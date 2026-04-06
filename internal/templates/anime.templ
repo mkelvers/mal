@@ -36,7 +36,7 @@ templ AnimeDetails(anime jikan.Anime, currentStatus string) {
 							}
 						</div>
 						<div class="anime-actions">
-							@WatchlistDropdown(anime.MalID, anime.Title, anime.ImageURL(), currentStatus)
+							@WatchlistDropdown(anime.MalID, anime.Title, anime.TitleEnglish, anime.TitleJapanese, anime.ImageURL(), currentStatus)
 						</div>
 					</div>
 				</div>
@@ -146,7 +146,7 @@ func joinNames(entities []jikan.NamedEntity) string {
 	return strings.Join(names, ", ")
 }
 
-templ WatchlistDropdown(animeID int, animeTitle string, animeImage string, currentStatus string) {
+templ WatchlistDropdown(animeID int, animeTitle string, animeTitleEnglish string, animeTitleJapanese string, animeImage string, currentStatus string) {
 	<div class="dropdown" id="watchlist-dropdown">
 		<button class="dropdown-trigger" onclick="toggleDropdown()">
 			if currentStatus != "" {
@@ -157,11 +157,11 @@ templ WatchlistDropdown(animeID int, animeTitle string, animeImage string, curre
 			<span class="dropdown-arrow">▾</span>
 		</button>
 		<div class="dropdown-menu">
-			@dropdownStatusOption(animeID, animeTitle, animeImage, "watching", currentStatus)
-			@dropdownStatusOption(animeID, animeTitle, animeImage, "completed", currentStatus)
-			@dropdownStatusOption(animeID, animeTitle, animeImage, "on_hold", currentStatus)
-			@dropdownStatusOption(animeID, animeTitle, animeImage, "dropped", currentStatus)
-			@dropdownStatusOption(animeID, animeTitle, animeImage, "plan_to_watch", currentStatus)
+			@dropdownStatusOption(animeID, animeTitle, animeTitleEnglish, animeTitleJapanese, animeImage, "watching", currentStatus)
+			@dropdownStatusOption(animeID, animeTitle, animeTitleEnglish, animeTitleJapanese, animeImage, "completed", currentStatus)
+			@dropdownStatusOption(animeID, animeTitle, animeTitleEnglish, animeTitleJapanese, animeImage, "on_hold", currentStatus)
+			@dropdownStatusOption(animeID, animeTitle, animeTitleEnglish, animeTitleJapanese, animeImage, "dropped", currentStatus)
+			@dropdownStatusOption(animeID, animeTitle, animeTitleEnglish, animeTitleJapanese, animeImage, "plan_to_watch", currentStatus)
 			if currentStatus != "" {
 				<div class="dropdown-divider"></div>
 				<button 
@@ -175,11 +175,11 @@ templ WatchlistDropdown(animeID int, animeTitle string, animeImage string, curre
 	</div>
 }
 
-templ dropdownStatusOption(animeID int, animeTitle string, animeImage string, status string, currentStatus string) {
+templ dropdownStatusOption(animeID int, animeTitle string, animeTitleEnglish string, animeTitleJapanese string, animeImage string, status string, currentStatus string) {
 	<button 
 		class={ "dropdown-item", templ.KV("active", status == currentStatus) }
 		hx-post="/api/watchlist"
-		hx-vals={ fmt.Sprintf(`{"anime_id": "%d", "anime_title": "%s", "anime_image": "%s", "status": "%s"}`, animeID, animeTitle, animeImage, status) }
+		hx-vals={ fmt.Sprintf(`{"anime_id": "%d", "anime_title": "%s", "anime_title_english": "%s", "anime_title_japanese": "%s", "anime_image": "%s", "status": "%s"}`, animeID, animeTitle, animeTitleEnglish, animeTitleJapanese, animeImage, status) }
 		hx-target="#watchlist-dropdown"
 		hx-swap="outerHTML"
 	>

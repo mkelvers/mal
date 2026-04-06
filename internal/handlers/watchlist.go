@@ -83,16 +83,7 @@ func (h *WatchlistHandler) HandleUpdateWatchlist(w http.ResponseWriter, r *http.
 		return
 	}
 
-	// Determine display title (prefer English)
-	displayTitle := animeTitleEnglish
-	if displayTitle == "" {
-		displayTitle = animeTitleJapanese
-	}
-	if displayTitle == "" {
-		displayTitle = animeTitle
-	}
-
-	templates.WatchlistDropdown(int(animeID), displayTitle, animeImage, status).Render(r.Context(), w)
+	templates.WatchlistDropdown(int(animeID), animeTitle, animeTitleEnglish, animeTitleJapanese, animeImage, status).Render(r.Context(), w)
 }
 
 func (h *WatchlistHandler) HandleDeleteWatchlist(w http.ResponseWriter, r *http.Request) {
@@ -138,18 +129,18 @@ func (h *WatchlistHandler) HandleDeleteWatchlist(w http.ResponseWriter, r *http.
 		return
 	}
 
-	// Determine display title for dropdown (prefer English)
-	displayTitle := ""
-	if anime.TitleEnglish.Valid && anime.TitleEnglish.String != "" {
-		displayTitle = anime.TitleEnglish.String
-	} else if anime.TitleJapanese.Valid && anime.TitleJapanese.String != "" {
-		displayTitle = anime.TitleJapanese.String
-	} else {
-		displayTitle = anime.TitleOriginal
+	// Extract nullable strings
+	titleEnglish := ""
+	if anime.TitleEnglish.Valid {
+		titleEnglish = anime.TitleEnglish.String
+	}
+	titleJapanese := ""
+	if anime.TitleJapanese.Valid {
+		titleJapanese = anime.TitleJapanese.String
 	}
 
 	// Otherwise return updated dropdown for anime page
-	templates.WatchlistDropdown(int(animeID), displayTitle, anime.ImageUrl, "").Render(r.Context(), w)
+	templates.WatchlistDropdown(int(animeID), anime.TitleOriginal, titleEnglish, titleJapanese, anime.ImageUrl, "").Render(r.Context(), w)
 }
 
 func (h *WatchlistHandler) HandleGetWatchlist(w http.ResponseWriter, r *http.Request) {
