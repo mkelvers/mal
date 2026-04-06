@@ -143,10 +143,10 @@ func (h *Handler) HandleQuickSearch(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Limit to 10 results
+	// Limit to 5 results
 	results := res.Animes
-	if len(results) > 10 {
-		results = results[:10]
+	if len(results) > 5 {
+		results = results[:5]
 	}
 
 	type SearchResult struct {
