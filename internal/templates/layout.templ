@@ -12,31 +12,30 @@ templ Layout(title string) {
 		</head>
 		<body>
 			<header>
-				<div style="display: flex; justify-content: space-between; align-items: center;">
-					<h1>/malago/</h1>
-					<form action="/" method="GET" style="display: flex; align-items: center; gap: 8px;">
-						<input type="text" name="q" class="search-input" placeholder="search anime..." style="padding: 6px 12px; font-size: 14px; width: 250px; background: var(--surface); color: var(--text);" />
-						<button type="submit" class="search-button" style="padding: 6px 12px; font-size: 14px;">go</button>
+				<div class="header-top">
+					<h1>/malago</h1>
+					<div class="nav">
+						<a href="/">home</a>
+						<a href="/catalog">catalog</a>
+						<a href="/watchlist">watchlist</a>
+					</div>
+					<form action="/" method="GET" style="display: flex; align-items: center; gap: 0;">
+						<input type="text" name="q" class="search-input" placeholder="search anime..." />
+						<button type="submit" class="search-button">go</button>
 					</form>
 				</div>
-				<div class="nav">
-					[ <a href="/">home</a> ]
-					[ <a href="/catalog">catalog</a> ]
-					[ <a href="/watchlist">watchlist</a> ]
-				</div>
-				<hr/>
 			</header>
 
 			<main>
 				{ children... }
 			</main>
-			<div id="toast-container" style="position: fixed; bottom: 20px; right: 20px; z-index: 1000; display: flex; flex-direction: column; gap: 8px;"></div>
+			<div id="toast-container" style="position: fixed; bottom: 24px; right: 24px; z-index: 1000; display: flex; flex-direction: column; gap: 8px;"></div>
 			<script>
 				document.body.addEventListener('toast', function(evt) {
 					const container = document.getElementById('toast-container');
 					const toast = document.createElement('div');
-					toast.style.cssText = 'background: var(--surface, #333); color: var(--text, #fff); border: 1px solid var(--border, #555); padding: 8px 16px; font-size: 12px; font-weight: bold; opacity: 0; transition: opacity 0.3s;';
-					toast.textContent = '> ' + evt.detail.value;
+					toast.style.cssText = 'background: var(--surface); color: var(--text); border: 1px solid var(--border); padding: 12px 16px; font-size: 13px; font-weight: 500; opacity: 0; transition: opacity 0.3s; box-shadow: 0 4px 12px rgba(0,0,0,0.5);';
+					toast.textContent = evt.detail.value;
 					container.appendChild(toast);
 					
 					// fade in
