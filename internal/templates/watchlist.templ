@@ -55,7 +55,6 @@ templ Watchlist(entries []database.GetUserWatchListRow, layout string, currentSt
 								}
 							</a>
 							<div class="catalog-title">{ entry.DisplayTitle() }</div>
-							<div class="watchlist-status">{ entry.Status }</div>
 							<button 
 								class="remove-btn"
 								hx-delete={ string(templ.URL(fmt.Sprintf("/api/watchlist/%d?from=watchlist", entry.AnimeID))) } 
@@ -71,7 +70,6 @@ templ Watchlist(entries []database.GetUserWatchListRow, layout string, currentSt
 						<tr>
 							<th></th>
 							<th>title</th>
-							<th>status</th>
 							<th></th>
 						</tr>
 					</thead>
@@ -83,13 +81,12 @@ templ Watchlist(entries []database.GetUserWatchListRow, layout string, currentSt
 										<img src={ entry.ImageUrl } alt={ entry.DisplayTitle() } class="thumb" loading="lazy"/>
 									</a>
 								</td>
-								<td class="title-cell">
-									<a href={ templ.SafeURL(fmt.Sprintf("/anime/%d", entry.AnimeID)) }>
-										{ entry.DisplayTitle() }
-									</a>
-								</td>
-								<td class="status-cell">{ entry.Status }</td>
-								<td class="actions-cell">
+							<td class="title-cell">
+								<a href={ templ.SafeURL(fmt.Sprintf("/anime/%d", entry.AnimeID)) }>
+									{ entry.DisplayTitle() }
+								</a>
+							</td>
+							<td class="actions-cell">
 									<button 
 										class="remove-link"
 										hx-delete={ string(templ.URL(fmt.Sprintf("/api/watchlist/%d?from=watchlist", entry.AnimeID))) } 
