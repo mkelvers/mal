@@ -19,7 +19,7 @@ FROM debian:bullseye-slim
 WORKDIR /app
 
 # Required for sqlite
-RUN apt-get update && apt-get install -y ca-certificates && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y ca-certificates sqlite3 && rm -rf /var/lib/apt/lists/*
 
 # Create data directory for sqlite
 RUN mkdir -p /app/data
@@ -29,8 +29,13 @@ COPY --from=builder /app/create_user .
 COPY --from=builder /app/static ./static
 COPY --from=builder /app/migrations ./migrations
 
+# Copy entrypoint script
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
 # Expose the application port
 EXPOSE 3000
 
-# Run the server
+# Run entrypoint which handles migrations
+ENTRYPOINT ["/entrypoint.sh"]
 CMD ["./main_server"]
