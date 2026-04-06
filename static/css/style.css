@@ -1,0 +1,320 @@
+:root {
+  /* Dark Monochromatic Palette (4chan catalog style but dark) */
+  --bg: #111111;          /* very dark grey / almost black */
+  --surface: #1a1a1a;     /* slightly lighter dark for inputs/boxes */
+  --border: #333333;      /* dark grey border */
+  --text: #e0e0e0;        /* light grey text */
+  --text-muted: #888888;  /* medium grey for meta/loading */
+  --link: #cccccc;        /* light grey links */
+  --link-hover: #ffffff;  /* pure white on hover */
+  --greentext: #98fb98;   /* pale green for success/quotes */
+}
+
+body {
+  background-color: var(--bg);
+  color: var(--text);
+  font-family: arial, helvetica, sans-serif;
+  font-size: 15px;
+  margin: 0;
+  padding: 16px;
+  min-height: 100vh;
+}
+
+header {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+h1 {
+  font-size: 24px;
+  font-weight: bold;
+  margin: 0 0 8px 0;
+  color: var(--text);
+}
+
+.nav {
+  font-size: 14px;
+  font-weight: bold;
+}
+
+a {
+  color: var(--link);
+  text-decoration: none;
+}
+
+a:hover {
+  color: var(--link-hover);
+  text-decoration: underline;
+}
+
+hr {
+  border: 0;
+  border-bottom: 1px solid var(--border);
+  margin: 16px 0;
+}
+
+/* Search Area */
+.search-box {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.search-form {
+  display: inline-flex;
+  gap: 4px;
+}
+
+.search-input {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  padding: 6px;
+  color: var(--text);
+  font-size: 15px;
+  width: 250px;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: var(--text-muted);
+}
+
+.search-button {
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 6px 16px;
+  cursor: pointer;
+  font-size: 15px;
+}
+
+.search-button:hover {
+  background-color: var(--border);
+}
+
+.status-text {
+  color: var(--text-muted);
+  font-weight: bold;
+  font-size: 12px;
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+/* 4chan Catalog Grid */
+.catalog-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 24px;
+  padding: 0 16px;
+  justify-items: center;
+}
+
+.catalog-item {
+  text-align: center;
+  width: 180px;
+}
+
+.catalog-thumb {
+  max-width: 180px;
+  max-height: 240px;
+  border: 1px solid var(--border);
+  transition: opacity 0.1s;
+}
+
+.catalog-thumb:hover {
+  opacity: 0.8;
+}
+
+.no-image {
+  width: 180px;
+  height: 240px;
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.catalog-title {
+  font-weight: bold;
+  font-size: 13px;
+  margin-top: 6px;
+  word-wrap: break-word;
+  line-height: 1.4;
+  color: var(--text);
+}
+
+footer {
+  text-align: center;
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-top: 48px;
+}
+
+/* HTMX states */
+.htmx-indicator { display: none; }
+.htmx-request .htmx-indicator { display: block; }
+.htmx-request.htmx-indicator { display: block; }
+
+/* Anime Details Page */
+.details-container {
+  padding: 16px;
+}
+
+.details-header {
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 16px;
+  margin-bottom: 24px;
+}
+
+.details-header h2 {
+  font-size: 28px;
+  margin: 0 0 8px 0;
+  color: var(--text);
+}
+
+.details-subtitle {
+  font-size: 16px;
+  color: var(--text-muted);
+}
+
+.details-body {
+  display: flex;
+  gap: 32px;
+  align-items: flex-start;
+}
+
+.details-sidebar {
+  width: 250px;
+  flex-shrink: 0;
+}
+
+.details-image {
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--border);
+  margin-bottom: 16px;
+}
+
+.stats-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+}
+
+.stats-table td {
+  border: 1px solid var(--border);
+  padding: 6px 8px;
+  text-align: left;
+  vertical-align: top;
+}
+
+.stats-table .stat-label {
+  font-weight: bold;
+  color: var(--text-muted);
+  background-color: var(--bg);
+  width: 80px;
+}
+
+.stat-sub {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.details-main {
+  flex: 1;
+}
+
+.details-main h3 {
+  font-size: 20px;
+  margin: 0 0 16px 0;
+  color: var(--text);
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 4px;
+  display: inline-block;
+}
+
+.details-synopsis {
+  font-size: 17px;
+  line-height: 1.7;
+  white-space: pre-wrap;
+}
+
+.relations-container {
+  margin-top: 32px;
+}
+
+.relations-list {
+  margin-top: 32px;
+  padding-top: 16px;
+}
+
+.relations-list ul {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
+
+.relations-list li {
+  margin-bottom: 8px;
+  font-size: 15px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 600px) {
+  body {
+    padding: 8px;
+  }
+
+  .catalog-grid {
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 8px;
+    padding: 0 4px;
+  }
+
+  .catalog-item, .catalog-thumb, .no-image {
+    width: 120px;
+  }
+
+  .catalog-thumb, .no-image {
+    max-height: 170px;
+  }
+
+  .search-form {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .search-input {
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .search-button {
+    width: 100%;
+  }
+
+  .details-body {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .details-sidebar {
+    width: 100%;
+    margin: 0 auto;
+  }
+
+  .details-main {
+    width: 100%;
+  }
+
+  .nav {
+    font-size: 14px;
+    gap: 8px;
+    display: flex;
+    justify-content: center;
+  }
+}
