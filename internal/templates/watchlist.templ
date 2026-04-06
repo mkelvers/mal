@@ -7,33 +7,39 @@ import (
 
 templ Watchlist(entries []database.GetUserWatchListRow, layout string, currentStatus string) {
 	@Layout("My Watchlist") {
-		<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-			<h2 style="margin: 0;">My Watchlist</h2>
-			<div>
-				<a href={ templ.URL(fmt.Sprintf("/watchlist?view=grid&status=%s", currentStatus)) } style={ viewLinkStyle(layout == "grid") }>Grid</a>
-				<span style="color: var(--border);"> | </span>
-				<a href={ templ.URL(fmt.Sprintf("/watchlist?view=table&status=%s", currentStatus)) } style={ viewLinkStyle(layout == "table") }>Table</a>
+		<div class="watchlist-header">
+			<h2>watchlist</h2>
+			<div class="view-toggle">
+				<a href={ templ.URL(fmt.Sprintf("/watchlist?view=grid&status=%s", currentStatus)) } class={ viewToggleClass(layout == "grid") }>grid</a>
+				<a href={ templ.URL(fmt.Sprintf("/watchlist?view=table&status=%s", currentStatus)) } class={ viewToggleClass(layout == "table") }>table</a>
 			</div>
 		</div>
 
-		<div style="display: flex; gap: 16px; margin-bottom: 16px; border-bottom: 1px solid var(--border); padding-bottom: 8px; overflow-x: auto; white-space: nowrap;">
-			<a href={ templ.URL(fmt.Sprintf("/watchlist?view=%s&status=all", layout)) } style={ tabLinkStyle(currentStatus == "all") }>All</a>
-			<a href={ templ.URL(fmt.Sprintf("/watchlist?view=%s&status=watching", layout)) } style={ tabLinkStyle(currentStatus == "watching") }>Watching</a>
-			<a href={ templ.URL(fmt.Sprintf("/watchlist?view=%s&status=on_hold", layout)) } style={ tabLinkStyle(currentStatus == "on_hold") }>On Hold</a>
-			<a href={ templ.URL(fmt.Sprintf("/watchlist?view=%s&status=plan_to_watch", layout)) } style={ tabLinkStyle(currentStatus == "plan_to_watch") }>Plan to Watch</a>
-			<a href={ templ.URL(fmt.Sprintf("/watchlist?view=%s&status=dropped", layout)) } style={ tabLinkStyle(currentStatus == "dropped") }>Dropped</a>
-			<a href={ templ.URL(fmt.Sprintf("/watchlist?view=%s&status=completed", layout)) } style={ tabLinkStyle(currentStatus == "completed") }>Completed</a>
+		<div class="status-tabs">
+			<a href={ templ.URL(fmt.Sprintf("/watchlist?view=%s&status=all", layout)) } class={ tabClass(currentStatus == "all") }>all</a>
+			<a href={ templ.URL(fmt.Sprintf("/watchlist?view=%s&status=watching", layout)) } class={ tabClass(currentStatus == "watching") }>watching</a>
+			<a href={ templ.URL(fmt.Sprintf("/watchlist?view=%s&status=on_hold", layout)) } class={ tabClass(currentStatus == "on_hold") }>on hold</a>
+			<a href={ templ.URL(fmt.Sprintf("/watchlist?view=%s&status=plan_to_watch", layout)) } class={ tabClass(currentStatus == "plan_to_watch") }>plan to watch</a>
+			<a href={ templ.URL(fmt.Sprintf("/watchlist?view=%s&status=dropped", layout)) } class={ tabClass(currentStatus == "dropped") }>dropped</a>
+			<a href={ templ.URL(fmt.Sprintf("/watchlist?view=%s&status=completed", layout)) } class={ tabClass(currentStatus == "completed") }>completed</a>
 		</div>
 
 		if len(entries) == 0 {
 			<div class="empty-state">
-				Your watchlist is empty. <a href="/">Go search for some anime!</a>
+				<div class="empty-state-title">nothing here yet</div>
+				<div class="empty-state-text">
+					if currentStatus == "all" {
+						your watchlist is empty. <a href="/">search for anime</a> to get started.
+					} else {
+						no anime in this category.
+					}
+				</div>
 			</div>
 		} else {
 			if layout == "grid" {
 				<div class="catalog-grid">
 					for _, entry := range entries {
-						<div class="catalog-item" id={ fmt.Sprintf("watchlist-entry-%d", entry.AnimeID) } style="position: relative;">
+						<div class="catalog-item watchlist-item" id={ fmt.Sprintf("watchlist-entry-%d", entry.AnimeID) }>
 							<a href={ templ.URL(fmt.Sprintf("/anime/%d", entry.AnimeID)) }>
 								if entry.ImageUrl != "" {
 									<img src={ entry.ImageUrl } alt={ entry.Title } class="catalog-thumb" loading="lazy" />
@@ -41,40 +47,49 @@ templ Watchlist(entries []database.GetUserWatchListRow, layout string, currentSt
 									<div class="no-image">no image</div>
 								}
 							</a>
-							<div class="catalog-title">
-								{ entry.Title }
-								<div style="font-size: 10px; color: var(--text-muted); margin-top: 4px;">{ entry.Status }</div>
-							</div>
-							<button hx-delete={ string(templ.URL(fmt.Sprintf("/api/watchlist/%d", entry.AnimeID))) } hx-target={ fmt.Sprintf("#watchlist-entry-%d", entry.AnimeID) } hx-swap="outerHTML" style="position: absolute; top: 4px; right: 4px; background: rgba(0,0,0,0.7); border: 1px solid var(--border); color: var(--redtext, #e06c75); cursor: pointer; font-size: 10px; padding: 2px 6px; border-radius: 4px;">remove</button>
+							<div class="catalog-title">{ entry.Title }</div>
+							<div class="watchlist-status">{ entry.Status }</div>
+							<button 
+								class="remove-btn"
+								hx-delete={ string(templ.URL(fmt.Sprintf("/api/watchlist/%d", entry.AnimeID))) } 
+								hx-target={ fmt.Sprintf("#watchlist-entry-%d", entry.AnimeID) } 
+								hx-swap="outerHTML"
+							>&times;</button>
 						</div>
 					}
 				</div>
 			} else {
-				<table class="stats-table">
+				<table class="watchlist-table">
 					<thead>
 						<tr>
-							<th>Image</th>
-							<th>Title</th>
-							<th>Status</th>
+							<th></th>
+							<th>title</th>
+							<th>status</th>
 							<th></th>
 						</tr>
 					</thead>
 					<tbody>
 						for _, entry := range entries {
 							<tr id={ fmt.Sprintf("watchlist-entry-%d", entry.AnimeID) }>
-								<td style="width: 50px;">
-									<a href={ templ.SafeURL(fmt.Sprintf("/anime/%d", entry.AnimeID)) }>
-										<img src={ entry.ImageUrl } alt={ entry.Title } width="50" style="border: 1px solid var(--border);" loading="lazy"/>
-									</a>
-								</td>
 								<td>
 									<a href={ templ.SafeURL(fmt.Sprintf("/anime/%d", entry.AnimeID)) }>
-										<strong>{ entry.Title }</strong>
+										<img src={ entry.ImageUrl } alt={ entry.Title } class="thumb" loading="lazy"/>
 									</a>
 								</td>
-								<td>{ entry.Status }</td>
-								<td style="text-align: right;">
-									<button hx-delete={ string(templ.URL(fmt.Sprintf("/api/watchlist/%d", entry.AnimeID))) } hx-target={ fmt.Sprintf("#watchlist-entry-%d", entry.AnimeID) } hx-swap="outerHTML" style="background: none; border: none; color: var(--redtext, #e06c75); cursor: pointer; text-decoration: underline; font-size: 12px; padding: 0;">delete</button>
+								<td class="title-cell">
+									<a href={ templ.SafeURL(fmt.Sprintf("/anime/%d", entry.AnimeID)) }>
+										{ entry.Title }
+									</a>
+								</td>
+								<td class="status-cell">{ entry.Status }</td>
+								<td class="actions-cell">
+									<button 
+										class="remove-link"
+										hx-delete={ string(templ.URL(fmt.Sprintf("/api/watchlist/%d", entry.AnimeID))) } 
+										hx-target={ fmt.Sprintf("#watchlist-entry-%d", entry.AnimeID) } 
+										hx-swap="outerHTML"
+										style="background: none; border: none; cursor: pointer;"
+									>remove</button>
 								</td>
 							</tr>
 						}
@@ -85,16 +100,16 @@ templ Watchlist(entries []database.GetUserWatchListRow, layout string, currentSt
 	}
 }
 
-func viewLinkStyle(active bool) string {
+func viewToggleClass(active bool) string {
 	if active {
-		return "color: var(--text); font-weight: bold; text-decoration: none;"
+		return "active"
 	}
-	return "color: var(--text-muted); text-decoration: none;"
+	return ""
 }
 
-func tabLinkStyle(active bool) string {
+func tabClass(active bool) string {
 	if active {
-		return "color: var(--text); font-weight: bold; text-decoration: none; border-bottom: 2px solid var(--text); padding-bottom: 7px;"
+		return "active"
 	}
-	return "color: var(--text-muted); text-decoration: none; padding-bottom: 7px;"
+	return ""
 }
