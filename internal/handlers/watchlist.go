@@ -101,14 +101,15 @@ func (h *WatchlistHandler) HandleDeleteWatchlist(w http.ResponseWriter, r *http.
 		return
 	}
 
-	animeIDStr := r.URL.Path[len("/api/watchlist/"):]
-	animeID, err := strconv.ParseInt(animeIDStr, 10, 64)
+	// Parse the path to get anime ID (path is /api/watchlist/{id} possibly with query params)
+	path := r.URL.Path[len("/api/watchlist/"):]
+	animeID, err := strconv.ParseInt(path, 10, 64)
 	if err != nil {
 		http.Error(w, "invalid anime ID", http.StatusBadRequest)
 		return
 	}
 
-	// Get anime info before deleting
+	// Get anime info before deleting (for dropdown refresh on anime page)
 	anime, err := h.db.GetAnime(r.Context(), animeID)
 	if err != nil {
 		http.Error(w, "anime not found", http.StatusNotFound)
@@ -125,6 +126,14 @@ func (h *WatchlistHandler) HandleDeleteWatchlist(w http.ResponseWriter, r *http.
 	}
 
 	w.Header().Set("HX-Trigger", `{"toast": "removed from watchlist"}`)
+
+	// If called from watchlist page, just return empty (hx-swap="delete" handles removal)
+	if r.URL.Query().Get("from") == "watchlist" {
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+
+	// Otherwise return updated dropdown for anime page
 	templates.WatchlistDropdown(int(animeID), anime.Title, anime.ImageUrl, "").Render(r.Context(), w)
 }
 

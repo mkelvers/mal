@@ -58,9 +58,9 @@ templ Watchlist(entries []database.GetUserWatchListRow, layout string, currentSt
 							<div class="watchlist-status">{ entry.Status }</div>
 							<button 
 								class="remove-btn"
-								hx-delete={ string(templ.URL(fmt.Sprintf("/api/watchlist/%d", entry.AnimeID))) } 
+								hx-delete={ string(templ.URL(fmt.Sprintf("/api/watchlist/%d?from=watchlist", entry.AnimeID))) } 
 								hx-target={ fmt.Sprintf("#watchlist-entry-%d", entry.AnimeID) } 
-								hx-swap="outerHTML"
+								hx-swap="delete"
 							>&times;</button>
 						</div>
 					}
@@ -92,9 +92,9 @@ templ Watchlist(entries []database.GetUserWatchListRow, layout string, currentSt
 								<td class="actions-cell">
 									<button 
 										class="remove-link"
-										hx-delete={ string(templ.URL(fmt.Sprintf("/api/watchlist/%d", entry.AnimeID))) } 
+										hx-delete={ string(templ.URL(fmt.Sprintf("/api/watchlist/%d?from=watchlist", entry.AnimeID))) } 
 										hx-target={ fmt.Sprintf("#watchlist-entry-%d", entry.AnimeID) } 
-										hx-swap="outerHTML"
+										hx-swap="delete"
 										style="background: none; border: none; cursor: pointer;"
 									>remove</button>
 								</td>
