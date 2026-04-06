@@ -116,12 +116,54 @@ templ AnimeDetails(anime jikan.Anime, currentStatus string) {
 						<span class="sidebar-value">{ joinNames(anime.Studios) }</span>
 					</div>
 				}
-				if len(anime.Producers) > 0 {
-					<div class="sidebar-row">
-						<span class="sidebar-label">Producers</span>
-						<span class="sidebar-value">{ joinNames(anime.Producers) }</span>
+			if len(anime.Producers) > 0 {
+				<div class="sidebar-row">
+					<span class="sidebar-label">Producers</span>
+					<span class="sidebar-value">{ joinNames(anime.Producers) }</span>
+				</div>
+			}
+			if anime.Source != "" {
+				<div class="sidebar-row">
+					<span class="sidebar-label">Source</span>
+					<span class="sidebar-value">{ anime.Source }</span>
+				</div>
+			}
+			if len(anime.Demographics) > 0 {
+				<div class="sidebar-row sidebar-row-wrap">
+					<span class="sidebar-label">Demographics</span>
+					<div class="sidebar-tags">
+						for _, d := range anime.Demographics {
+							<span class="sidebar-tag">{ d.Name }</span>
+						}
 					</div>
-				}
+				</div>
+			}
+			if len(anime.Themes) > 0 {
+				<div class="sidebar-row sidebar-row-wrap">
+					<span class="sidebar-label">Themes</span>
+					<div class="sidebar-tags">
+						for _, t := range anime.Themes {
+							<span class="sidebar-tag">{ t.Name }</span>
+						}
+					</div>
+				</div>
+			}
+			if anime.Broadcast.String != "" {
+				<div class="sidebar-row">
+					<span class="sidebar-label">Broadcast</span>
+					<span class="sidebar-value">{ anime.Broadcast.String }</span>
+				</div>
+			}
+			if len(anime.Streaming) > 0 {
+				<div class="sidebar-row">
+					<span class="sidebar-label">Streaming</span>
+					<div class="sidebar-value">
+						for _, s := range anime.Streaming {
+							<div><a href={ templ.URL(s.URL) } target="_blank">{ s.Name }</a></div>
+						}
+					</div>
+				</div>
+			}
 			</aside>
 		</div>
 		<script>

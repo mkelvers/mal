@@ -40,22 +40,36 @@ type Anime struct {
 			LargeImageURL string `json:"large_image_url"`
 		} `json:"webp"`
 	} `json:"images"`
-	Synopsis   string        `json:"synopsis"`
-	Score      float64       `json:"score"`
-	ScoredBy   int           `json:"scored_by"`
-	Rank       int           `json:"rank"`
-	Popularity int           `json:"popularity"`
-	Status     string        `json:"status"`
-	Episodes   int           `json:"episodes"`
-	Season     string        `json:"season"`
-	Year       int           `json:"year"`
-	Type       string        `json:"type"`
-	Rating     string        `json:"rating"`
-	Duration   string        `json:"duration"`
-	Aired      Aired         `json:"aired"`
-	Genres     []NamedEntity `json:"genres"`
-	Studios    []NamedEntity `json:"studios"`
-	Producers  []NamedEntity `json:"producers"`
+	Synopsis     string        `json:"synopsis"`
+	Score        float64       `json:"score"`
+	ScoredBy     int           `json:"scored_by"`
+	Rank         int           `json:"rank"`
+	Popularity   int           `json:"popularity"`
+	Status       string        `json:"status"`
+	Episodes     int           `json:"episodes"`
+	Season       string        `json:"season"`
+	Year         int           `json:"year"`
+	Type         string        `json:"type"`
+	Rating       string        `json:"rating"`
+	Duration     string        `json:"duration"`
+	Aired        Aired         `json:"aired"`
+	Genres       []NamedEntity `json:"genres"`
+	Studios      []NamedEntity `json:"studios"`
+	Producers    []NamedEntity `json:"producers"`
+	Themes       []NamedEntity `json:"themes"`
+	Themes2      []NamedEntity `json:"themes"` // fallback for different API versions
+	Source       string        `json:"source"`
+	Demographics []NamedEntity `json:"demographics"`
+	Broadcast    struct {
+		Day      string `json:"day"`
+		Time     string `json:"time"`
+		Timezone string `json:"timezone"`
+		String   string `json:"string"`
+	} `json:"broadcast"`
+	Streaming []struct {
+		Name string `json:"name"`
+		URL  string `json:"url"`
+	} `json:"streaming"`
 }
 
 // ImageURL returns the webp large image URL
