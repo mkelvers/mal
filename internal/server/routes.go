@@ -8,7 +8,7 @@ import (
 	"malago/internal/features/auth"
 	"malago/internal/features/watchlist"
 	"malago/internal/jikan"
-	"malago/internal/middleware"
+	"malago/internal/shared/middleware"
 )
 
 type Config struct {

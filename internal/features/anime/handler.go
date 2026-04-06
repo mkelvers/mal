@@ -6,7 +6,7 @@ import (
 	"strconv"
 
 	"malago/internal/database"
-	"malago/internal/middleware"
+	"malago/internal/shared/middleware"
 	"malago/internal/templates"
 )
 
