@@ -1,0 +1,54 @@
+package templates
+
+templ Layout(title string) {
+	<!DOCTYPE html>
+	<html lang="en">
+		<head>
+			<meta charset="UTF-8"/>
+			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+			<title>{ title }</title>
+			<link rel="stylesheet" href="/static/css/style.css"/>
+			<script src="https://unpkg.com/htmx.org@1.9.11"></script>
+		</head>
+		<body>
+			<header>
+				<div style="display: flex; justify-content: space-between; align-items: center;">
+					<h1>/malago/</h1>
+					<form action="/" method="GET" style="display: flex; align-items: center; gap: 8px;">
+						<input type="text" name="q" class="search-input" placeholder="search anime..." style="padding: 6px 12px; font-size: 14px; width: 250px; background: var(--surface); color: var(--text);" />
+						<button type="submit" class="search-button" style="padding: 6px 12px; font-size: 14px;">go</button>
+					</form>
+				</div>
+				<div class="nav">
+					[ <a href="/">home</a> ]
+					[ <a href="/catalog">catalog</a> ]
+					[ <a href="/watchlist">watchlist</a> ]
+				</div>
+				<hr/>
+			</header>
+
+			<main>
+				{ children... }
+			</main>
+			<div id="toast-container" style="position: fixed; bottom: 20px; right: 20px; z-index: 1000; display: flex; flex-direction: column; gap: 8px;"></div>
+			<script>
+				document.body.addEventListener('toast', function(evt) {
+					const container = document.getElementById('toast-container');
+					const toast = document.createElement('div');
+					toast.style.cssText = 'background: var(--surface, #333); color: var(--text, #fff); border: 1px solid var(--border, #555); padding: 8px 16px; font-size: 12px; font-weight: bold; opacity: 0; transition: opacity 0.3s;';
+					toast.textContent = '> ' + evt.detail.value;
+					container.appendChild(toast);
+					
+					// fade in
+					requestAnimationFrame(() => { toast.style.opacity = '1'; });
+					
+					// remove after 3s
+					setTimeout(() => {
+						toast.style.opacity = '0';
+						setTimeout(() => { toast.remove(); }, 300);
+					}, 3000);
+				});
+			</script>
+		</body>
+	</html>
+}

@@ -1,0 +1,41 @@
+package templates
+
+import "malago/internal/jikan"
+import "fmt"
+
+templ Catalog() {
+	@Layout("malago - catalog") {
+		<div class="catalog-grid" id="catalog-content">
+			<div hx-get="/api/catalog?page=1" hx-trigger="load" hx-swap="outerHTML">
+				<div class="status-text" style="grid-column: 1 / -1;">> loading catalog...</div>
+			</div>
+		</div>
+	}
+}
+
+templ CatalogItems(animes []jikan.Anime, nextPage int, hasNext bool) {
+	for i, anime := range animes {
+		if i == len(animes)-1 && hasNext {
+			<div class="catalog-item" hx-get={ string(templ.URL(fmt.Sprintf("/api/catalog?page=%d", nextPage))) } hx-trigger="revealed" hx-swap="afterend">
+				@CatalogItem(anime)
+			</div>
+		} else {
+			<div class="catalog-item">
+				@CatalogItem(anime)
+			</div>
+		}
+	}
+}
+
+templ CatalogItem(anime jikan.Anime) {
+	<a href={ templ.URL(fmt.Sprintf("/anime/%d", anime.MalID)) }>
+		if anime.Images.Webp.LargeImageURL != "" {
+			<img src={ anime.Images.Webp.LargeImageURL } alt={ anime.DisplayTitle() } class="catalog-thumb" loading="lazy" />
+		} else {
+			<div class="no-image">no image</div>
+		}
+	</a>
+	<div class="catalog-title">
+		{ anime.DisplayTitle() }
+	</div>
+}
