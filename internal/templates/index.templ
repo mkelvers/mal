@@ -1,13 +1,13 @@
 package templates
 
 import (
-	"malago/internal/jikan"
+	"mal/internal/jikan"
 	"fmt"
 	"net/url"
 )
 
 templ Search(q string) {
-	@Layout("malago - search") {
+	@Layout("mal - search") {
 		if q != "" {
 			<div class="loading-indicator htmx-indicator" id="loading">
 				<div class="loading-dot"></div>

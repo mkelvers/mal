@@ -10,7 +10,7 @@ test:
 	go test ./...
 
 migrate:
-	sqlite3 malago.db < migrations/001_init.sql
+	sqlite3 mal.db < migrations/001_init.sql
 
 sqlc:
 	sqlc generate

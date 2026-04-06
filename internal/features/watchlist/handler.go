@@ -7,9 +7,9 @@ import (
 	"net/http"
 	"strconv"
 
-	"malago/internal/database"
-	"malago/internal/shared/middleware"
-	"malago/internal/templates"
+	"mal/internal/database"
+	"mal/internal/shared/middleware"
+	"mal/internal/templates"
 )
 
 type Handler struct {
@@ -198,7 +198,7 @@ func (h *Handler) HandleExportWatchlist(w http.ResponseWriter, r *http.Request) 
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Content-Disposition", "attachment; filename=malago-watchlist.json")
+	w.Header().Set("Content-Disposition", "attachment; filename=mal-watchlist.json")
 	json.NewEncoder(w).Encode(export)
 }
 

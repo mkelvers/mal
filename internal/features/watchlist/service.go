@@ -8,7 +8,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"malago/internal/database"
+	"mal/internal/database"
 )
 
 type Service struct {

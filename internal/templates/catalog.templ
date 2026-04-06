@@ -1,10 +1,10 @@
 package templates
 
-import "malago/internal/jikan"
+import "mal/internal/jikan"
 import "fmt"
 
 templ Catalog() {
-	@Layout("malago - catalog") {
+	@Layout("mal - catalog") {
 		<div class="catalog-grid" id="catalog-content">
 			<div hx-get="/api/catalog?page=1" hx-trigger="load" hx-swap="outerHTML" style="grid-column: 1 / -1;">
 				<div class="loading-indicator">

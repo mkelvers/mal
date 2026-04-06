@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"malago/internal/database"
-	"malago/internal/jikan"
+	"mal/internal/database"
+	"mal/internal/jikan"
 )
 
 type Service struct {

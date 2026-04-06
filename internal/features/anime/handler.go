@@ -6,9 +6,9 @@ import (
 	"net/http"
 	"strconv"
 
-	"malago/internal/database"
-	"malago/internal/shared/middleware"
-	"malago/internal/templates"
+	"mal/internal/database"
+	"mal/internal/shared/middleware"
+	"mal/internal/templates"
 )
 
 type Handler struct {

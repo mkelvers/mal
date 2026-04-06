@@ -3,12 +3,12 @@ package server
 import (
 	"net/http"
 
-	"malago/internal/database"
-	"malago/internal/features/anime"
-	"malago/internal/features/auth"
-	"malago/internal/features/watchlist"
-	"malago/internal/jikan"
-	"malago/internal/shared/middleware"
+	"mal/internal/database"
+	"mal/internal/features/anime"
+	"mal/internal/features/auth"
+	"mal/internal/features/watchlist"
+	"mal/internal/jikan"
+	"mal/internal/shared/middleware"
 )
 
 type Config struct {

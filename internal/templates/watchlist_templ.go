@@ -10,7 +10,7 @@ import templruntime "github.com/a-h/templ/runtime"
 
 import (
 	"fmt"
-	"malago/internal/database"
+	"mal/internal/database"
 )
 
 func Watchlist(entries []database.GetUserWatchListRow, layout string, currentStatus string, sortBy string, sortOrder string) templ.Component {

@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"strings"
 
-	"malago/internal/database"
-	"malago/internal/features/auth"
+	"mal/internal/database"
+	"mal/internal/features/auth"
 )
 
 type contextKey string

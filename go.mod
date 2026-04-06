@@ -1,4 +1,4 @@
-module malago
+module mal
 
 go 1.24.0
 

@@ -13,7 +13,7 @@ import (
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 
-	"malago/internal/database"
+	"mal/internal/database"
 )
 
 var (

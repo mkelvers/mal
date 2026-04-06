@@ -3,7 +3,7 @@ package auth
 import (
 	"net/http"
 
-	"malago/internal/templates"
+	"mal/internal/templates"
 )
 
 type Handler struct {

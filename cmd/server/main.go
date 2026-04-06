@@ -8,17 +8,17 @@ import (
 
 	_ "github.com/mattn/go-sqlite3"
 
-	"malago/internal/database"
-	"malago/internal/features/auth"
-	"malago/internal/jikan"
-	"malago/internal/server"
+	"mal/internal/database"
+	"mal/internal/features/auth"
+	"mal/internal/jikan"
+	"mal/internal/server"
 )
 
 func main() {
 
 	dbFile := os.Getenv("DATABASE_FILE")
 	if dbFile == "" {
-		dbFile = "malago.db"
+		dbFile = "mal.db"
 	}
 
 	db, err := sql.Open("sqlite3", dbFile)

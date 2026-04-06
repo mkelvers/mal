@@ -1,11 +1,11 @@
 package templates
 
-import "malago/internal/jikan"
+import "mal/internal/jikan"
 import "fmt"
 import "strings"
 
 templ AnimeDetails(anime jikan.Anime, currentStatus string) {
-	@Layout("malago - " + anime.DisplayTitle()) {
+	@Layout("mal - " + anime.DisplayTitle()) {
 		<div class="anime-page">
 			<div class="anime-main">
 				<div class="anime-hero">
