@@ -2,140 +2,230 @@ package templates
 
 import "malago/internal/jikan"
 import "fmt"
+import "strings"
 
-templ AnimeDetails(anime jikan.Anime) {
+templ AnimeDetails(anime jikan.Anime, currentStatus string) {
 	@Layout("malago - " + anime.DisplayTitle()) {
-		<div class="details-container">
-			<div class="details-header">
-				<h2>{ anime.DisplayTitle() }</h2>
-				if anime.TitleJapanese != "" {
-					<div class="details-subtitle">{ anime.TitleJapanese }</div>
-				}
-			</div>
-
-			<div class="details-body">
-				<aside class="details-sidebar">
-					if anime.Images.Webp.LargeImageURL != "" {
-						<img src={ anime.Images.Webp.LargeImageURL } alt={ anime.DisplayTitle() } class="details-image" />
-					} else {
-						<div class="no-image">no image</div>
-					}
-
-					<table class="stats-table">
-						<tbody>
-							<tr>
-								<td class="stat-label">Score</td>
-								<td>
-									if anime.Score > 0 {
-										{ fmt.Sprintf("%.2f", anime.Score) }
-										<span class="stat-sub">({ fmt.Sprintf("%d", anime.ScoredBy) } users)</span>
-									} else {
-										N/A
-									}
-								</td>
-							</tr>
-							<tr>
-								<td class="stat-label">Rank</td>
-								<td>
-									if anime.Rank > 0 {
-										#{ fmt.Sprintf("%d", anime.Rank) }
-									} else {
-										N/A
-									}
-								</td>
-							</tr>
-							<tr>
-								<td class="stat-label">Popularity</td>
-								<td>
-									if anime.Popularity > 0 {
-										#{ fmt.Sprintf("%d", anime.Popularity) }
-									} else {
-										N/A
-									}
-								</td>
-							</tr>
-							<tr>
-								<td class="stat-label">Type</td>
-								<td>{ anime.Type }</td>
-							</tr>
-							<tr>
-								<td class="stat-label">Episodes</td>
-								<td>
-									if anime.Episodes > 0 {
-										{ fmt.Sprintf("%d", anime.Episodes) }
-									} else {
-										Unknown
-									}
-								</td>
-							</tr>
-							<tr>
-								<td class="stat-label">Status</td>
-								<td>{ anime.Status }</td>
-							</tr>
-							<tr>
-								<td class="stat-label">Aired</td>
-								<td>
-									if anime.Season != "" && anime.Year > 0 {
-										{ anime.Season } { fmt.Sprintf("%d", anime.Year) }
-									} else {
-										Unknown
-									}
-								</td>
-							</tr>
-						</tbody>
-					</table>
-
-					<div class="watchlist-form-container" style="margin-top: 16px; border: 1px solid var(--border); padding: 8px; background-color: var(--surface);">
-						<form hx-post="/api/watchlist" hx-swap="none" hx-trigger="change" style="display: flex; flex-direction: column; gap: 8px; margin: 0;">
-							<input type="hidden" name="anime_id" value={ fmt.Sprintf("%d", anime.MalID) } />
-							<input type="hidden" name="anime_title" value={ anime.Title } />
-							<input type="hidden" name="anime_image" value={ anime.Images.Webp.LargeImageURL } />
-							<select name="status" class="search-input" style="width: 100%;">
-								<option value="" disabled selected>Add to list...</option>
-								<option value="watching">Watching</option>
-								<option value="completed">Completed</option>
-								<option value="on_hold">On Hold</option>
-								<option value="dropped">Dropped</option>
-								<option value="plan_to_watch">Plan to Watch</option>
-							</select>
-						</form>
+		<div class="anime-page">
+			<div class="anime-main">
+				<div class="anime-hero">
+					<div class="anime-poster">
+						if anime.ImageURL() != "" {
+							<img src={ anime.ImageURL() } alt={ anime.DisplayTitle() } />
+						} else {
+							<div class="no-image">no image</div>
+						}
 					</div>
-				</aside>
-
-				<main class="details-main">
-					<h3>Synopsis</h3>
+					<div class="anime-info">
+						<h1>{ anime.DisplayTitle() }</h1>
+						if anime.TitleJapanese != "" {
+							<p class="anime-alt-title">{ anime.TitleJapanese }</p>
+						}
+						<div class="anime-quick-info">
+							if anime.ShortRating() != "" {
+								<span class="info-tag">{ anime.ShortRating() }</span>
+							}
+							if anime.Type != "" {
+								<span class="info-tag">{ anime.Type }</span>
+							}
+							if anime.Episodes > 0 {
+								<span class="info-tag">{ fmt.Sprintf("%d ep", anime.Episodes) }</span>
+							}
+							if anime.ShortDuration() != "" {
+								<span class="info-tag">{ anime.ShortDuration() }</span>
+							}
+						</div>
+						<div class="anime-actions">
+							<div class="dropdown" id="watchlist-dropdown">
+								<button class="dropdown-trigger" onclick="toggleDropdown()">
+									if currentStatus != "" {
+										{ formatStatus(currentStatus) }
+									} else {
+										add to watchlist
+									}
+									<span class="dropdown-arrow">▾</span>
+								</button>
+								<div class="dropdown-menu">
+									@statusOption(anime, "watching", currentStatus)
+									@statusOption(anime, "completed", currentStatus)
+									@statusOption(anime, "on_hold", currentStatus)
+									@statusOption(anime, "dropped", currentStatus)
+									@statusOption(anime, "plan_to_watch", currentStatus)
+									if currentStatus != "" {
+										<div class="dropdown-divider"></div>
+										<button 
+											class="dropdown-item remove"
+											hx-delete={ string(templ.URL(fmt.Sprintf("/api/watchlist/%d", anime.MalID))) }
+											hx-swap="none"
+										>remove from list</button>
+									}
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+				<section class="anime-synopsis">
+					<h3>synopsis</h3>
 					if anime.Synopsis != "" {
-						<div class="details-synopsis">{ anime.Synopsis }</div>
+						<p>{ anime.Synopsis }</p>
 					} else {
-						<div class="details-synopsis" style="color: var(--text-muted); font-style: italic;">No synopsis available.</div>
+						<p class="no-synopsis">no synopsis available.</p>
 					}
-
-					<div class="relations-container" hx-get={ string(templ.URL(fmt.Sprintf("/api/anime/%d/relations", anime.MalID))) } hx-trigger="load">
-						<div class="status-text">> loading relations...</div>
+				</section>
+				<section class="anime-relations" hx-get={ string(templ.URL(fmt.Sprintf("/api/anime/%d/relations", anime.MalID))) } hx-trigger="load">
+					<div class="loading-indicator">
+						<div class="loading-dot"></div>
+						<div class="loading-dot"></div>
+						<div class="loading-dot"></div>
+						<span>loading relations</span>
 					</div>
-				</main>
+				</section>
 			</div>
+			<aside class="anime-sidebar">
+				if anime.TitleJapanese != "" {
+					<div class="sidebar-row">
+						<span class="sidebar-label">Japanese</span>
+						<span class="sidebar-value">{ anime.TitleJapanese }</span>
+					</div>
+				}
+				if len(anime.TitleSynonyms) > 0 {
+					<div class="sidebar-row">
+						<span class="sidebar-label">Synonyms</span>
+						<span class="sidebar-value">{ strings.Join(anime.TitleSynonyms, ", ") }</span>
+					</div>
+				}
+				if anime.Aired.String != "" {
+					<div class="sidebar-row">
+						<span class="sidebar-label">Aired</span>
+						<span class="sidebar-value">{ anime.Aired.String }</span>
+					</div>
+				}
+				if anime.Premiered() != "" {
+					<div class="sidebar-row">
+						<span class="sidebar-label">Premiered</span>
+						<span class="sidebar-value">{ anime.Premiered() }</span>
+					</div>
+				}
+				if anime.Duration != "" {
+					<div class="sidebar-row">
+						<span class="sidebar-label">Duration</span>
+						<span class="sidebar-value">{ anime.Duration }</span>
+					</div>
+				}
+				if anime.Status != "" {
+					<div class="sidebar-row">
+						<span class="sidebar-label">Status</span>
+						<span class="sidebar-value">{ anime.Status }</span>
+					</div>
+				}
+				if anime.Score > 0 {
+					<div class="sidebar-row">
+						<span class="sidebar-label">MAL Score</span>
+						<span class="sidebar-value">{ fmt.Sprintf("%.2f", anime.Score) }</span>
+					</div>
+				}
+				if len(anime.Genres) > 0 {
+					<div class="sidebar-row sidebar-row-wrap">
+						<span class="sidebar-label">Genres</span>
+						<div class="sidebar-tags">
+							for _, g := range anime.Genres {
+								<span class="sidebar-tag">{ g.Name }</span>
+							}
+						</div>
+					</div>
+				}
+				if len(anime.Studios) > 0 {
+					<div class="sidebar-row">
+						<span class="sidebar-label">Studios</span>
+						<span class="sidebar-value">{ joinNames(anime.Studios) }</span>
+					</div>
+				}
+				if len(anime.Producers) > 0 {
+					<div class="sidebar-row">
+						<span class="sidebar-label">Producers</span>
+						<span class="sidebar-value">{ joinNames(anime.Producers) }</span>
+					</div>
+				}
+			</aside>
 		</div>
+		<script>
+			function toggleDropdown() {
+				document.getElementById('watchlist-dropdown').classList.toggle('open');
+			}
+			document.addEventListener('click', function(e) {
+				const dropdown = document.getElementById('watchlist-dropdown');
+				if (dropdown && !dropdown.contains(e.target)) {
+					dropdown.classList.remove('open');
+				}
+			});
+		</script>
+	}
+}
+
+func joinNames(entities []jikan.NamedEntity) string {
+	names := make([]string, len(entities))
+	for i, e := range entities {
+		names[i] = e.Name
+	}
+	return strings.Join(names, ", ")
+}
+
+templ statusOption(anime jikan.Anime, status string, currentStatus string) {
+	<button 
+		class={ "dropdown-item", templ.KV("active", status == currentStatus) }
+		hx-post="/api/watchlist"
+		hx-vals={ fmt.Sprintf(`{"anime_id": "%d", "anime_title": "%s", "anime_image": "%s", "status": "%s"}`, anime.MalID, anime.Title, anime.ImageURL(), status) }
+		hx-swap="none"
+	>
+		{ formatStatus(status) }
+		if status == currentStatus {
+			<span class="check">✓</span>
+		}
+	</button>
+}
+
+func formatStatus(status string) string {
+	switch status {
+	case "watching":
+		return "watching"
+	case "completed":
+		return "completed"
+	case "on_hold":
+		return "on hold"
+	case "dropped":
+		return "dropped"
+	case "plan_to_watch":
+		return "plan to watch"
+	default:
+		return status
 	}
 }
 
 templ AnimeRelationsList(relations []jikan.RelationEntry) {
-	<div class="relations-list">
-		<h3>Related Anime (Chronological)</h3>
-		if len(relations) <= 1 {
-			<div style="color: var(--text-muted); font-size: 12px; font-style: italic;">no prequel or sequel relations found.</div>
-		} else {
-			<ul>
-				for _, rel := range relations {
-					<li>
-						if rel.IsCurrent {
-							<strong style="color: var(--text);">> { rel.Anime.DisplayTitle() } (Current)</strong>
+	if len(relations) > 1 {
+		<h3>related</h3>
+		<div class="relations-grid">
+			for _, rel := range relations {
+				if rel.IsCurrent {
+					<div class="relation-card current">
+						if rel.Anime.ImageURL() != "" {
+							<img src={ rel.Anime.ImageURL() } alt={ rel.Anime.DisplayTitle() } class="relation-thumb" />
 						} else {
-							<a href={ templ.URL(fmt.Sprintf("/anime/%d", rel.Anime.MalID)) }>{ rel.Anime.DisplayTitle() }</a>
+							<div class="no-image">no image</div>
 						}
-					</li>
+						<div class="relation-title">{ rel.Anime.DisplayTitle() }</div>
+					</div>
+				} else {
+					<a href={ templ.URL(fmt.Sprintf("/anime/%d", rel.Anime.MalID)) } class="relation-card">
+						if rel.Anime.ImageURL() != "" {
+							<img src={ rel.Anime.ImageURL() } alt={ rel.Anime.DisplayTitle() } class="relation-thumb" />
+						} else {
+							<div class="no-image">no image</div>
+						}
+						<div class="relation-title">{ rel.Anime.DisplayTitle() }</div>
+					</a>
 				}
-			</ul>
-		}
-	</div>
+			}
+		</div>
+	}
 }
