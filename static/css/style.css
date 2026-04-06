@@ -721,8 +721,8 @@ a:visited {
 .anime-sidebar {
   flex-shrink: 0;
   width: 240px;
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
   gap: 12px;
   padding: 12px;
   background: var(--surface);
@@ -903,9 +903,7 @@ a:visited {
   .anime-sidebar {
     width: 100%;
     order: 2;
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
+    grid-template-columns: repeat(3, 1fr);
   }
 
   .anime-sidebar .sidebar-row {
