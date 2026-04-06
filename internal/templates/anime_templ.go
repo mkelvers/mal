@@ -700,9 +700,9 @@ func statusOption(anime jikan.Anime, status string, currentStatus string) templ.
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var34 string
-		templ_7745c5c3_Var34, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf(`{"anime_id": "%d", "anime_title": "%s", "anime_image": "%s", "status": "%s"}`, anime.MalID, anime.Title, anime.ImageURL(), status))
+		templ_7745c5c3_Var34, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf(`{"anime_id": "%d", "anime_title": "%s", "anime_image": "%s", "status": "%s"}`, anime.MalID, anime.DisplayTitle(), anime.ImageURL(), status))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/anime.templ`, Line: 197, Col: 155}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/anime.templ`, Line: 197, Col: 164}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var34))
 		if templ_7745c5c3_Err != nil {

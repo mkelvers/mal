@@ -194,7 +194,7 @@ templ statusOption(anime jikan.Anime, status string, currentStatus string) {
 	<button 
 		class={ "dropdown-item", templ.KV("active", status == currentStatus) }
 		hx-post="/api/watchlist"
-		hx-vals={ fmt.Sprintf(`{"anime_id": "%d", "anime_title": "%s", "anime_image": "%s", "status": "%s"}`, anime.MalID, anime.Title, anime.ImageURL(), status) }
+		hx-vals={ fmt.Sprintf(`{"anime_id": "%d", "anime_title": "%s", "anime_image": "%s", "status": "%s"}`, anime.MalID, anime.DisplayTitle(), anime.ImageURL(), status) }
 		hx-target="#watchlist-dropdown"
 		hx-swap="outerHTML"
 	>
