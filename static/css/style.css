@@ -903,6 +903,13 @@ a:visited {
   .anime-sidebar {
     width: 100%;
     order: 2;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  .anime-sidebar .sidebar-row {
+    flex-direction: column;
   }
 
   .relations-grid {
