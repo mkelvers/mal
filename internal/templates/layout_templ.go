@@ -42,7 +42,7 @@ func Layout(title string) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</title><link rel=\"stylesheet\" href=\"/static/css/style.css\"><script src=\"https://unpkg.com/htmx.org@1.9.11\"></script></head><body><header><div class=\"header-top\"><h1>/malago</h1><div class=\"nav\"><a href=\"/\">home</a> <a href=\"/catalog\">catalog</a> <a href=\"/watchlist\">watchlist</a></div><form action=\"/\" method=\"GET\" style=\"display: flex; align-items: center; gap: 0;\"><input type=\"text\" name=\"q\" class=\"search-input\" placeholder=\"search anime...\"> <button type=\"submit\" class=\"search-button\">go</button></form></div></header><main>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</title><link rel=\"stylesheet\" href=\"/static/css/style.css\"><script src=\"https://unpkg.com/htmx.org@1.9.11\"></script></head><body><header><div class=\"header-top\"><div class=\"header-left\"><a href=\"/\" class=\"logo\">/malago</a><div class=\"nav\"><a href=\"/\">catalog</a> <a href=\"/watchlist\">watchlist</a></div></div><form action=\"/search\" method=\"GET\" class=\"header-search\"><input type=\"text\" name=\"q\" class=\"search-input\" placeholder=\"search anime...\"></form></div></header><main>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -50,7 +50,7 @@ func Layout(title string) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "</main><div id=\"toast-container\" style=\"position: fixed; bottom: 24px; right: 24px; z-index: 1000; display: flex; flex-direction: column; gap: 8px;\"></div><script>\n\t\t\t\tdocument.body.addEventListener('toast', function(evt) {\n\t\t\t\t\tconst container = document.getElementById('toast-container');\n\t\t\t\t\tconst toast = document.createElement('div');\n\t\t\t\t\ttoast.style.cssText = 'background: var(--surface); color: var(--text); border: 1px solid var(--border); padding: 12px 16px; font-size: 13px; font-weight: 500; opacity: 0; transition: opacity 0.3s; box-shadow: 0 4px 12px rgba(0,0,0,0.5);';\n\t\t\t\t\ttoast.textContent = evt.detail.value;\n\t\t\t\t\tcontainer.appendChild(toast);\n\t\t\t\t\t\n\t\t\t\t\t// fade in\n\t\t\t\t\trequestAnimationFrame(() => { toast.style.opacity = '1'; });\n\t\t\t\t\t\n\t\t\t\t\t// remove after 3s\n\t\t\t\t\tsetTimeout(() => {\n\t\t\t\t\t\ttoast.style.opacity = '0';\n\t\t\t\t\t\tsetTimeout(() => { toast.remove(); }, 300);\n\t\t\t\t\t}, 3000);\n\t\t\t\t});\n\t\t\t</script></body></html>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "</main><div id=\"toast-container\"></div><script>\n\t\t\t\tdocument.body.addEventListener('toast', function(evt) {\n\t\t\t\t\tconst container = document.getElementById('toast-container');\n\t\t\t\t\tconst toast = document.createElement('div');\n\t\t\t\t\ttoast.className = 'toast';\n\t\t\t\t\ttoast.textContent = evt.detail.value;\n\t\t\t\t\tcontainer.appendChild(toast);\n\t\t\t\t\t\n\t\t\t\t\trequestAnimationFrame(() => { toast.style.opacity = '1'; });\n\t\t\t\t\t\n\t\t\t\t\tsetTimeout(() => {\n\t\t\t\t\t\ttoast.style.opacity = '0';\n\t\t\t\t\t\tsetTimeout(() => { toast.remove(); }, 300);\n\t\t\t\t\t}, 3000);\n\t\t\t\t});\n\t\t\t</script></body></html>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
