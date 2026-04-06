@@ -3,8 +3,8 @@ package server
 import (
 	"net/http"
 
-	"malago/internal/auth"
 	"malago/internal/database"
+	"malago/internal/features/auth"
 	"malago/internal/handlers"
 	"malago/internal/jikan"
 	"malago/internal/middleware"
@@ -19,7 +19,7 @@ type Config struct {
 func NewRouter(cfg Config) http.Handler {
 	mux := http.NewServeMux()
 
-	authHandler := handlers.NewAuthHandler(cfg.AuthService)
+	authHandler := auth.NewHandler(cfg.AuthService)
 	watchlistHandler := handlers.NewWatchlistHandler(cfg.DB)
 	animeHandler := handlers.NewAnimeHandler(cfg.JikanClient, cfg.DB)
 
