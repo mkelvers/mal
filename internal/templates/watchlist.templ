@@ -5,7 +5,7 @@ import (
 	"malago/internal/database"
 )
 
-templ Watchlist(entries []database.GetUserWatchListRow, layout string, currentStatus string) {
+templ Watchlist(entries []database.GetUserWatchListRow, layout string, currentStatus string, sortBy string, sortOrder string) {
 	@Layout("My Watchlist") {
 		<div class="watchlist-header">
 			<h2>watchlist</h2>
@@ -16,20 +16,22 @@ templ Watchlist(entries []database.GetUserWatchListRow, layout string, currentSt
 					<input type="file" id="import-file" name="file" accept=".json" onchange="htmx.trigger('#import-form', 'submit')" />
 				</form>
 				<div class="view-toggle">
-					<a href={ templ.URL(fmt.Sprintf("/watchlist?view=grid&status=%s", currentStatus)) } class={ viewClass(layout == "grid") }>grid</a>
-					<a href={ templ.URL(fmt.Sprintf("/watchlist?view=table&status=%s", currentStatus)) } class={ viewClass(layout == "table") }>table</a>
+					<a href={ templ.URL(fmt.Sprintf("/watchlist?view=grid&status=%s&sort=%s&order=%s", currentStatus, sortBy, sortOrder)) } class={ viewClass(layout == "grid") }>grid</a>
+					<a href={ templ.URL(fmt.Sprintf("/watchlist?view=table&status=%s&sort=%s&order=%s", currentStatus, sortBy, sortOrder)) } class={ viewClass(layout == "table") }>table</a>
 				</div>
 			</div>
 		</div>
 
 		<div class="status-tabs">
-			<a href={ templ.URL(fmt.Sprintf("/watchlist?view=%s&status=all", layout)) } class={ tabClass(currentStatus == "all") }>all</a>
-			<a href={ templ.URL(fmt.Sprintf("/watchlist?view=%s&status=watching", layout)) } class={ tabClass(currentStatus == "watching") }>watching</a>
-			<a href={ templ.URL(fmt.Sprintf("/watchlist?view=%s&status=on_hold", layout)) } class={ tabClass(currentStatus == "on_hold") }>on hold</a>
-			<a href={ templ.URL(fmt.Sprintf("/watchlist?view=%s&status=plan_to_watch", layout)) } class={ tabClass(currentStatus == "plan_to_watch") }>plan to watch</a>
-			<a href={ templ.URL(fmt.Sprintf("/watchlist?view=%s&status=dropped", layout)) } class={ tabClass(currentStatus == "dropped") }>dropped</a>
-			<a href={ templ.URL(fmt.Sprintf("/watchlist?view=%s&status=completed", layout)) } class={ tabClass(currentStatus == "completed") }>completed</a>
+			<a href={ templ.URL(fmt.Sprintf("/watchlist?view=%s&status=all&sort=%s&order=%s", layout, sortBy, sortOrder)) } class={ tabClass(currentStatus == "all") }>all</a>
+			<a href={ templ.URL(fmt.Sprintf("/watchlist?view=%s&status=watching&sort=%s&order=%s", layout, sortBy, sortOrder)) } class={ tabClass(currentStatus == "watching") }>watching</a>
+			<a href={ templ.URL(fmt.Sprintf("/watchlist?view=%s&status=on_hold&sort=%s&order=%s", layout, sortBy, sortOrder)) } class={ tabClass(currentStatus == "on_hold") }>on hold</a>
+			<a href={ templ.URL(fmt.Sprintf("/watchlist?view=%s&status=plan_to_watch&sort=%s&order=%s", layout, sortBy, sortOrder)) } class={ tabClass(currentStatus == "plan_to_watch") }>plan to watch</a>
+			<a href={ templ.URL(fmt.Sprintf("/watchlist?view=%s&status=dropped&sort=%s&order=%s", layout, sortBy, sortOrder)) } class={ tabClass(currentStatus == "dropped") }>dropped</a>
+			<a href={ templ.URL(fmt.Sprintf("/watchlist?view=%s&status=completed&sort=%s&order=%s", layout, sortBy, sortOrder)) } class={ tabClass(currentStatus == "completed") }>completed</a>
 		</div>
+
+		@SortFilter(SortFilterOptions{Sort: sortBy, Order: sortOrder, View: layout, Status: currentStatus})
 
 		if len(entries) == 0 {
 			<div class="empty-state">

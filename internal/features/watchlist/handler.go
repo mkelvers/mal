@@ -125,6 +125,15 @@ func (h *Handler) HandleGetWatchlist(w http.ResponseWriter, r *http.Request) {
 	}
 
 	statusFilter := r.URL.Query().Get("status")
+	sortBy := r.URL.Query().Get("sort")
+	sortOrder := r.URL.Query().Get("order")
+
+	if sortBy != "title" && sortBy != "score" {
+		sortBy = "date"
+	}
+	if sortOrder != "asc" {
+		sortOrder = "desc"
+	}
 
 	user, ok := r.Context().Value(middleware.UserContextKey).(*database.User)
 	if !ok || user == nil {
@@ -150,7 +159,10 @@ func (h *Handler) HandleGetWatchlist(w http.ResponseWriter, r *http.Request) {
 		filteredEntries = entries
 	}
 
-	templates.Watchlist(filteredEntries, layout, statusFilter).Render(r.Context(), w)
+	// Sort entries
+	h.sortEntries(filteredEntries, sortBy, sortOrder)
+
+	templates.Watchlist(filteredEntries, layout, statusFilter, sortBy, sortOrder).Render(r.Context(), w)
 }
 
 func (h *Handler) HandleExportWatchlist(w http.ResponseWriter, r *http.Request) {
@@ -213,4 +225,41 @@ func (h *Handler) HandleImportWatchlist(w http.ResponseWriter, r *http.Request) 
 
 	w.Header().Set("HX-Redirect", "/watchlist")
 	w.WriteHeader(http.StatusOK)
+}
+
+func (h *Handler) sortEntries(entries []database.GetUserWatchListRow, sortBy, sortOrder string) {
+	var less func(int, int) bool
+
+	switch sortBy {
+	case "title":
+		less = func(i, j int) bool {
+			cmp := entries[i].TitleOriginal < entries[j].TitleOriginal
+			if sortOrder == "asc" {
+				return cmp
+			}
+			return !cmp
+		}
+	case "score":
+		less = func(i, j int) bool {
+			// Score is stored as JSON in the DB, for now just keep default order
+			return false
+		}
+	default: // "date"
+		less = func(i, j int) bool {
+			cmp := entries[i].UpdatedAt.After(entries[j].UpdatedAt)
+			if sortOrder == "asc" {
+				return !cmp
+			}
+			return cmp
+		}
+	}
+
+	// Simple bubble sort for small lists
+	for i := 0; i < len(entries); i++ {
+		for j := i + 1; j < len(entries); j++ {
+			if less(j, i) {
+				entries[i], entries[j] = entries[j], entries[i]
+			}
+		}
+	}
 }
