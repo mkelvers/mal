@@ -2,6 +2,16 @@ package jikan
 
 import "fmt"
 
+type SearchResult struct {
+	Animes      []Anime
+	HasNextPage bool
+}
+
+type TopAnimeResult struct {
+	Animes      []Anime
+	HasNextPage bool
+}
+
 // NamedEntity represents genres, studios, producers, etc.
 type NamedEntity struct {
 	MalID int    `json:"mal_id"`
@@ -144,14 +154,4 @@ func (a Anime) DisplayTitle() string {
 		return a.TitleJapanese
 	}
 	return a.Title
-}
-
-type SearchResult struct {
-	Animes      []Anime
-	HasNextPage bool
-}
-
-type TopAnimeResult struct {
-	Animes      []Anime
-	HasNextPage bool
 }

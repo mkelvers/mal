@@ -1,4 +1,4 @@
-package handlers
+package anime
 
 import (
 	"log"
@@ -6,21 +6,19 @@ import (
 	"strconv"
 
 	"malago/internal/database"
-	"malago/internal/jikan"
 	"malago/internal/middleware"
 	"malago/internal/templates"
 )
 
-type AnimeHandler struct {
-	jikan *jikan.Client
-	db    *database.Queries
+type Handler struct {
+	svc *Service
 }
 
-func NewAnimeHandler(jikan *jikan.Client, db *database.Queries) *AnimeHandler {
-	return &AnimeHandler{jikan: jikan, db: db}
+func NewHandler(svc *Service) *Handler {
+	return &Handler{svc: svc}
 }
 
-func (h *AnimeHandler) HandleCatalog(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) HandleCatalog(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path != "/" {
 		http.NotFound(w, r)
 		return
@@ -28,16 +26,15 @@ func (h *AnimeHandler) HandleCatalog(w http.ResponseWriter, r *http.Request) {
 	templates.Catalog().Render(r.Context(), w)
 }
 
-func (h *AnimeHandler) HandleSearch(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) HandleSearch(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Query().Get("q")
 	if query == "" {
 		templates.Search("").Render(r.Context(), w)
 		return
 	}
 
-	// Check if HTMX request for results only
 	if r.Header.Get("HX-Request") == "true" {
-		res, err := h.jikan.Search(query, 1)
+		res, err := h.svc.Search(query, 1)
 		if err != nil {
 			log.Printf("search error: %v", err)
 			http.Error(w, "Failed to search anime", http.StatusInternalServerError)
@@ -47,11 +44,10 @@ func (h *AnimeHandler) HandleSearch(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Full page with query
 	templates.Search(query).Render(r.Context(), w)
 }
 
-func (h *AnimeHandler) HandleAPISearch(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) HandleAPISearch(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Query().Get("q")
 	pageStr := r.URL.Query().Get("page")
 	page, _ := strconv.Atoi(pageStr)
@@ -59,7 +55,7 @@ func (h *AnimeHandler) HandleAPISearch(w http.ResponseWriter, r *http.Request) {
 		page = 1
 	}
 
-	res, err := h.jikan.Search(query, page)
+	res, err := h.svc.Search(query, page)
 	if err != nil {
 		log.Printf("search pagination error: %v", err)
 		http.Error(w, "Failed to fetch search page", http.StatusInternalServerError)
@@ -69,14 +65,14 @@ func (h *AnimeHandler) HandleAPISearch(w http.ResponseWriter, r *http.Request) {
 	templates.SearchItems(query, res.Animes, page+1, res.HasNextPage).Render(r.Context(), w)
 }
 
-func (h *AnimeHandler) HandleAPICatalog(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) HandleAPICatalog(w http.ResponseWriter, r *http.Request) {
 	pageStr := r.URL.Query().Get("page")
 	page, _ := strconv.Atoi(pageStr)
 	if page < 1 {
 		page = 1
 	}
 
-	res, err := h.jikan.GetTopAnime(page)
+	res, err := h.svc.GetTopAnime(page)
 	if err != nil {
 		log.Printf("top anime error: %v", err)
 		http.Error(w, "Failed to fetch top anime", http.StatusInternalServerError)
@@ -86,7 +82,7 @@ func (h *AnimeHandler) HandleAPICatalog(w http.ResponseWriter, r *http.Request) 
 	templates.CatalogItems(res.Animes, page+1, res.HasNextPage).Render(r.Context(), w)
 }
 
-func (h *AnimeHandler) HandleAnimeDetails(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) HandleAnimeDetails(w http.ResponseWriter, r *http.Request) {
 	idStr := r.URL.Path[len("/anime/"):]
 	id, err := strconv.Atoi(idStr)
 	if err != nil || id <= 0 {
@@ -94,29 +90,22 @@ func (h *AnimeHandler) HandleAnimeDetails(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	anime, err := h.jikan.GetAnimeByID(id)
+	userID := ""
+	if user, ok := r.Context().Value(middleware.UserContextKey).(*database.User); ok && user != nil {
+		userID = user.ID
+	}
+
+	anime, currentStatus, err := h.svc.GetAnimeDetails(r.Context(), id, userID)
 	if err != nil {
 		log.Printf("anime fetch error for %d: %v", id, err)
 		http.Error(w, "Failed to fetch anime details", http.StatusInternalServerError)
 		return
 	}
 
-	// Get current watchlist status if user is logged in
-	currentStatus := ""
-	if user := middleware.GetUser(r.Context()); user != nil {
-		entry, err := h.db.GetWatchListEntry(r.Context(), database.GetWatchListEntryParams{
-			UserID:  user.ID,
-			AnimeID: int64(id),
-		})
-		if err == nil {
-			currentStatus = entry.Status
-		}
-	}
-
 	templates.AnimeDetails(anime, currentStatus).Render(r.Context(), w)
 }
 
-func (h *AnimeHandler) HandleAPIAnimeRelations(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) HandleAPIAnimeRelations(w http.ResponseWriter, r *http.Request) {
 	path := r.URL.Path[len("/api/anime/"):]
 	idStr := ""
 	for i, c := range path {
@@ -132,6 +121,6 @@ func (h *AnimeHandler) HandleAPIAnimeRelations(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	relations := h.jikan.GetFullRelations(id)
+	relations := h.svc.GetRelations(id)
 	templates.AnimeRelationsList(relations).Render(r.Context(), w)
 }
