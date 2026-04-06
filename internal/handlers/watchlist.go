@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"strconv"
 	"time"
@@ -47,6 +48,8 @@ func (h *WatchlistHandler) HandleUpdateWatchlist(w http.ResponseWriter, r *http.
 	animeTitleJapanese := r.FormValue("anime_title_japanese")
 	animeImage := r.FormValue("anime_image")
 	status := r.FormValue("status")
+
+	log.Printf("watchlist add: id=%s, title=%s, title_en=%s, title_jp=%s", animeIDStr, animeTitle, animeTitleEnglish, animeTitleJapanese)
 
 	animeID, err := strconv.ParseInt(animeIDStr, 10, 64)
 	if err != nil {
