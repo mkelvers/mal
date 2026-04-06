@@ -80,3 +80,12 @@ func RequireGlobalAuth(next http.Handler) http.Handler {
 		next.ServeHTTP(w, r)
 	})
 }
+
+// GetUser returns the user from context, or nil if not logged in
+func GetUser(ctx context.Context) *database.User {
+	user, ok := ctx.Value(UserContextKey).(*database.User)
+	if !ok {
+		return nil
+	}
+	return user
+}
