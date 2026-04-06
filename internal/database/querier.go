@@ -14,6 +14,7 @@ type Querier interface {
 	DeleteSession(ctx context.Context, id string) error
 	DeleteUserSessions(ctx context.Context, userID string) error
 	DeleteWatchListEntry(ctx context.Context, arg DeleteWatchListEntryParams) error
+	GetAnime(ctx context.Context, id int64) (Anime, error)
 	GetSession(ctx context.Context, id string) (Session, error)
 	GetUser(ctx context.Context, id string) (User, error)
 	GetUserByUsername(ctx context.Context, username string) (User, error)

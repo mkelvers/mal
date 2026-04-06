@@ -91,6 +91,22 @@ func (q *Queries) DeleteWatchListEntry(ctx context.Context, arg DeleteWatchListE
 	return err
 }
 
+const getAnime = `-- name: GetAnime :one
+SELECT id, title, image_url, created_at FROM anime WHERE id = ? LIMIT 1
+`
+
+func (q *Queries) GetAnime(ctx context.Context, id int64) (Anime, error) {
+	row := q.db.QueryRowContext(ctx, getAnime, id)
+	var i Anime
+	err := row.Scan(
+		&i.ID,
+		&i.Title,
+		&i.ImageUrl,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
 const getSession = `-- name: GetSession :one
 SELECT id, user_id, expires_at, created_at FROM session WHERE id = ? LIMIT 1
 `

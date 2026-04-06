@@ -31,6 +31,9 @@ ON CONFLICT (id) DO UPDATE SET
     image_url = excluded.image_url
 RETURNING *;
 
+-- name: GetAnime :one
+SELECT * FROM anime WHERE id = ? LIMIT 1;
+
 -- name: UpsertWatchListEntry :one
 INSERT INTO watch_list_entry (id, user_id, anime_id, status, updated_at)
 VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
