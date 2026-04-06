@@ -41,7 +41,7 @@ func Login() templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<h2>Login</h2><form action=\"/login\" method=\"POST\" style=\"max-width: 300px; margin: 0 auto; padding: 20px; border: 1px solid var(--border); background-color: var(--bg);\"><div style=\"margin-bottom: 15px;\"><label for=\"username\" style=\"display: block; margin-bottom: 5px;\">Email</label> <input type=\"text\" id=\"username\" name=\"username\" required style=\"width: 100%; padding: 8px; box-sizing: border-box;\"></div><div style=\"margin-bottom: 15px;\"><label for=\"password\" style=\"display: block; margin-bottom: 5px;\">Password</label> <input type=\"password\" id=\"password\" name=\"password\" required style=\"width: 100%; padding: 8px; box-sizing: border-box;\"></div><button type=\"submit\" style=\"width: 100%; padding: 10px; cursor: pointer;\">Login</button></form>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"login-container\"><h2>sign in</h2><p class=\"login-subtitle\">enter your credentials to continue</p><form action=\"/login\" method=\"POST\" class=\"login-form\"><div class=\"form-group\"><label for=\"username\">email</label> <input type=\"text\" id=\"username\" name=\"username\" required placeholder=\"you@example.com\"></div><div class=\"form-group\"><label for=\"password\">password</label> <input type=\"password\" id=\"password\" name=\"password\" required placeholder=\"your password\"></div><button type=\"submit\" class=\"login-button\">sign in</button></form></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
