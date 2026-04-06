@@ -25,7 +25,12 @@ func main() {
 		os.Exit(1)
 	}
 
-	db, err := sql.Open("sqlite3", "malago.db")
+	dbFile := os.Getenv("DATABASE_FILE")
+	if dbFile == "" {
+		dbFile = "malago.db"
+	}
+
+	db, err := sql.Open("sqlite3", dbFile)
 	if err != nil {
 		log.Fatalf("failed to open db: %v", err)
 	}
