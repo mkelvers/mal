@@ -5,6 +5,7 @@ import (
 
 	"malago/internal/database"
 	"malago/internal/features/auth"
+	"malago/internal/features/watchlist"
 	"malago/internal/handlers"
 	"malago/internal/jikan"
 	"malago/internal/middleware"
@@ -20,7 +21,8 @@ func NewRouter(cfg Config) http.Handler {
 	mux := http.NewServeMux()
 
 	authHandler := auth.NewHandler(cfg.AuthService)
-	watchlistHandler := handlers.NewWatchlistHandler(cfg.DB)
+	watchlistSvc := watchlist.NewService(cfg.DB)
+	watchlistHandler := watchlist.NewHandler(watchlistSvc)
 	animeHandler := handlers.NewAnimeHandler(cfg.JikanClient, cfg.DB)
 
 	// Serve static files
