@@ -49,12 +49,12 @@ templ Watchlist(entries []database.GetUserWatchListRow, layout string, currentSt
 						<div class="catalog-item watchlist-item" id={ fmt.Sprintf("watchlist-entry-%d", entry.AnimeID) }>
 							<a href={ templ.URL(fmt.Sprintf("/anime/%d", entry.AnimeID)) }>
 								if entry.ImageUrl != "" {
-									<img src={ entry.ImageUrl } alt={ entry.Title } class="catalog-thumb" loading="lazy" />
+									<img src={ entry.ImageUrl } alt={ entry.DisplayTitle() } class="catalog-thumb" loading="lazy" />
 								} else {
 									<div class="no-image">no image</div>
 								}
 							</a>
-							<div class="catalog-title">{ entry.Title }</div>
+							<div class="catalog-title">{ entry.DisplayTitle() }</div>
 							<div class="watchlist-status">{ entry.Status }</div>
 							<button 
 								class="remove-btn"
@@ -80,12 +80,12 @@ templ Watchlist(entries []database.GetUserWatchListRow, layout string, currentSt
 							<tr id={ fmt.Sprintf("watchlist-entry-%d", entry.AnimeID) }>
 								<td>
 									<a href={ templ.SafeURL(fmt.Sprintf("/anime/%d", entry.AnimeID)) }>
-										<img src={ entry.ImageUrl } alt={ entry.Title } class="thumb" loading="lazy"/>
+										<img src={ entry.ImageUrl } alt={ entry.DisplayTitle() } class="thumb" loading="lazy"/>
 									</a>
 								</td>
 								<td class="title-cell">
 									<a href={ templ.SafeURL(fmt.Sprintf("/anime/%d", entry.AnimeID)) }>
-										{ entry.Title }
+										{ entry.DisplayTitle() }
 									</a>
 								</td>
 								<td class="status-cell">{ entry.Status }</td>

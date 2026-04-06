@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -42,6 +43,8 @@ func (h *WatchlistHandler) HandleUpdateWatchlist(w http.ResponseWriter, r *http.
 
 	animeIDStr := r.FormValue("anime_id")
 	animeTitle := r.FormValue("anime_title")
+	animeTitleEnglish := r.FormValue("anime_title_english")
+	animeTitleJapanese := r.FormValue("anime_title_japanese")
 	animeImage := r.FormValue("anime_image")
 	status := r.FormValue("status")
 
@@ -53,9 +56,11 @@ func (h *WatchlistHandler) HandleUpdateWatchlist(w http.ResponseWriter, r *http.
 
 	// Ensure the anime exists in our local DB first (foreign key constraint)
 	_, err = h.db.UpsertAnime(r.Context(), database.UpsertAnimeParams{
-		ID:       animeID,
-		Title:    animeTitle,
-		ImageUrl: animeImage,
+		ID:            animeID,
+		TitleOriginal: animeTitle,
+		TitleEnglish:  sql.NullString{String: animeTitleEnglish, Valid: animeTitleEnglish != ""},
+		TitleJapanese: sql.NullString{String: animeTitleJapanese, Valid: animeTitleJapanese != ""},
+		ImageUrl:      animeImage,
 	})
 	if err != nil {
 		http.Error(w, fmt.Sprintf("failed to save anime reference: %v", err), http.StatusInternalServerError)
@@ -75,7 +80,16 @@ func (h *WatchlistHandler) HandleUpdateWatchlist(w http.ResponseWriter, r *http.
 		return
 	}
 
-	templates.WatchlistDropdown(int(animeID), animeTitle, animeImage, status).Render(r.Context(), w)
+	// Determine display title (prefer English)
+	displayTitle := animeTitleEnglish
+	if displayTitle == "" {
+		displayTitle = animeTitleJapanese
+	}
+	if displayTitle == "" {
+		displayTitle = animeTitle
+	}
+
+	templates.WatchlistDropdown(int(animeID), displayTitle, animeImage, status).Render(r.Context(), w)
 }
 
 func (h *WatchlistHandler) HandleDeleteWatchlist(w http.ResponseWriter, r *http.Request) {
@@ -121,8 +135,18 @@ func (h *WatchlistHandler) HandleDeleteWatchlist(w http.ResponseWriter, r *http.
 		return
 	}
 
+	// Determine display title for dropdown (prefer English)
+	displayTitle := ""
+	if anime.TitleEnglish.Valid && anime.TitleEnglish.String != "" {
+		displayTitle = anime.TitleEnglish.String
+	} else if anime.TitleJapanese.Valid && anime.TitleJapanese.String != "" {
+		displayTitle = anime.TitleJapanese.String
+	} else {
+		displayTitle = anime.TitleOriginal
+	}
+
 	// Otherwise return updated dropdown for anime page
-	templates.WatchlistDropdown(int(animeID), anime.Title, anime.ImageUrl, "").Render(r.Context(), w)
+	templates.WatchlistDropdown(int(animeID), displayTitle, anime.ImageUrl, "").Render(r.Context(), w)
 }
 
 func (h *WatchlistHandler) HandleGetWatchlist(w http.ResponseWriter, r *http.Request) {
@@ -206,7 +230,7 @@ func (h *WatchlistHandler) HandleExportWatchlist(w http.ResponseWriter, r *http.
 	for i, entry := range entries {
 		export.Entries[i] = WatchlistExportEntry{
 			AnimeID:   entry.AnimeID,
-			Title:     entry.Title,
+			Title:     entry.DisplayTitle(),
 			ImageURL:  entry.ImageUrl,
 			Status:    entry.Status,
 			UpdatedAt: entry.UpdatedAt.Format(time.RFC3339),
@@ -251,11 +275,13 @@ func (h *WatchlistHandler) HandleImportWatchlist(w http.ResponseWriter, r *http.
 
 	imported := 0
 	for _, entry := range export.Entries {
-		// Upsert anime
+		// Upsert anime - store title as original (we don't know which type it is from export)
 		_, err := h.db.UpsertAnime(r.Context(), database.UpsertAnimeParams{
-			ID:       entry.AnimeID,
-			Title:    entry.Title,
-			ImageUrl: entry.ImageURL,
+			ID:            entry.AnimeID,
+			TitleOriginal: entry.Title,
+			TitleEnglish:  sql.NullString{},
+			TitleJapanese: sql.NullString{},
+			ImageUrl:      entry.ImageURL,
 		})
 		if err != nil {
 			continue

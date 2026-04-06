@@ -7,6 +7,7 @@ package database
 
 import (
 	"context"
+	"database/sql"
 	"time"
 )
 
@@ -92,7 +93,7 @@ func (q *Queries) DeleteWatchListEntry(ctx context.Context, arg DeleteWatchListE
 }
 
 const getAnime = `-- name: GetAnime :one
-SELECT id, title, image_url, created_at FROM anime WHERE id = ? LIMIT 1
+SELECT id, title_original, image_url, created_at, title_english, title_japanese FROM anime WHERE id = ? LIMIT 1
 `
 
 func (q *Queries) GetAnime(ctx context.Context, id int64) (Anime, error) {
@@ -100,9 +101,11 @@ func (q *Queries) GetAnime(ctx context.Context, id int64) (Anime, error) {
 	var i Anime
 	err := row.Scan(
 		&i.ID,
-		&i.Title,
+		&i.TitleOriginal,
 		&i.ImageUrl,
 		&i.CreatedAt,
+		&i.TitleEnglish,
+		&i.TitleJapanese,
 	)
 	return i, err
 }
@@ -156,7 +159,12 @@ func (q *Queries) GetUserByUsername(ctx context.Context, username string) (User,
 }
 
 const getUserWatchList = `-- name: GetUserWatchList :many
-SELECT e.id, e.user_id, e.anime_id, e.status, e.created_at, e.updated_at, a.title, a.image_url
+SELECT 
+    e.id, e.user_id, e.anime_id, e.status, e.created_at, e.updated_at,
+    a.title_original,
+    a.title_english,
+    a.title_japanese,
+    a.image_url
 FROM watch_list_entry e
 JOIN anime a ON e.anime_id = a.id
 WHERE e.user_id = ?
@@ -164,14 +172,16 @@ ORDER BY e.updated_at DESC
 `
 
 type GetUserWatchListRow struct {
-	ID        string    `json:"id"`
-	UserID    string    `json:"user_id"`
-	AnimeID   int64     `json:"anime_id"`
-	Status    string    `json:"status"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
-	Title     string    `json:"title"`
-	ImageUrl  string    `json:"image_url"`
+	ID            string         `json:"id"`
+	UserID        string         `json:"user_id"`
+	AnimeID       int64          `json:"anime_id"`
+	Status        string         `json:"status"`
+	CreatedAt     time.Time      `json:"created_at"`
+	UpdatedAt     time.Time      `json:"updated_at"`
+	TitleOriginal string         `json:"title_original"`
+	TitleEnglish  sql.NullString `json:"title_english"`
+	TitleJapanese sql.NullString `json:"title_japanese"`
+	ImageUrl      string         `json:"image_url"`
 }
 
 func (q *Queries) GetUserWatchList(ctx context.Context, userID string) ([]GetUserWatchListRow, error) {
@@ -190,7 +200,9 @@ func (q *Queries) GetUserWatchList(ctx context.Context, userID string) ([]GetUse
 			&i.Status,
 			&i.CreatedAt,
 			&i.UpdatedAt,
-			&i.Title,
+			&i.TitleOriginal,
+			&i.TitleEnglish,
+			&i.TitleJapanese,
 			&i.ImageUrl,
 		); err != nil {
 			return nil, err
@@ -231,28 +243,40 @@ func (q *Queries) GetWatchListEntry(ctx context.Context, arg GetWatchListEntryPa
 }
 
 const upsertAnime = `-- name: UpsertAnime :one
-INSERT INTO anime (id, title, image_url)
-VALUES (?, ?, ?)
+INSERT INTO anime (id, title_original, title_english, title_japanese, image_url)
+VALUES (?, ?, ?, ?, ?)
 ON CONFLICT (id) DO UPDATE SET
-    title = excluded.title,
+    title_original = excluded.title_original,
+    title_english = excluded.title_english,
+    title_japanese = excluded.title_japanese,
     image_url = excluded.image_url
-RETURNING id, title, image_url, created_at
+RETURNING id, title_original, image_url, created_at, title_english, title_japanese
 `
 
 type UpsertAnimeParams struct {
-	ID       int64  `json:"id"`
-	Title    string `json:"title"`
-	ImageUrl string `json:"image_url"`
+	ID            int64          `json:"id"`
+	TitleOriginal string         `json:"title_original"`
+	TitleEnglish  sql.NullString `json:"title_english"`
+	TitleJapanese sql.NullString `json:"title_japanese"`
+	ImageUrl      string         `json:"image_url"`
 }
 
 func (q *Queries) UpsertAnime(ctx context.Context, arg UpsertAnimeParams) (Anime, error) {
-	row := q.db.QueryRowContext(ctx, upsertAnime, arg.ID, arg.Title, arg.ImageUrl)
+	row := q.db.QueryRowContext(ctx, upsertAnime,
+		arg.ID,
+		arg.TitleOriginal,
+		arg.TitleEnglish,
+		arg.TitleJapanese,
+		arg.ImageUrl,
+	)
 	var i Anime
 	err := row.Scan(
 		&i.ID,
-		&i.Title,
+		&i.TitleOriginal,
 		&i.ImageUrl,
 		&i.CreatedAt,
+		&i.TitleEnglish,
+		&i.TitleJapanese,
 	)
 	return i, err
 }

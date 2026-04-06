@@ -5,6 +5,7 @@
 package database
 
 import (
+	"database/sql"
 	"time"
 )
 
@@ -17,10 +18,12 @@ type Account struct {
 }
 
 type Anime struct {
-	ID        int64     `json:"id"`
-	Title     string    `json:"title"`
-	ImageUrl  string    `json:"image_url"`
-	CreatedAt time.Time `json:"created_at"`
+	ID            int64          `json:"id"`
+	TitleOriginal string         `json:"title_original"`
+	ImageUrl      string         `json:"image_url"`
+	CreatedAt     time.Time      `json:"created_at"`
+	TitleEnglish  sql.NullString `json:"title_english"`
+	TitleJapanese sql.NullString `json:"title_japanese"`
 }
 
 type Session struct {
