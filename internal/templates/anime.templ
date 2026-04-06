@@ -36,31 +36,7 @@ templ AnimeDetails(anime jikan.Anime, currentStatus string) {
 							}
 						</div>
 						<div class="anime-actions">
-							<div class="dropdown" id="watchlist-dropdown">
-								<button class="dropdown-trigger" onclick="toggleDropdown()">
-									if currentStatus != "" {
-										{ formatStatus(currentStatus) }
-									} else {
-										add to watchlist
-									}
-									<span class="dropdown-arrow">▾</span>
-								</button>
-								<div class="dropdown-menu">
-									@statusOption(anime, "watching", currentStatus)
-									@statusOption(anime, "completed", currentStatus)
-									@statusOption(anime, "on_hold", currentStatus)
-									@statusOption(anime, "dropped", currentStatus)
-									@statusOption(anime, "plan_to_watch", currentStatus)
-									if currentStatus != "" {
-										<div class="dropdown-divider"></div>
-										<button 
-											class="dropdown-item remove"
-											hx-delete={ string(templ.URL(fmt.Sprintf("/api/watchlist/%d", anime.MalID))) }
-											hx-swap="none"
-										>remove from list</button>
-									}
-								</div>
-							</div>
+							@WatchlistDropdown(anime.MalID, anime.Title, anime.ImageURL(), currentStatus)
 						</div>
 					</div>
 				</div>
@@ -170,12 +146,57 @@ func joinNames(entities []jikan.NamedEntity) string {
 	return strings.Join(names, ", ")
 }
 
+templ WatchlistDropdown(animeID int, animeTitle string, animeImage string, currentStatus string) {
+	<div class="dropdown" id="watchlist-dropdown">
+		<button class="dropdown-trigger" onclick="toggleDropdown()">
+			if currentStatus != "" {
+				{ formatStatus(currentStatus) }
+			} else {
+				add to watchlist
+			}
+			<span class="dropdown-arrow">▾</span>
+		</button>
+		<div class="dropdown-menu">
+			@dropdownStatusOption(animeID, animeTitle, animeImage, "watching", currentStatus)
+			@dropdownStatusOption(animeID, animeTitle, animeImage, "completed", currentStatus)
+			@dropdownStatusOption(animeID, animeTitle, animeImage, "on_hold", currentStatus)
+			@dropdownStatusOption(animeID, animeTitle, animeImage, "dropped", currentStatus)
+			@dropdownStatusOption(animeID, animeTitle, animeImage, "plan_to_watch", currentStatus)
+			if currentStatus != "" {
+				<div class="dropdown-divider"></div>
+				<button 
+					class="dropdown-item remove"
+					hx-delete={ string(templ.URL(fmt.Sprintf("/api/watchlist/%d", animeID))) }
+					hx-target="#watchlist-dropdown"
+					hx-swap="outerHTML"
+				>remove from list</button>
+			}
+		</div>
+	</div>
+}
+
+templ dropdownStatusOption(animeID int, animeTitle string, animeImage string, status string, currentStatus string) {
+	<button 
+		class={ "dropdown-item", templ.KV("active", status == currentStatus) }
+		hx-post="/api/watchlist"
+		hx-vals={ fmt.Sprintf(`{"anime_id": "%d", "anime_title": "%s", "anime_image": "%s", "status": "%s"}`, animeID, animeTitle, animeImage, status) }
+		hx-target="#watchlist-dropdown"
+		hx-swap="outerHTML"
+	>
+		{ formatStatus(status) }
+		if status == currentStatus {
+			<span class="check">✓</span>
+		}
+	</button>
+}
+
 templ statusOption(anime jikan.Anime, status string, currentStatus string) {
 	<button 
 		class={ "dropdown-item", templ.KV("active", status == currentStatus) }
 		hx-post="/api/watchlist"
 		hx-vals={ fmt.Sprintf(`{"anime_id": "%d", "anime_title": "%s", "anime_image": "%s", "status": "%s"}`, anime.MalID, anime.Title, anime.ImageURL(), status) }
-		hx-swap="none"
+		hx-target="#watchlist-dropdown"
+		hx-swap="outerHTML"
 	>
 		{ formatStatus(status) }
 		if status == currentStatus {

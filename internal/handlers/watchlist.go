@@ -83,7 +83,7 @@ func (h *WatchlistHandler) HandleUpdateWatchlist(w http.ResponseWriter, r *http.
 	}
 
 	w.Header().Set("HX-Trigger", fmt.Sprintf(`{"toast": "added to %s"}`, displayStatus))
-	w.WriteHeader(http.StatusNoContent)
+	templates.WatchlistDropdown(int(animeID), animeTitle, animeImage, status).Render(r.Context(), w)
 }
 
 func (h *WatchlistHandler) HandleDeleteWatchlist(w http.ResponseWriter, r *http.Request) {
@@ -106,6 +106,13 @@ func (h *WatchlistHandler) HandleDeleteWatchlist(w http.ResponseWriter, r *http.
 		return
 	}
 
+	// Get anime info before deleting
+	anime, err := h.db.GetAnime(r.Context(), animeID)
+	if err != nil {
+		http.Error(w, "anime not found", http.StatusNotFound)
+		return
+	}
+
 	err = h.db.DeleteWatchListEntry(r.Context(), database.DeleteWatchListEntryParams{
 		UserID:  user.ID,
 		AnimeID: animeID,
@@ -116,7 +123,7 @@ func (h *WatchlistHandler) HandleDeleteWatchlist(w http.ResponseWriter, r *http.
 	}
 
 	w.Header().Set("HX-Trigger", `{"toast": "removed from watchlist"}`)
-	w.WriteHeader(http.StatusOK)
+	templates.WatchlistDropdown(int(animeID), anime.Title, anime.ImageUrl, "").Render(r.Context(), w)
 }
 
 func (h *WatchlistHandler) HandleGetWatchlist(w http.ResponseWriter, r *http.Request) {
