@@ -57,7 +57,6 @@ type Anime struct {
 	Studios      []NamedEntity `json:"studios"`
 	Producers    []NamedEntity `json:"producers"`
 	Themes       []NamedEntity `json:"themes"`
-	Themes2      []NamedEntity `json:"themes"` // fallback for different API versions
 	Source       string        `json:"source"`
 	Demographics []NamedEntity `json:"demographics"`
 	Broadcast    struct {
