@@ -20,15 +20,20 @@ templ Layout(title string) {
 							<a href="/watchlist">watchlist</a>
 						</div>
 					</div>
-					<form action="/search" method="GET" class="header-search">
-						<input type="text" name="q" class="search-input" placeholder="search anime..." />
-					</form>
+					<div class="header-search-wrapper">
+						<form action="/search" method="GET" class="header-search">
+							<input type="text" id="search-input" name="q" class="search-input" placeholder="search anime..." autocomplete="off" />
+							<div id="search-dropdown" class="search-dropdown"></div>
+						</form>
+					</div>
 				</div>
 			</header>
 
 			<main>
 				{ children... }
 			</main>
+
+			<script src="/static/js/search.js"></script>
 		</body>
 	</html>
 }

@@ -1,6 +1,7 @@
 package anime
 
 import (
+	"encoding/json"
 	"log"
 	"net/http"
 	"strconv"
@@ -123,4 +124,49 @@ func (h *Handler) HandleAPIAnimeRelations(w http.ResponseWriter, r *http.Request
 
 	relations := h.svc.GetRelations(id)
 	templates.AnimeRelationsList(relations).Render(r.Context(), w)
+}
+
+func (h *Handler) HandleQuickSearch(w http.ResponseWriter, r *http.Request) {
+	query := r.URL.Query().Get("q")
+	if query == "" {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode([]interface{}{})
+		return
+	}
+
+	res, err := h.svc.Search(query, 1)
+	if err != nil {
+		log.Printf("quick search error: %v", err)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	// Limit to 10 results
+	results := res.Animes
+	if len(results) > 10 {
+		results = results[:10]
+	}
+
+	type SearchResult struct {
+		ID    int    `json:"id"`
+		Title string `json:"title"`
+		Type  string `json:"type"`
+		Image string `json:"image"`
+	}
+
+	output := make([]SearchResult, len(results))
+	for i, anime := range results {
+		output[i] = SearchResult{
+			ID:    anime.MalID,
+			Title: anime.DisplayTitle(),
+			Type:  anime.Type,
+			Image: anime.ImageURL(),
+		}
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(output)
 }

@@ -42,7 +42,7 @@ func Layout(title string) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</title><link rel=\"stylesheet\" href=\"/static/css/style.css\"><script src=\"https://unpkg.com/htmx.org@1.9.11\"></script></head><body><header><div class=\"header-top\"><div class=\"header-left\"><a href=\"/\" class=\"logo\">/malago</a><div class=\"nav\"><a href=\"/\">catalog</a> <a href=\"/watchlist\">watchlist</a></div></div><form action=\"/search\" method=\"GET\" class=\"header-search\"><input type=\"text\" name=\"q\" class=\"search-input\" placeholder=\"search anime...\"></form></div></header><main>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</title><link rel=\"stylesheet\" href=\"/static/css/style.css\"><script src=\"https://unpkg.com/htmx.org@1.9.11\"></script></head><body><header><div class=\"header-top\"><div class=\"header-left\"><a href=\"/\" class=\"logo\">/malago</a><div class=\"nav\"><a href=\"/\">catalog</a> <a href=\"/watchlist\">watchlist</a></div></div><div class=\"header-search-wrapper\"><form action=\"/search\" method=\"GET\" class=\"header-search\"><input type=\"text\" id=\"search-input\" name=\"q\" class=\"search-input\" placeholder=\"search anime...\" autocomplete=\"off\"><div id=\"search-dropdown\" class=\"search-dropdown\"></div></form></div></div></header><main>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -50,7 +50,7 @@ func Layout(title string) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "</main></body></html>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "</main><script src=\"/static/js/search.js\"></script></body></html>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
