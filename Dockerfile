@@ -21,6 +21,9 @@ WORKDIR /app
 # Required for sqlite
 RUN apt-get update && apt-get install -y ca-certificates && rm -rf /var/lib/apt/lists/*
 
+# Create data directory for sqlite
+RUN mkdir -p /app/data
+
 COPY --from=builder /app/main_server .
 COPY --from=builder /app/create_user .
 COPY --from=builder /app/static ./static
