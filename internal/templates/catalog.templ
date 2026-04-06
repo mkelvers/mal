@@ -6,8 +6,13 @@ import "fmt"
 templ Catalog() {
 	@Layout("malago - catalog") {
 		<div class="catalog-grid" id="catalog-content">
-			<div hx-get="/api/catalog?page=1" hx-trigger="load" hx-swap="outerHTML">
-				<div class="status-text" style="grid-column: 1 / -1;">> loading catalog...</div>
+			<div hx-get="/api/catalog?page=1" hx-trigger="load" hx-swap="outerHTML" style="grid-column: 1 / -1;">
+				<div class="loading-indicator">
+					<div class="loading-dot"></div>
+					<div class="loading-dot"></div>
+					<div class="loading-dot"></div>
+					<span>loading catalog</span>
+				</div>
 			</div>
 		</div>
 	}
@@ -29,8 +34,8 @@ templ CatalogItems(animes []jikan.Anime, nextPage int, hasNext bool) {
 
 templ CatalogItem(anime jikan.Anime) {
 	<a href={ templ.URL(fmt.Sprintf("/anime/%d", anime.MalID)) }>
-		if anime.Images.Webp.LargeImageURL != "" {
-			<img src={ anime.Images.Webp.LargeImageURL } alt={ anime.DisplayTitle() } class="catalog-thumb" loading="lazy" />
+		if anime.ImageURL() != "" {
+			<img src={ anime.ImageURL() } alt={ anime.DisplayTitle() } class="catalog-thumb" loading="lazy" />
 		} else {
 			<div class="no-image">no image</div>
 		}

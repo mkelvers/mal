@@ -51,30 +51,37 @@ func main() {
 	fs := http.FileServer(http.Dir("./static"))
 	mux.Handle("/static/", http.StripPrefix("/static/", fs))
 
-	// Index page (Search)
+	// Homepage (Catalog)
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path != "/" {
 			http.NotFound(w, r)
 			return
 		}
-		q := r.URL.Query().Get("q")
-		templates.Index(q).Render(r.Context(), w)
+		templates.Catalog().Render(r.Context(), w)
 	})
 
-	// Search endpoint initial query
+	// Search page
 	mux.HandleFunc("/search", func(w http.ResponseWriter, r *http.Request) {
 		query := r.URL.Query().Get("q")
 		if query == "" {
+			templates.Search("").Render(r.Context(), w)
 			return
 		}
 
-		res, err := jikanClient.Search(query, 1)
-		if err != nil {
-			log.Printf("search error: %v", err)
-			http.Error(w, "Failed to search anime", http.StatusInternalServerError)
+		// Check if HTMX request for results only
+		if r.Header.Get("HX-Request") == "true" {
+			res, err := jikanClient.Search(query, 1)
+			if err != nil {
+				log.Printf("search error: %v", err)
+				http.Error(w, "Failed to search anime", http.StatusInternalServerError)
+				return
+			}
+			templates.SearchResultsWrapper(query, res.Animes, 2, res.HasNextPage).Render(r.Context(), w)
 			return
 		}
-		templates.SearchResultsWrapper(query, res.Animes, 2, res.HasNextPage).Render(r.Context(), w)
+
+		// Full page with query
+		templates.Search(query).Render(r.Context(), w)
 	})
 
 	// Search endpoint (HTMX Infinite Scroll)
@@ -94,11 +101,6 @@ func main() {
 		}
 
 		templates.SearchItems(query, res.Animes, page+1, res.HasNextPage).Render(r.Context(), w)
-	})
-
-	// Catalog page
-	mux.HandleFunc("/catalog", func(w http.ResponseWriter, r *http.Request) {
-		templates.Catalog().Render(r.Context(), w)
 	})
 
 	// Catalog endpoint (HTMX Infinite Scroll)
@@ -135,7 +137,19 @@ func main() {
 			return
 		}
 
-		templates.AnimeDetails(anime).Render(r.Context(), w)
+		// Get current watchlist status if user is logged in
+		currentStatus := ""
+		if user := middleware.GetUser(r.Context()); user != nil {
+			entry, err := queries.GetWatchListEntry(r.Context(), database.GetWatchListEntryParams{
+				UserID:  user.ID,
+				AnimeID: int64(id),
+			})
+			if err == nil {
+				currentStatus = entry.Status
+			}
+		}
+
+		templates.AnimeDetails(anime, currentStatus).Render(r.Context(), w)
 	})
 
 	// Anime Relations API endpoint (HTMX "Suspense")

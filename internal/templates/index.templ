@@ -6,25 +6,20 @@ import (
 	"net/url"
 )
 
-templ Index(q string) {
+templ Search(q string) {
 	@Layout("malago - search") {
-		<div class="search-box">
-			<form action="/" method="GET" class="search-form">
-				<input type="text" name="q" class="search-input" placeholder="search..." value={ q } autofocus />
-				<button type="submit" class="search-button">search</button>
-			</form>
-		</div>
-
 		if q != "" {
-			<div id="loading" class="htmx-indicator status-text">
-				> fetching from jikan...
+			<div class="loading-indicator htmx-indicator" id="loading">
+				<div class="loading-dot"></div>
+				<div class="loading-dot"></div>
+				<div class="loading-dot"></div>
+				<span>searching</span>
 			</div>
 			<div id="results" hx-get={ string(templ.URL("/search?q=" + url.QueryEscape(q))) } hx-trigger="load" hx-indicator="#loading"></div>
 		} else {
-			<div id="results">
-				<div style="text-align: center; color: var(--text-muted); font-size: 12px; margin-top: 32px;">
-					no results yet.
-				</div>
+			<div class="empty-state">
+				<div class="empty-state-title">search for anime</div>
+				<div class="empty-state-text">use the search bar above to find anime to add to your watchlist</div>
 			</div>
 		}
 	}
@@ -32,7 +27,10 @@ templ Index(q string) {
 
 templ SearchResultsWrapper(query string, animes []jikan.Anime, nextPage int, hasNext bool) {
 	if len(animes) == 0 {
-		<div style="text-align: center; color: var(--text-muted); font-size: 12px;">no results found.</div>
+		<div class="empty-state">
+			<div class="empty-state-title">no results found</div>
+			<div class="empty-state-text">try a different search term</div>
+		</div>
 	} else {
 		<div class="catalog-grid">
 			@SearchItems(query, animes, nextPage, hasNext)
