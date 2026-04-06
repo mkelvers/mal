@@ -36,6 +36,7 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 # Go
 main_server
 create_user
+malago
 *.db
 *.db-shm
 *.db-wal
