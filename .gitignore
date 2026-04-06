@@ -40,3 +40,4 @@ create_user
 *.db-shm
 *.db-wal
 tmp/
+server
