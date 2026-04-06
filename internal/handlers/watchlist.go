@@ -75,16 +75,6 @@ func (h *WatchlistHandler) HandleUpdateWatchlist(w http.ResponseWriter, r *http.
 		return
 	}
 
-	// For HTMX, we can just return a success toast or update a portion of the UI
-	displayStatus := status
-	switch status {
-	case "on_hold":
-		displayStatus = "on hold"
-	case "plan_to_watch":
-		displayStatus = "plan to watch"
-	}
-
-	w.Header().Set("HX-Trigger", fmt.Sprintf(`{"toast": "added to %s"}`, displayStatus))
 	templates.WatchlistDropdown(int(animeID), animeTitle, animeImage, status).Render(r.Context(), w)
 }
 
@@ -124,8 +114,6 @@ func (h *WatchlistHandler) HandleDeleteWatchlist(w http.ResponseWriter, r *http.
 		http.Error(w, fmt.Sprintf("failed to delete from watchlist: %v", err), http.StatusInternalServerError)
 		return
 	}
-
-	w.Header().Set("HX-Trigger", `{"toast": "removed from watchlist"}`)
 
 	// If called from watchlist page, just return empty (hx-swap="delete" handles removal)
 	if r.URL.Query().Get("from") == "watchlist" {
@@ -286,7 +274,6 @@ func (h *WatchlistHandler) HandleImportWatchlist(w http.ResponseWriter, r *http.
 		imported++
 	}
 
-	w.Header().Set("HX-Trigger", fmt.Sprintf(`{"toast": "imported %d entries"}`, imported))
 	w.Header().Set("HX-Redirect", "/watchlist")
 	w.WriteHeader(http.StatusOK)
 }

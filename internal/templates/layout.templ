@@ -29,23 +29,6 @@ templ Layout(title string) {
 			<main>
 				{ children... }
 			</main>
-			<div id="toast-container"></div>
-			<script>
-				document.body.addEventListener('toast', function(evt) {
-					const container = document.getElementById('toast-container');
-					const toast = document.createElement('div');
-					toast.className = 'toast';
-					toast.textContent = evt.detail.value;
-					container.appendChild(toast);
-					
-					requestAnimationFrame(() => { toast.style.opacity = '1'; });
-					
-					setTimeout(() => {
-						toast.style.opacity = '0';
-						setTimeout(() => { toast.remove(); }, 300);
-					}, 3000);
-				});
-			</script>
 		</body>
 	</html>
 }

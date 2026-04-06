@@ -50,7 +50,7 @@ func Layout(title string) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "</main><div id=\"toast-container\"></div><script>\n\t\t\t\tdocument.body.addEventListener('toast', function(evt) {\n\t\t\t\t\tconst container = document.getElementById('toast-container');\n\t\t\t\t\tconst toast = document.createElement('div');\n\t\t\t\t\ttoast.className = 'toast';\n\t\t\t\t\ttoast.textContent = evt.detail.value;\n\t\t\t\t\tcontainer.appendChild(toast);\n\t\t\t\t\t\n\t\t\t\t\trequestAnimationFrame(() => { toast.style.opacity = '1'; });\n\t\t\t\t\t\n\t\t\t\t\tsetTimeout(() => {\n\t\t\t\t\t\ttoast.style.opacity = '0';\n\t\t\t\t\t\tsetTimeout(() => { toast.remove(); }, 300);\n\t\t\t\t\t}, 3000);\n\t\t\t\t});\n\t\t\t</script></body></html>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "</main></body></html>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
