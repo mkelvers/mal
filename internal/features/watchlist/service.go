@@ -26,6 +26,7 @@ type AddRequest struct {
 	TitleJapanese string
 	ImageURL      string
 	Status        string
+	Airing        bool
 }
 
 func (s *Service) AddEntry(ctx context.Context, userID string, req AddRequest) error {
@@ -39,6 +40,7 @@ func (s *Service) AddEntry(ctx context.Context, userID string, req AddRequest) e
 		TitleEnglish:  sql.NullString{String: req.TitleEnglish, Valid: req.TitleEnglish != ""},
 		TitleJapanese: sql.NullString{String: req.TitleJapanese, Valid: req.TitleJapanese != ""},
 		ImageUrl:      req.ImageURL,
+		Airing:        sql.NullBool{Bool: req.Airing, Valid: true},
 	})
 	if err != nil {
 		return fmt.Errorf("failed to save anime reference: %w", err)

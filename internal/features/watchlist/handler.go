@@ -44,6 +44,8 @@ func (h *Handler) HandleUpdateWatchlist(w http.ResponseWriter, r *http.Request) 
 	animeTitleJapanese := r.FormValue("anime_title_japanese")
 	animeImage := r.FormValue("anime_image")
 	status := r.FormValue("status")
+	airingStr := r.FormValue("airing")
+	airing := airingStr == "true"
 
 	log.Printf("watchlist add: id=%s, title=%s", animeIDStr, animeTitle)
 
@@ -60,6 +62,7 @@ func (h *Handler) HandleUpdateWatchlist(w http.ResponseWriter, r *http.Request) 
 		TitleJapanese: animeTitleJapanese,
 		ImageURL:      animeImage,
 		Status:        status,
+		Airing:        airing,
 	}
 
 	if err := h.svc.AddEntry(r.Context(), user.ID, req); err != nil {
@@ -67,7 +70,7 @@ func (h *Handler) HandleUpdateWatchlist(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	templates.WatchlistDropdown(int(animeID), animeTitle, animeTitleEnglish, animeTitleJapanese, animeImage, status).Render(r.Context(), w)
+	templates.WatchlistDropdown(int(animeID), animeTitle, animeTitleEnglish, animeTitleJapanese, animeImage, status, airing).Render(r.Context(), w)
 }
 
 func (h *Handler) HandleDeleteWatchlist(w http.ResponseWriter, r *http.Request) {
@@ -109,8 +112,12 @@ func (h *Handler) HandleDeleteWatchlist(w http.ResponseWriter, r *http.Request) 
 	if anime.TitleJapanese.Valid {
 		titleJapanese = anime.TitleJapanese.String
 	}
+	airing := false
+	if anime.Airing.Valid {
+		airing = anime.Airing.Bool
+	}
 
-	templates.WatchlistDropdown(int(animeID), anime.TitleOriginal, titleEnglish, titleJapanese, anime.ImageUrl, "").Render(r.Context(), w)
+	templates.WatchlistDropdown(int(animeID), anime.TitleOriginal, titleEnglish, titleJapanese, anime.ImageUrl, "", airing).Render(r.Context(), w)
 }
 
 func (h *Handler) HandleGetWatchlist(w http.ResponseWriter, r *http.Request) {
@@ -148,7 +155,14 @@ func (h *Handler) HandleGetWatchlist(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var filteredEntries []database.GetUserWatchListRow
-	if statusFilter != "" && statusFilter != "all" {
+	if statusFilter == "continuing" {
+		// Show airing anime with watching or plan_to_watch status
+		for _, entry := range entries {
+			if entry.Airing.Bool && (entry.Status == "watching" || entry.Status == "plan_to_watch") {
+				filteredEntries = append(filteredEntries, entry)
+			}
+		}
+	} else if statusFilter != "" && statusFilter != "all" {
 		for _, entry := range entries {
 			if entry.Status == statusFilter {
 				filteredEntries = append(filteredEntries, entry)

@@ -25,6 +25,7 @@ templ Watchlist(entries []database.GetUserWatchListRow, layout string, currentSt
 		<div class="status-tabs">
 			<a href={ templ.URL(fmt.Sprintf("/watchlist?view=%s&status=all&sort=%s&order=%s", layout, sortBy, sortOrder)) } class={ tabClass(currentStatus == "all") }>all</a>
 			<a href={ templ.URL(fmt.Sprintf("/watchlist?view=%s&status=watching&sort=%s&order=%s", layout, sortBy, sortOrder)) } class={ tabClass(currentStatus == "watching") }>watching</a>
+			<a href={ templ.URL(fmt.Sprintf("/watchlist?view=%s&status=continuing&sort=%s&order=%s", layout, sortBy, sortOrder)) } class={ tabClass(currentStatus == "continuing") }>continuing</a>
 			<a href={ templ.URL(fmt.Sprintf("/watchlist?view=%s&status=on_hold&sort=%s&order=%s", layout, sortBy, sortOrder)) } class={ tabClass(currentStatus == "on_hold") }>on hold</a>
 			<a href={ templ.URL(fmt.Sprintf("/watchlist?view=%s&status=plan_to_watch&sort=%s&order=%s", layout, sortBy, sortOrder)) } class={ tabClass(currentStatus == "plan_to_watch") }>plan to watch</a>
 			<a href={ templ.URL(fmt.Sprintf("/watchlist?view=%s&status=dropped&sort=%s&order=%s", layout, sortBy, sortOrder)) } class={ tabClass(currentStatus == "dropped") }>dropped</a>
@@ -39,6 +40,8 @@ templ Watchlist(entries []database.GetUserWatchListRow, layout string, currentSt
 				<div class="empty-state-text">
 					if currentStatus == "all" {
 						your watchlist is empty. <a href="/">search for anime</a> to get started.
+					} else if currentStatus == "continuing" {
+						no airing anime with watching or plan to watch status.
 					} else {
 						no anime in this category.
 					}

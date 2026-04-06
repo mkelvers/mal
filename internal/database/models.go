@@ -24,6 +24,7 @@ type Anime struct {
 	CreatedAt     time.Time      `json:"created_at"`
 	TitleEnglish  sql.NullString `json:"title_english"`
 	TitleJapanese sql.NullString `json:"title_japanese"`
+	Airing        sql.NullBool   `json:"airing"`
 }
 
 type Session struct {

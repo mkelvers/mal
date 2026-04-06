@@ -46,6 +46,7 @@ type Anime struct {
 	Rank         int           `json:"rank"`
 	Popularity   int           `json:"popularity"`
 	Status       string        `json:"status"`
+	Airing       bool          `json:"airing"`
 	Episodes     int           `json:"episodes"`
 	Season       string        `json:"season"`
 	Year         int           `json:"year"`

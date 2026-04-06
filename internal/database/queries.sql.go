@@ -93,7 +93,7 @@ func (q *Queries) DeleteWatchListEntry(ctx context.Context, arg DeleteWatchListE
 }
 
 const getAnime = `-- name: GetAnime :one
-SELECT id, title_original, image_url, created_at, title_english, title_japanese FROM anime WHERE id = ? LIMIT 1
+SELECT id, title_original, image_url, created_at, title_english, title_japanese, airing FROM anime WHERE id = ? LIMIT 1
 `
 
 func (q *Queries) GetAnime(ctx context.Context, id int64) (Anime, error) {
@@ -106,6 +106,7 @@ func (q *Queries) GetAnime(ctx context.Context, id int64) (Anime, error) {
 		&i.CreatedAt,
 		&i.TitleEnglish,
 		&i.TitleJapanese,
+		&i.Airing,
 	)
 	return i, err
 }
@@ -164,7 +165,8 @@ SELECT
     a.title_original,
     a.title_english,
     a.title_japanese,
-    a.image_url
+    a.image_url,
+    a.airing
 FROM watch_list_entry e
 JOIN anime a ON e.anime_id = a.id
 WHERE e.user_id = ?
@@ -182,6 +184,7 @@ type GetUserWatchListRow struct {
 	TitleEnglish  sql.NullString `json:"title_english"`
 	TitleJapanese sql.NullString `json:"title_japanese"`
 	ImageUrl      string         `json:"image_url"`
+	Airing        sql.NullBool   `json:"airing"`
 }
 
 func (q *Queries) GetUserWatchList(ctx context.Context, userID string) ([]GetUserWatchListRow, error) {
@@ -204,6 +207,7 @@ func (q *Queries) GetUserWatchList(ctx context.Context, userID string) ([]GetUse
 			&i.TitleEnglish,
 			&i.TitleJapanese,
 			&i.ImageUrl,
+			&i.Airing,
 		); err != nil {
 			return nil, err
 		}
@@ -243,14 +247,15 @@ func (q *Queries) GetWatchListEntry(ctx context.Context, arg GetWatchListEntryPa
 }
 
 const upsertAnime = `-- name: UpsertAnime :one
-INSERT INTO anime (id, title_original, title_english, title_japanese, image_url)
-VALUES (?, ?, ?, ?, ?)
+INSERT INTO anime (id, title_original, title_english, title_japanese, image_url, airing)
+VALUES (?, ?, ?, ?, ?, ?)
 ON CONFLICT (id) DO UPDATE SET
     title_original = excluded.title_original,
     title_english = excluded.title_english,
     title_japanese = excluded.title_japanese,
-    image_url = excluded.image_url
-RETURNING id, title_original, image_url, created_at, title_english, title_japanese
+    image_url = excluded.image_url,
+    airing = excluded.airing
+RETURNING id, title_original, image_url, created_at, title_english, title_japanese, airing
 `
 
 type UpsertAnimeParams struct {
@@ -259,6 +264,7 @@ type UpsertAnimeParams struct {
 	TitleEnglish  sql.NullString `json:"title_english"`
 	TitleJapanese sql.NullString `json:"title_japanese"`
 	ImageUrl      string         `json:"image_url"`
+	Airing        sql.NullBool   `json:"airing"`
 }
 
 func (q *Queries) UpsertAnime(ctx context.Context, arg UpsertAnimeParams) (Anime, error) {
@@ -268,6 +274,7 @@ func (q *Queries) UpsertAnime(ctx context.Context, arg UpsertAnimeParams) (Anime
 		arg.TitleEnglish,
 		arg.TitleJapanese,
 		arg.ImageUrl,
+		arg.Airing,
 	)
 	var i Anime
 	err := row.Scan(
@@ -277,6 +284,7 @@ func (q *Queries) UpsertAnime(ctx context.Context, arg UpsertAnimeParams) (Anime
 		&i.CreatedAt,
 		&i.TitleEnglish,
 		&i.TitleJapanese,
+		&i.Airing,
 	)
 	return i, err
 }

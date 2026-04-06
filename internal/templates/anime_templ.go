@@ -206,7 +206,7 @@ func AnimeDetails(anime jikan.Anime, currentStatus string) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = WatchlistDropdown(anime.MalID, anime.Title, anime.TitleEnglish, anime.TitleJapanese, anime.ImageURL(), currentStatus).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = WatchlistDropdown(anime.MalID, anime.Title, anime.TitleEnglish, anime.TitleJapanese, anime.ImageURL(), currentStatus, anime.Airing).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -615,7 +615,7 @@ func joinNames(entities []jikan.NamedEntity) string {
 	return strings.Join(names, ", ")
 }
 
-func WatchlistDropdown(animeID int, animeTitle string, animeTitleEnglish string, animeTitleJapanese string, animeImage string, currentStatus string) templ.Component {
+func WatchlistDropdown(animeID int, animeTitle string, animeTitleEnglish string, animeTitleJapanese string, animeImage string, currentStatus string, airing bool) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -664,23 +664,23 @@ func WatchlistDropdown(animeID int, animeTitle string, animeTitleEnglish string,
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = dropdownStatusOption(animeID, animeTitle, animeTitleEnglish, animeTitleJapanese, animeImage, "watching", currentStatus).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = dropdownStatusOption(animeID, animeTitle, animeTitleEnglish, animeTitleJapanese, animeImage, "watching", currentStatus, airing).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = dropdownStatusOption(animeID, animeTitle, animeTitleEnglish, animeTitleJapanese, animeImage, "completed", currentStatus).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = dropdownStatusOption(animeID, animeTitle, animeTitleEnglish, animeTitleJapanese, animeImage, "completed", currentStatus, airing).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = dropdownStatusOption(animeID, animeTitle, animeTitleEnglish, animeTitleJapanese, animeImage, "on_hold", currentStatus).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = dropdownStatusOption(animeID, animeTitle, animeTitleEnglish, animeTitleJapanese, animeImage, "on_hold", currentStatus, airing).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = dropdownStatusOption(animeID, animeTitle, animeTitleEnglish, animeTitleJapanese, animeImage, "dropped", currentStatus).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = dropdownStatusOption(animeID, animeTitle, animeTitleEnglish, animeTitleJapanese, animeImage, "dropped", currentStatus, airing).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = dropdownStatusOption(animeID, animeTitle, animeTitleEnglish, animeTitleJapanese, animeImage, "plan_to_watch", currentStatus).Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = dropdownStatusOption(animeID, animeTitle, animeTitleEnglish, animeTitleJapanese, animeImage, "plan_to_watch", currentStatus, airing).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -711,7 +711,7 @@ func WatchlistDropdown(animeID int, animeTitle string, animeTitleEnglish string,
 	})
 }
 
-func dropdownStatusOption(animeID int, animeTitle string, animeTitleEnglish string, animeTitleJapanese string, animeImage string, status string, currentStatus string) templ.Component {
+func dropdownStatusOption(animeID int, animeTitle string, animeTitleEnglish string, animeTitleJapanese string, animeImage string, status string, currentStatus string, airing bool) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -755,9 +755,9 @@ func dropdownStatusOption(animeID int, animeTitle string, animeTitleEnglish stri
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var35 string
-		templ_7745c5c3_Var35, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf(`{"anime_id": "%d", "anime_title": "%s", "anime_title_english": "%s", "anime_title_japanese": "%s", "anime_image": "%s", "status": "%s"}`, animeID, animeTitle, animeTitleEnglish, animeTitleJapanese, animeImage, status))
+		templ_7745c5c3_Var35, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf(`{"anime_id": "%d", "anime_title": "%s", "anime_title_english": "%s", "anime_title_japanese": "%s", "anime_image": "%s", "status": "%s", "airing": "%v"}`, animeID, animeTitle, animeTitleEnglish, animeTitleJapanese, animeImage, status, airing))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/anime.templ`, Line: 224, Col: 242}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/anime.templ`, Line: 224, Col: 266}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var35))
 		if templ_7745c5c3_Err != nil {
