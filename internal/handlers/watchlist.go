@@ -1,9 +1,11 @@
 package handlers
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/google/uuid"
 
@@ -164,4 +166,118 @@ func (h *WatchlistHandler) HandleGetWatchlist(w http.ResponseWriter, r *http.Req
 	}
 
 	templates.Watchlist(filteredEntries, layout, statusFilter).Render(r.Context(), w)
+}
+
+// WatchlistExportEntry represents a single entry in the export format
+type WatchlistExportEntry struct {
+	AnimeID   int64  `json:"anime_id"`
+	Title     string `json:"title"`
+	ImageURL  string `json:"image_url"`
+	Status    string `json:"status"`
+	UpdatedAt string `json:"updated_at"`
+}
+
+// WatchlistExport is the full export format
+type WatchlistExport struct {
+	ExportedAt string                 `json:"exported_at"`
+	Entries    []WatchlistExportEntry `json:"entries"`
+}
+
+func (h *WatchlistHandler) HandleExportWatchlist(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	user, ok := r.Context().Value(middleware.UserContextKey).(*database.User)
+	if !ok || user == nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	entries, err := h.db.GetUserWatchList(r.Context(), user.ID)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("failed to fetch watchlist: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	export := WatchlistExport{
+		ExportedAt: time.Now().UTC().Format(time.RFC3339),
+		Entries:    make([]WatchlistExportEntry, len(entries)),
+	}
+
+	for i, entry := range entries {
+		export.Entries[i] = WatchlistExportEntry{
+			AnimeID:   entry.AnimeID,
+			Title:     entry.Title,
+			ImageURL:  entry.ImageUrl,
+			Status:    entry.Status,
+			UpdatedAt: entry.UpdatedAt.Format(time.RFC3339),
+		}
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Disposition", "attachment; filename=malago-watchlist.json")
+	json.NewEncoder(w).Encode(export)
+}
+
+func (h *WatchlistHandler) HandleImportWatchlist(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	user, ok := r.Context().Value(middleware.UserContextKey).(*database.User)
+	if !ok || user == nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	// Parse multipart form (max 10MB)
+	if err := r.ParseMultipartForm(10 << 20); err != nil {
+		http.Error(w, "failed to parse form", http.StatusBadRequest)
+		return
+	}
+
+	file, _, err := r.FormFile("file")
+	if err != nil {
+		http.Error(w, "no file uploaded", http.StatusBadRequest)
+		return
+	}
+	defer file.Close()
+
+	var export WatchlistExport
+	if err := json.NewDecoder(file).Decode(&export); err != nil {
+		http.Error(w, "invalid JSON format", http.StatusBadRequest)
+		return
+	}
+
+	imported := 0
+	for _, entry := range export.Entries {
+		// Upsert anime
+		_, err := h.db.UpsertAnime(r.Context(), database.UpsertAnimeParams{
+			ID:       entry.AnimeID,
+			Title:    entry.Title,
+			ImageUrl: entry.ImageURL,
+		})
+		if err != nil {
+			continue
+		}
+
+		// Upsert watchlist entry
+		_, err = h.db.UpsertWatchListEntry(r.Context(), database.UpsertWatchListEntryParams{
+			ID:      uuid.New().String(),
+			UserID:  user.ID,
+			AnimeID: entry.AnimeID,
+			Status:  entry.Status,
+		})
+		if err != nil {
+			continue
+		}
+		imported++
+	}
+
+	w.Header().Set("HX-Trigger", fmt.Sprintf(`{"toast": "imported %d entries"}`, imported))
+	w.Header().Set("HX-Redirect", "/watchlist")
+	w.WriteHeader(http.StatusOK)
 }

@@ -9,9 +9,16 @@ templ Watchlist(entries []database.GetUserWatchListRow, layout string, currentSt
 	@Layout("My Watchlist") {
 		<div class="watchlist-header">
 			<h2>watchlist</h2>
-			<div class="view-toggle">
-				<a href={ templ.URL(fmt.Sprintf("/watchlist?view=grid&status=%s", currentStatus)) } class={ viewToggleClass(layout == "grid") }>grid</a>
-				<a href={ templ.URL(fmt.Sprintf("/watchlist?view=table&status=%s", currentStatus)) } class={ viewToggleClass(layout == "table") }>table</a>
+			<div class="watchlist-controls">
+				<a href="/api/watchlist/export" class="text-link">export</a>
+				<button class="text-link" onclick="document.getElementById('import-file').click()">import</button>
+				<form id="import-form" hx-post="/api/watchlist/import" hx-encoding="multipart/form-data" style="display: none;">
+					<input type="file" id="import-file" name="file" accept=".json" onchange="htmx.trigger('#import-form', 'submit')" />
+				</form>
+				<div class="view-toggle">
+					<a href={ templ.URL(fmt.Sprintf("/watchlist?view=grid&status=%s", currentStatus)) } class={ viewClass(layout == "grid") }>grid</a>
+					<a href={ templ.URL(fmt.Sprintf("/watchlist?view=table&status=%s", currentStatus)) } class={ viewClass(layout == "table") }>table</a>
+				</div>
 			</div>
 		</div>
 
@@ -100,7 +107,7 @@ templ Watchlist(entries []database.GetUserWatchListRow, layout string, currentSt
 	}
 }
 
-func viewToggleClass(active bool) string {
+func viewClass(active bool) string {
 	if active {
 		return "active"
 	}

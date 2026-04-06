@@ -46,11 +46,11 @@ func Watchlist(entries []database.GetUserWatchListRow, layout string, currentSta
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"watchlist-header\"><h2>watchlist</h2><div class=\"view-toggle\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"watchlist-header\"><h2>watchlist</h2><div class=\"watchlist-controls\"><a href=\"/api/watchlist/export\" class=\"text-link\">export</a> <button class=\"text-link\" onclick=\"document.getElementById('import-file').click()\">import</button><form id=\"import-form\" hx-post=\"/api/watchlist/import\" hx-encoding=\"multipart/form-data\" style=\"display: none;\"><input type=\"file\" id=\"import-file\" name=\"file\" accept=\".json\" onchange=\"htmx.trigger('#import-form', 'submit')\"></form><div class=\"view-toggle\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var3 = []any{viewToggleClass(layout == "grid")}
+			var templ_7745c5c3_Var3 = []any{viewClass(layout == "grid")}
 			templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var3...)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -62,7 +62,7 @@ func Watchlist(entries []database.GetUserWatchListRow, layout string, currentSta
 			var templ_7745c5c3_Var4 templ.SafeURL
 			templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinURLErrs(templ.URL(fmt.Sprintf("/watchlist?view=grid&status=%s", currentStatus)))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/watchlist.templ`, Line: 13, Col: 85}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/watchlist.templ`, Line: 19, Col: 86}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 			if templ_7745c5c3_Err != nil {
@@ -85,7 +85,7 @@ func Watchlist(entries []database.GetUserWatchListRow, layout string, currentSta
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var6 = []any{viewToggleClass(layout == "table")}
+			var templ_7745c5c3_Var6 = []any{viewClass(layout == "table")}
 			templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var6...)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -97,7 +97,7 @@ func Watchlist(entries []database.GetUserWatchListRow, layout string, currentSta
 			var templ_7745c5c3_Var7 templ.SafeURL
 			templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinURLErrs(templ.URL(fmt.Sprintf("/watchlist?view=table&status=%s", currentStatus)))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/watchlist.templ`, Line: 14, Col: 86}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/watchlist.templ`, Line: 20, Col: 87}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 			if templ_7745c5c3_Err != nil {
@@ -116,7 +116,7 @@ func Watchlist(entries []database.GetUserWatchListRow, layout string, currentSta
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "\">table</a></div></div><div class=\"status-tabs\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "\">table</a></div></div></div><div class=\"status-tabs\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -132,7 +132,7 @@ func Watchlist(entries []database.GetUserWatchListRow, layout string, currentSta
 			var templ_7745c5c3_Var10 templ.SafeURL
 			templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinURLErrs(templ.URL(fmt.Sprintf("/watchlist?view=%s&status=all", layout)))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/watchlist.templ`, Line: 19, Col: 76}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/watchlist.templ`, Line: 26, Col: 76}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 			if templ_7745c5c3_Err != nil {
@@ -167,7 +167,7 @@ func Watchlist(entries []database.GetUserWatchListRow, layout string, currentSta
 			var templ_7745c5c3_Var13 templ.SafeURL
 			templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinURLErrs(templ.URL(fmt.Sprintf("/watchlist?view=%s&status=watching", layout)))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/watchlist.templ`, Line: 20, Col: 81}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/watchlist.templ`, Line: 27, Col: 81}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 			if templ_7745c5c3_Err != nil {
@@ -202,7 +202,7 @@ func Watchlist(entries []database.GetUserWatchListRow, layout string, currentSta
 			var templ_7745c5c3_Var16 templ.SafeURL
 			templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinURLErrs(templ.URL(fmt.Sprintf("/watchlist?view=%s&status=on_hold", layout)))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/watchlist.templ`, Line: 21, Col: 80}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/watchlist.templ`, Line: 28, Col: 80}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
 			if templ_7745c5c3_Err != nil {
@@ -237,7 +237,7 @@ func Watchlist(entries []database.GetUserWatchListRow, layout string, currentSta
 			var templ_7745c5c3_Var19 templ.SafeURL
 			templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinURLErrs(templ.URL(fmt.Sprintf("/watchlist?view=%s&status=plan_to_watch", layout)))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/watchlist.templ`, Line: 22, Col: 86}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/watchlist.templ`, Line: 29, Col: 86}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var19))
 			if templ_7745c5c3_Err != nil {
@@ -272,7 +272,7 @@ func Watchlist(entries []database.GetUserWatchListRow, layout string, currentSta
 			var templ_7745c5c3_Var22 templ.SafeURL
 			templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.JoinURLErrs(templ.URL(fmt.Sprintf("/watchlist?view=%s&status=dropped", layout)))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/watchlist.templ`, Line: 23, Col: 80}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/watchlist.templ`, Line: 30, Col: 80}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var22))
 			if templ_7745c5c3_Err != nil {
@@ -307,7 +307,7 @@ func Watchlist(entries []database.GetUserWatchListRow, layout string, currentSta
 			var templ_7745c5c3_Var25 templ.SafeURL
 			templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.JoinURLErrs(templ.URL(fmt.Sprintf("/watchlist?view=%s&status=completed", layout)))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/watchlist.templ`, Line: 24, Col: 82}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/watchlist.templ`, Line: 31, Col: 82}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var25))
 			if templ_7745c5c3_Err != nil {
@@ -364,7 +364,7 @@ func Watchlist(entries []database.GetUserWatchListRow, layout string, currentSta
 						var templ_7745c5c3_Var27 string
 						templ_7745c5c3_Var27, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("watchlist-entry-%d", entry.AnimeID))
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/watchlist.templ`, Line: 42, Col: 100}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/watchlist.templ`, Line: 49, Col: 100}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var27))
 						if templ_7745c5c3_Err != nil {
@@ -377,7 +377,7 @@ func Watchlist(entries []database.GetUserWatchListRow, layout string, currentSta
 						var templ_7745c5c3_Var28 templ.SafeURL
 						templ_7745c5c3_Var28, templ_7745c5c3_Err = templ.JoinURLErrs(templ.URL(fmt.Sprintf("/anime/%d", entry.AnimeID)))
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/watchlist.templ`, Line: 43, Col: 67}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/watchlist.templ`, Line: 50, Col: 67}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var28))
 						if templ_7745c5c3_Err != nil {
@@ -395,7 +395,7 @@ func Watchlist(entries []database.GetUserWatchListRow, layout string, currentSta
 							var templ_7745c5c3_Var29 string
 							templ_7745c5c3_Var29, templ_7745c5c3_Err = templ.JoinStringErrs(entry.ImageUrl)
 							if templ_7745c5c3_Err != nil {
-								return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/watchlist.templ`, Line: 45, Col: 34}
+								return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/watchlist.templ`, Line: 52, Col: 34}
 							}
 							_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var29))
 							if templ_7745c5c3_Err != nil {
@@ -408,7 +408,7 @@ func Watchlist(entries []database.GetUserWatchListRow, layout string, currentSta
 							var templ_7745c5c3_Var30 string
 							templ_7745c5c3_Var30, templ_7745c5c3_Err = templ.JoinStringErrs(entry.Title)
 							if templ_7745c5c3_Err != nil {
-								return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/watchlist.templ`, Line: 45, Col: 54}
+								return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/watchlist.templ`, Line: 52, Col: 54}
 							}
 							_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var30))
 							if templ_7745c5c3_Err != nil {
@@ -431,7 +431,7 @@ func Watchlist(entries []database.GetUserWatchListRow, layout string, currentSta
 						var templ_7745c5c3_Var31 string
 						templ_7745c5c3_Var31, templ_7745c5c3_Err = templ.JoinStringErrs(entry.Title)
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/watchlist.templ`, Line: 50, Col: 47}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/watchlist.templ`, Line: 57, Col: 47}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var31))
 						if templ_7745c5c3_Err != nil {
@@ -444,7 +444,7 @@ func Watchlist(entries []database.GetUserWatchListRow, layout string, currentSta
 						var templ_7745c5c3_Var32 string
 						templ_7745c5c3_Var32, templ_7745c5c3_Err = templ.JoinStringErrs(entry.Status)
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/watchlist.templ`, Line: 51, Col: 51}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/watchlist.templ`, Line: 58, Col: 51}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var32))
 						if templ_7745c5c3_Err != nil {
@@ -457,7 +457,7 @@ func Watchlist(entries []database.GetUserWatchListRow, layout string, currentSta
 						var templ_7745c5c3_Var33 string
 						templ_7745c5c3_Var33, templ_7745c5c3_Err = templ.JoinStringErrs(string(templ.URL(fmt.Sprintf("/api/watchlist/%d", entry.AnimeID))))
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/watchlist.templ`, Line: 54, Col: 86}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/watchlist.templ`, Line: 61, Col: 86}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var33))
 						if templ_7745c5c3_Err != nil {
@@ -470,7 +470,7 @@ func Watchlist(entries []database.GetUserWatchListRow, layout string, currentSta
 						var templ_7745c5c3_Var34 string
 						templ_7745c5c3_Var34, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("#watchlist-entry-%d", entry.AnimeID))
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/watchlist.templ`, Line: 55, Col: 69}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/watchlist.templ`, Line: 62, Col: 69}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var34))
 						if templ_7745c5c3_Err != nil {
@@ -498,7 +498,7 @@ func Watchlist(entries []database.GetUserWatchListRow, layout string, currentSta
 						var templ_7745c5c3_Var35 string
 						templ_7745c5c3_Var35, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("watchlist-entry-%d", entry.AnimeID))
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/watchlist.templ`, Line: 73, Col: 64}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/watchlist.templ`, Line: 80, Col: 64}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var35))
 						if templ_7745c5c3_Err != nil {
@@ -511,7 +511,7 @@ func Watchlist(entries []database.GetUserWatchListRow, layout string, currentSta
 						var templ_7745c5c3_Var36 templ.SafeURL
 						templ_7745c5c3_Var36, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL(fmt.Sprintf("/anime/%d", entry.AnimeID)))
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/watchlist.templ`, Line: 75, Col: 73}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/watchlist.templ`, Line: 82, Col: 73}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var36))
 						if templ_7745c5c3_Err != nil {
@@ -524,7 +524,7 @@ func Watchlist(entries []database.GetUserWatchListRow, layout string, currentSta
 						var templ_7745c5c3_Var37 string
 						templ_7745c5c3_Var37, templ_7745c5c3_Err = templ.JoinStringErrs(entry.ImageUrl)
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/watchlist.templ`, Line: 76, Col: 35}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/watchlist.templ`, Line: 83, Col: 35}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var37))
 						if templ_7745c5c3_Err != nil {
@@ -537,7 +537,7 @@ func Watchlist(entries []database.GetUserWatchListRow, layout string, currentSta
 						var templ_7745c5c3_Var38 string
 						templ_7745c5c3_Var38, templ_7745c5c3_Err = templ.JoinStringErrs(entry.Title)
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/watchlist.templ`, Line: 76, Col: 55}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/watchlist.templ`, Line: 83, Col: 55}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var38))
 						if templ_7745c5c3_Err != nil {
@@ -550,7 +550,7 @@ func Watchlist(entries []database.GetUserWatchListRow, layout string, currentSta
 						var templ_7745c5c3_Var39 templ.SafeURL
 						templ_7745c5c3_Var39, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL(fmt.Sprintf("/anime/%d", entry.AnimeID)))
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/watchlist.templ`, Line: 80, Col: 73}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/watchlist.templ`, Line: 87, Col: 73}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var39))
 						if templ_7745c5c3_Err != nil {
@@ -563,7 +563,7 @@ func Watchlist(entries []database.GetUserWatchListRow, layout string, currentSta
 						var templ_7745c5c3_Var40 string
 						templ_7745c5c3_Var40, templ_7745c5c3_Err = templ.JoinStringErrs(entry.Title)
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/watchlist.templ`, Line: 81, Col: 23}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/watchlist.templ`, Line: 88, Col: 23}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var40))
 						if templ_7745c5c3_Err != nil {
@@ -576,7 +576,7 @@ func Watchlist(entries []database.GetUserWatchListRow, layout string, currentSta
 						var templ_7745c5c3_Var41 string
 						templ_7745c5c3_Var41, templ_7745c5c3_Err = templ.JoinStringErrs(entry.Status)
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/watchlist.templ`, Line: 84, Col: 46}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/watchlist.templ`, Line: 91, Col: 46}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var41))
 						if templ_7745c5c3_Err != nil {
@@ -589,7 +589,7 @@ func Watchlist(entries []database.GetUserWatchListRow, layout string, currentSta
 						var templ_7745c5c3_Var42 string
 						templ_7745c5c3_Var42, templ_7745c5c3_Err = templ.JoinStringErrs(string(templ.URL(fmt.Sprintf("/api/watchlist/%d", entry.AnimeID))))
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/watchlist.templ`, Line: 88, Col: 88}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/watchlist.templ`, Line: 95, Col: 88}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var42))
 						if templ_7745c5c3_Err != nil {
@@ -602,7 +602,7 @@ func Watchlist(entries []database.GetUserWatchListRow, layout string, currentSta
 						var templ_7745c5c3_Var43 string
 						templ_7745c5c3_Var43, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("#watchlist-entry-%d", entry.AnimeID))
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/watchlist.templ`, Line: 89, Col: 71}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/watchlist.templ`, Line: 96, Col: 71}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var43))
 						if templ_7745c5c3_Err != nil {
@@ -629,7 +629,7 @@ func Watchlist(entries []database.GetUserWatchListRow, layout string, currentSta
 	})
 }
 
-func viewToggleClass(active bool) string {
+func viewClass(active bool) string {
 	if active {
 		return "active"
 	}

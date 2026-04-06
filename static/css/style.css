@@ -290,6 +290,27 @@ a:hover {
   margin: 0;
 }
 
+.watchlist-controls {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.text-link {
+  font-size: 13px;
+  font-family: inherit;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  text-decoration: none;
+  padding: 0;
+}
+
+.text-link:hover {
+  color: var(--text);
+}
+
 .view-toggle {
   display: flex;
   border: 1px solid var(--border);
