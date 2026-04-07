@@ -25,8 +25,6 @@ type Anime struct {
 	TitleEnglish  sql.NullString `json:"title_english"`
 	TitleJapanese sql.NullString `json:"title_japanese"`
 	Airing        sql.NullBool   `json:"airing"`
-	MagnetLink    sql.NullString `json:"magnet_link"`
-	TorrentHash   sql.NullString `json:"torrent_hash"`
 }
 
 type Session struct {

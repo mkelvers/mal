@@ -1,9 +1,7 @@
 package server
 
 import (
-	"log/slog"
 	"net/http"
-	"os"
 
 	"mal/internal/database"
 	"mal/internal/features/anime"
@@ -11,7 +9,6 @@ import (
 	"mal/internal/features/watchlist"
 	"mal/internal/jikan"
 	"mal/internal/shared/middleware"
-	"mal/internal/streaming"
 )
 
 type Config struct {
@@ -31,13 +28,6 @@ func NewRouter(cfg Config) http.Handler {
 	animeSvc := anime.NewService(cfg.JikanClient, cfg.DB)
 	animeHandler := anime.NewHandler(animeSvc)
 
-	logger := slog.New(slog.NewTextHandler(os.Stderr, nil))
-	streamSvc, err := streaming.NewService(logger)
-	if err != nil {
-		panic("failed to initialize streaming service: " + err.Error())
-	}
-	streamHandler := streaming.NewHandler(streamSvc, cfg.JikanClient)
-
 	// Serve static files
 	fs := http.FileServer(http.Dir("./static"))
 	mux.Handle("/static/", http.StripPrefix("/static/", fs))
@@ -49,8 +39,7 @@ func NewRouter(cfg Config) http.Handler {
 	mux.HandleFunc("/api/search-quick", animeHandler.HandleQuickSearch)
 	mux.HandleFunc("/api/catalog", animeHandler.HandleAPICatalog)
 	mux.HandleFunc("/anime/", animeHandler.HandleAnimeDetails)
-	mux.HandleFunc("/api/anime/{id}/relations", animeHandler.HandleAPIAnimeRelations)
-	mux.HandleFunc("/api/anime/{id}/episodes", animeHandler.HandleAPIAnimeEpisodes)
+	mux.HandleFunc("/api/anime/", animeHandler.HandleAPIAnimeRelations)
 
 	// Auth Endpoints
 	mux.HandleFunc("/login", func(w http.ResponseWriter, r *http.Request) {
@@ -61,9 +50,6 @@ func NewRouter(cfg Config) http.Handler {
 		}
 	})
 	mux.HandleFunc("/logout", authHandler.HandleLogout)
-
-	// Streaming endpoints
-	streamHandler.RegisterRoutes(mux)
 
 	// Watchlist POST endpoint (Protected)
 	mux.Handle("/api/watchlist/export", middleware.RequireAuth(http.HandlerFunc(watchlistHandler.HandleExportWatchlist)))
