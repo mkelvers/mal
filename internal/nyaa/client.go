@@ -101,6 +101,11 @@ func (c *Client) SearchAnime(query string) ([]Torrent, error) {
 		seeders, _ := strconv.Atoi(item.Seeders)
 		leechers, _ := strconv.Atoi(item.Leechers)
 
+		// Skip dead torrents (0 seeders)
+		if seeders == 0 {
+			continue
+		}
+
 		// Extract torrent ID from download link
 		// Link format: https://nyaa.si/download/1234567.torrent
 		viewURL := extractViewURL(item.Link)
