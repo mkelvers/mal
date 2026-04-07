@@ -301,22 +301,31 @@ func (h *Handler) HandleStartHLS(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	epStr := r.URL.Query().Get("ep")
+	episode, _ := strconv.Atoi(epStr)
+
 	// Check torrent exists
 	if _, ok := h.svc.GetTorrent(hash); !ok {
 		http.Error(w, "torrent not found - start stream first", http.StatusNotFound)
 		return
 	}
 
-	session, err := h.svc.StartHLS(r.Context(), hash)
+	session, err := h.svc.StartHLS(r.Context(), hash, episode)
 	if err != nil {
 		log.Printf("HLS start error: %v", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
+	// Use sessionKey for subsequent requests
+	sessionKey := hash
+	if episode > 0 {
+		sessionKey = fmt.Sprintf("%s-ep%d", hash, episode)
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{
-		"playlist": fmt.Sprintf("/api/stream/hls/%s/playlist.m3u8", hash),
+		"playlist": fmt.Sprintf("/api/stream/hls/%s/playlist.m3u8", sessionKey),
 		"status":   "ready",
 		"output":   session.OutputDir,
 	})

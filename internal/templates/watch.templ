@@ -118,6 +118,7 @@ templ WatchPage(anime jikan.Anime, episode int, torrents []nyaa.Torrent) {
 		<!-- HLS.js for browser playback -->
 		<script src="https://cdn.jsdelivr.net/npm/hls.js@1"></script>
 		<script>
+			const currentEpisode = { fmt.Sprintf("%d", episode) };
 			let currentStreamHash = null;
 			let progressInterval = null;
 			let hls = null;
@@ -159,7 +160,7 @@ templ WatchPage(anime jikan.Anime, episode int, torrents []nyaa.Torrent) {
 			function startHLS() {
 				showLoading('preparing video stream...');
 
-				fetch('/api/stream/hls/' + currentStreamHash, {
+				fetch('/api/stream/hls/' + currentStreamHash + '?ep=' + currentEpisode, {
 					method: 'POST'
 				})
 				.then(res => {

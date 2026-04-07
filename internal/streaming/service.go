@@ -286,6 +286,70 @@ func isVideoFile(path string) bool {
 	return false
 }
 
+// findEpisodeFile finds the video file matching a specific episode number
+// Falls back to largest video file if no match found
+func findEpisodeFile(files []*torrent.File, episode int) *torrent.File {
+	var bestMatch *torrent.File
+	var fallback *torrent.File
+
+	// Episode patterns to match in filenames
+	epStr := fmt.Sprintf("%02d", episode)
+	epStr2 := fmt.Sprintf("%d", episode)
+
+	patterns := []string{
+		fmt.Sprintf(" - %s", epStr),       // - 01
+		fmt.Sprintf(" - %s ", epStr),      // - 01 (with space after)
+		fmt.Sprintf("E%s", epStr),         // E01
+		fmt.Sprintf("E%s ", epStr),        // E01 (with space)
+		fmt.Sprintf("Episode %s", epStr2), // Episode 1
+		fmt.Sprintf("Episode %s", epStr),  // Episode 01
+		fmt.Sprintf(" %s ", epStr),        // standalone 01
+		fmt.Sprintf("[%s]", epStr),        // [01]
+		fmt.Sprintf("_%s_", epStr),        // _01_
+		fmt.Sprintf(".%s.", epStr),        // .01.
+	}
+
+	for _, f := range files {
+		if !isVideoFile(f.Path()) {
+			continue
+		}
+
+		// Track largest video as fallback
+		if fallback == nil || f.Length() > fallback.Length() {
+			fallback = f
+		}
+
+		filename := strings.ToLower(filepath.Base(f.Path()))
+
+		// Check each pattern
+		for _, pattern := range patterns {
+			if strings.Contains(filename, strings.ToLower(pattern)) {
+				// Verify it's not a different episode (e.g., searching for ep 1, don't match ep 10)
+				// Check character after match isn't a digit
+				idx := strings.Index(filename, strings.ToLower(pattern))
+				if idx >= 0 {
+					afterIdx := idx + len(pattern)
+					if afterIdx >= len(filename) || !isDigit(filename[afterIdx]) {
+						if bestMatch == nil || f.Length() > bestMatch.Length() {
+							bestMatch = f
+						}
+						break
+					}
+				}
+			}
+		}
+	}
+
+	if bestMatch != nil {
+		return bestMatch
+	}
+	return fallback
+}
+
+func isDigit(c byte) bool {
+	return c >= '0' && c <= '9'
+}
+
 // ParseMagnetHash extracts info hash from a magnet URI
 func ParseMagnetHash(magnetURI string) (string, error) {
 	spec, err := torrent.TorrentSpecFromMagnetUri(magnetURI)
@@ -330,13 +394,20 @@ func (s *Service) GetVideoFilePath(infoHash string) (string, error) {
 }
 
 // StartHLS starts HLS transcoding for a torrent
-func (s *Service) StartHLS(ctx context.Context, infoHash string) (*HLSSession, error) {
+// If episode > 0, it will try to find the file matching that episode number
+func (s *Service) StartHLS(ctx context.Context, infoHash string, episode int) (*HLSSession, error) {
 	if s.hls == nil {
 		return nil, fmt.Errorf("HLS transcoding not available (ffmpeg not found)")
 	}
 
+	// Use episode-specific session key if episode specified
+	sessionKey := infoHash
+	if episode > 0 {
+		sessionKey = fmt.Sprintf("%s-ep%d", infoHash, episode)
+	}
+
 	// Check if session already exists
-	if session, ok := s.hls.GetSession(infoHash); ok {
+	if session, ok := s.hls.GetSession(sessionKey); ok {
 		return session, nil
 	}
 
@@ -346,12 +417,22 @@ func (s *Service) StartHLS(ctx context.Context, infoHash string) (*HLSSession, e
 		return nil, fmt.Errorf("torrent not found: %s", infoHash)
 	}
 
-	// Find the largest video file
+	// Find the video file - either by episode or largest
 	var videoFile *torrent.File
-	for _, f := range t.Files() {
-		if isVideoFile(f.Path()) {
-			if videoFile == nil || f.Length() > videoFile.Length() {
-				videoFile = f
+	if episode > 0 {
+		videoFile = findEpisodeFile(t.Files(), episode)
+		if videoFile != nil {
+			s.logger.Info("found episode file", "episode", episode, "file", videoFile.Path())
+		}
+	}
+
+	// Fallback to largest video file
+	if videoFile == nil {
+		for _, f := range t.Files() {
+			if isVideoFile(f.Path()) {
+				if videoFile == nil || f.Length() > videoFile.Length() {
+					videoFile = f
+				}
 			}
 		}
 	}
@@ -368,7 +449,7 @@ func (s *Service) StartHLS(ctx context.Context, infoHash string) (*HLSSession, e
 
 	// Wait for at least 2MB to be available before starting ffmpeg
 	minBytes := int64(2 * 1024 * 1024)
-	s.logger.Info("waiting for initial data", "hash", infoHash, "need", minBytes)
+	s.logger.Info("waiting for initial data", "hash", infoHash, "file", videoFile.Path(), "need", minBytes)
 
 	ticker := time.NewTicker(500 * time.Millisecond)
 	defer ticker.Stop()
@@ -392,7 +473,7 @@ func (s *Service) StartHLS(ctx context.Context, infoHash string) (*HLSSession, e
 
 ready:
 	// Start transcoding with the reader piped to ffmpeg
-	session, err := s.hls.StartSessionWithReader(infoHash, reader)
+	session, err := s.hls.StartSessionWithReader(sessionKey, reader)
 	if err != nil {
 		return nil, err
 	}
@@ -402,7 +483,7 @@ ready:
 	defer cancel()
 
 	if err := session.WaitReady(waitCtx); err != nil {
-		s.hls.StopSession(infoHash)
+		s.hls.StopSession(sessionKey)
 		return nil, fmt.Errorf("HLS not ready: %w", err)
 	}
 
