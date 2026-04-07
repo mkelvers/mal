@@ -444,7 +444,7 @@ func AnimeDetails(anime jikan.Anime, currentStatus string) templ.Component {
 				var templ_7745c5c3_Var22 string
 				templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.JoinStringErrs(joinNames(anime.Producers))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/anime.templ`, Line: 122, Col: 61}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/anime.templ`, Line: 122, Col: 62}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var22))
 				if templ_7745c5c3_Err != nil {
@@ -463,7 +463,7 @@ func AnimeDetails(anime jikan.Anime, currentStatus string) templ.Component {
 				var templ_7745c5c3_Var23 string
 				templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.JoinStringErrs(anime.Source)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/anime.templ`, Line: 128, Col: 47}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/anime.templ`, Line: 128, Col: 48}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var23))
 				if templ_7745c5c3_Err != nil {
@@ -487,7 +487,7 @@ func AnimeDetails(anime jikan.Anime, currentStatus string) templ.Component {
 					var templ_7745c5c3_Var24 string
 					templ_7745c5c3_Var24, templ_7745c5c3_Err = templ.JoinStringErrs(d.Name)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/anime.templ`, Line: 136, Col: 41}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/anime.templ`, Line: 136, Col: 42}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var24))
 					if templ_7745c5c3_Err != nil {
@@ -516,7 +516,7 @@ func AnimeDetails(anime jikan.Anime, currentStatus string) templ.Component {
 					var templ_7745c5c3_Var25 string
 					templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.JoinStringErrs(t.Name)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/anime.templ`, Line: 146, Col: 41}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/anime.templ`, Line: 146, Col: 42}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var25))
 					if templ_7745c5c3_Err != nil {
@@ -540,7 +540,7 @@ func AnimeDetails(anime jikan.Anime, currentStatus string) templ.Component {
 				var templ_7745c5c3_Var26 string
 				templ_7745c5c3_Var26, templ_7745c5c3_Err = templ.JoinStringErrs(anime.Broadcast.String)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/anime.templ`, Line: 154, Col: 57}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/anime.templ`, Line: 154, Col: 58}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var26))
 				if templ_7745c5c3_Err != nil {
@@ -564,7 +564,7 @@ func AnimeDetails(anime jikan.Anime, currentStatus string) templ.Component {
 					var templ_7745c5c3_Var27 templ.SafeURL
 					templ_7745c5c3_Var27, templ_7745c5c3_Err = templ.JoinURLErrs(templ.URL(s.URL))
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/anime.templ`, Line: 162, Col: 38}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/anime.templ`, Line: 162, Col: 39}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var27))
 					if templ_7745c5c3_Err != nil {
@@ -577,7 +577,7 @@ func AnimeDetails(anime jikan.Anime, currentStatus string) templ.Component {
 					var templ_7745c5c3_Var28 string
 					templ_7745c5c3_Var28, templ_7745c5c3_Err = templ.JoinStringErrs(s.Name)
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/anime.templ`, Line: 162, Col: 65}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/anime.templ`, Line: 162, Col: 66}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var28))
 					if templ_7745c5c3_Err != nil {

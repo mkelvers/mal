@@ -28,6 +28,14 @@ func (s *Service) GetTopAnime(page int) (jikan.TopAnimeResult, error) {
 	return s.jikanClient.GetTopAnime(page)
 }
 
+func (s *Service) GetAiringAnime(page int) (jikan.TopAnimeResult, error) {
+	return s.jikanClient.GetSeasonsNow(page)
+}
+
+func (s *Service) GetUpcomingAnime(page int) (jikan.TopAnimeResult, error) {
+	return s.jikanClient.GetSeasonsUpcoming(page)
+}
+
 func (s *Service) GetAnimeDetails(ctx context.Context, id int, userID string) (jikan.Anime, string, error) {
 	anime, err := s.jikanClient.GetAnimeByID(id)
 	if err != nil {

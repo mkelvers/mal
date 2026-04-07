@@ -93,7 +93,7 @@ func SortFilter(opts SortFilterOptions) templ.Component {
 		var templ_7745c5c3_Var2 string
 		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(opts.Sort)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/sort_filter.templ`, Line: 29, Col: 67}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/sort_filter.templ`, Line: 29, Col: 68}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
 		if templ_7745c5c3_Err != nil {
@@ -106,7 +106,7 @@ func SortFilter(opts SortFilterOptions) templ.Component {
 		var templ_7745c5c3_Var3 string
 		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(opts.Order)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/sort_filter.templ`, Line: 30, Col: 70}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/sort_filter.templ`, Line: 30, Col: 71}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 		if templ_7745c5c3_Err != nil {
@@ -124,7 +124,7 @@ func SortFilter(opts SortFilterOptions) templ.Component {
 			var templ_7745c5c3_Var4 string
 			templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(opts.View)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/sort_filter.templ`, Line: 32, Col: 52}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/sort_filter.templ`, Line: 32, Col: 53}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 			if templ_7745c5c3_Err != nil {
@@ -143,7 +143,7 @@ func SortFilter(opts SortFilterOptions) templ.Component {
 			var templ_7745c5c3_Var5 string
 			templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(opts.Status)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/sort_filter.templ`, Line: 35, Col: 56}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/sort_filter.templ`, Line: 35, Col: 57}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 			if templ_7745c5c3_Err != nil {

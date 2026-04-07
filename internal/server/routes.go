@@ -34,6 +34,9 @@ func NewRouter(cfg Config) http.Handler {
 
 	// Anime / Search / Catalog
 	mux.HandleFunc("/", animeHandler.HandleCatalog)
+	mux.HandleFunc("/discover", animeHandler.HandleDiscover)
+	mux.HandleFunc("/api/discover/airing", animeHandler.HandleAPIDiscoverAiring)
+	mux.HandleFunc("/api/discover/upcoming", animeHandler.HandleAPIDiscoverUpcoming)
 	mux.HandleFunc("/search", animeHandler.HandleSearch)
 	mux.HandleFunc("/api/search", animeHandler.HandleAPISearch)
 	mux.HandleFunc("/api/search-quick", animeHandler.HandleQuickSearch)

@@ -14,6 +14,8 @@ type Client struct {
 	baseURL        string
 	cache          *expirable.LRU[string, SearchResult]
 	topCache       *expirable.LRU[int, TopAnimeResult]
+	airingCache    *expirable.LRU[int, TopAnimeResult]
+	upcomingCache  *expirable.LRU[int, TopAnimeResult]
 	animeCache     *expirable.LRU[int, Anime]
 	relationsCache *expirable.LRU[int, JikanRelationsResponse]
 }
@@ -21,6 +23,8 @@ type Client struct {
 func NewClient() *Client {
 	cache := expirable.NewLRU[string, SearchResult](500, nil, time.Hour*1)
 	topCache := expirable.NewLRU[int, TopAnimeResult](100, nil, time.Hour*1)
+	airingCache := expirable.NewLRU[int, TopAnimeResult](100, nil, time.Hour*1)
+	upcomingCache := expirable.NewLRU[int, TopAnimeResult](100, nil, time.Hour*1)
 	animeCache := expirable.NewLRU[int, Anime](1000, nil, time.Hour*24)
 	relationsCache := expirable.NewLRU[int, JikanRelationsResponse](1000, nil, time.Hour*24)
 
@@ -29,6 +33,8 @@ func NewClient() *Client {
 		baseURL:        "https://api.jikan.moe/v4",
 		cache:          cache,
 		topCache:       topCache,
+		airingCache:    airingCache,
+		upcomingCache:  upcomingCache,
 		animeCache:     animeCache,
 		relationsCache: relationsCache,
 	}

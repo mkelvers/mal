@@ -13,7 +13,7 @@ templ Watchlist(entries []database.GetUserWatchListRow, layout string, currentSt
 				<a href="/api/watchlist/export" class="text-link">export</a>
 				<button class="text-link" onclick="document.getElementById('import-file').click()">import</button>
 				<form id="import-form" hx-post="/api/watchlist/import" hx-encoding="multipart/form-data" style="display: none;">
-					<input type="file" id="import-file" name="file" accept=".json" onchange="htmx.trigger('#import-form', 'submit')" />
+					<input type="file" id="import-file" name="file" accept=".json" onchange="htmx.trigger('#import-form', 'submit')"/>
 				</form>
 				<div class="view-toggle">
 					<a href={ templ.URL(fmt.Sprintf("/watchlist?view=grid&status=%s&sort=%s&order=%s", currentStatus, sortBy, sortOrder)) } class={ viewClass(layout == "grid") }>grid</a>
@@ -21,7 +21,6 @@ templ Watchlist(entries []database.GetUserWatchListRow, layout string, currentSt
 				</div>
 			</div>
 		</div>
-
 		<div class="status-tabs">
 			<a href={ templ.URL(fmt.Sprintf("/watchlist?view=%s&status=all&sort=%s&order=%s", layout, sortBy, sortOrder)) } class={ tabClass(currentStatus == "all") }>all</a>
 			<a href={ templ.URL(fmt.Sprintf("/watchlist?view=%s&status=watching&sort=%s&order=%s", layout, sortBy, sortOrder)) } class={ tabClass(currentStatus == "watching") }>watching</a>
@@ -31,9 +30,7 @@ templ Watchlist(entries []database.GetUserWatchListRow, layout string, currentSt
 			<a href={ templ.URL(fmt.Sprintf("/watchlist?view=%s&status=dropped&sort=%s&order=%s", layout, sortBy, sortOrder)) } class={ tabClass(currentStatus == "dropped") }>dropped</a>
 			<a href={ templ.URL(fmt.Sprintf("/watchlist?view=%s&status=completed&sort=%s&order=%s", layout, sortBy, sortOrder)) } class={ tabClass(currentStatus == "completed") }>completed</a>
 		</div>
-
 		@SortFilter(SortFilterOptions{Sort: sortBy, Order: sortOrder, View: layout, Status: currentStatus})
-
 		if len(entries) == 0 {
 			<div class="empty-state">
 				<div class="empty-state-title">nothing here yet</div>
@@ -54,16 +51,16 @@ templ Watchlist(entries []database.GetUserWatchListRow, layout string, currentSt
 						<div class="catalog-item watchlist-item" id={ fmt.Sprintf("watchlist-entry-%d", entry.AnimeID) }>
 							<a href={ templ.URL(fmt.Sprintf("/anime/%d", entry.AnimeID)) }>
 								if entry.ImageUrl != "" {
-									<img src={ entry.ImageUrl } alt={ entry.DisplayTitle() } class="catalog-thumb" loading="lazy" />
+									<img src={ entry.ImageUrl } alt={ entry.DisplayTitle() } class="catalog-thumb" loading="lazy"/>
 								} else {
 									<div class="no-image">no image</div>
 								}
 							</a>
 							<div class="catalog-title">{ entry.DisplayTitle() }</div>
-							<button 
+							<button
 								class="remove-btn"
-								hx-delete={ string(templ.URL(fmt.Sprintf("/api/watchlist/%d?from=watchlist", entry.AnimeID))) } 
-								hx-target={ fmt.Sprintf("#watchlist-entry-%d", entry.AnimeID) } 
+								hx-delete={ string(templ.URL(fmt.Sprintf("/api/watchlist/%d?from=watchlist", entry.AnimeID))) }
+								hx-target={ fmt.Sprintf("#watchlist-entry-%d", entry.AnimeID) }
 								hx-swap="delete"
 							>&times;</button>
 						</div>
@@ -86,16 +83,16 @@ templ Watchlist(entries []database.GetUserWatchListRow, layout string, currentSt
 										<img src={ entry.ImageUrl } alt={ entry.DisplayTitle() } class="thumb" loading="lazy"/>
 									</a>
 								</td>
-							<td class="title-cell">
-								<a href={ templ.SafeURL(fmt.Sprintf("/anime/%d", entry.AnimeID)) }>
-									{ entry.DisplayTitle() }
-								</a>
-							</td>
-							<td class="actions-cell">
-									<button 
+								<td class="title-cell">
+									<a href={ templ.SafeURL(fmt.Sprintf("/anime/%d", entry.AnimeID)) }>
+										{ entry.DisplayTitle() }
+									</a>
+								</td>
+								<td class="actions-cell">
+									<button
 										class="remove-link"
-										hx-delete={ string(templ.URL(fmt.Sprintf("/api/watchlist/%d?from=watchlist", entry.AnimeID))) } 
-										hx-target={ fmt.Sprintf("#watchlist-entry-%d", entry.AnimeID) } 
+										hx-delete={ string(templ.URL(fmt.Sprintf("/api/watchlist/%d?from=watchlist", entry.AnimeID))) }
+										hx-target={ fmt.Sprintf("#watchlist-entry-%d", entry.AnimeID) }
 										hx-swap="delete"
 										style="background: none; border: none; cursor: pointer;"
 									>remove</button>

@@ -1,0 +1,53 @@
+package templates
+
+import "mal/internal/jikan"
+import "fmt"
+
+templ Discover() {
+	@Layout("mal - discover") {
+		<div class="discover-container">
+			<div class="tabs">
+				<button
+					class="tab active"
+					hx-get="/api/discover/airing?page=1"
+					hx-target="#discover-content"
+					hx-trigger="click"
+					onclick="document.querySelectorAll('.tab').forEach(t => t.classList.remove('active')); this.classList.add('active');"
+				>
+					airing now
+				</button>
+				<button
+					class="tab"
+					hx-get="/api/discover/upcoming?page=1"
+					hx-target="#discover-content"
+					hx-trigger="click"
+					onclick="document.querySelectorAll('.tab').forEach(t => t.classList.remove('active')); this.classList.add('active');"
+				>
+					upcoming
+				</button>
+			</div>
+			<div class="catalog-grid" id="discover-content" hx-get="/api/discover/airing?page=1" hx-trigger="load">
+				<div class="loading-indicator" style="grid-column: 1 / -1;">
+					<div class="loading-dot"></div>
+					<div class="loading-dot"></div>
+					<div class="loading-dot"></div>
+					<span>loading discover</span>
+				</div>
+			</div>
+		</div>
+	}
+}
+
+templ DiscoverItems(animes []jikan.Anime, listType string, nextPage int, hasNext bool) {
+	for i, anime := range animes {
+		if i == len(animes)-1 && hasNext {
+			<div class="catalog-item" hx-get={ string(templ.URL(fmt.Sprintf("/api/discover/%s?page=%d", listType, nextPage))) } hx-trigger="revealed" hx-swap="afterend">
+				@CatalogItem(anime)
+			</div>
+		} else {
+			<div class="catalog-item">
+				@CatalogItem(anime)
+			</div>
+		}
+	}
+}

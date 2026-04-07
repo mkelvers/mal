@@ -11,7 +11,7 @@ templ AnimeDetails(anime jikan.Anime, currentStatus string) {
 				<div class="anime-hero">
 					<div class="anime-poster">
 						if anime.ImageURL() != "" {
-							<img src={ anime.ImageURL() } alt={ anime.DisplayTitle() } />
+							<img src={ anime.ImageURL() } alt={ anime.DisplayTitle() }/>
 						} else {
 							<div class="no-image">no image</div>
 						}
@@ -116,54 +116,54 @@ templ AnimeDetails(anime jikan.Anime, currentStatus string) {
 						<span class="sidebar-value">{ joinNames(anime.Studios) }</span>
 					</div>
 				}
-			if len(anime.Producers) > 0 {
-				<div class="sidebar-row">
-					<span class="sidebar-label">Producers</span>
-					<span class="sidebar-value">{ joinNames(anime.Producers) }</span>
-				</div>
-			}
-			if anime.Source != "" {
-				<div class="sidebar-row">
-					<span class="sidebar-label">Source</span>
-					<span class="sidebar-value">{ anime.Source }</span>
-				</div>
-			}
-			if len(anime.Demographics) > 0 {
-				<div class="sidebar-row sidebar-row-wrap">
-					<span class="sidebar-label">Demographics</span>
-					<div class="sidebar-tags">
-						for _, d := range anime.Demographics {
-							<span class="sidebar-tag">{ d.Name }</span>
-						}
+				if len(anime.Producers) > 0 {
+					<div class="sidebar-row">
+						<span class="sidebar-label">Producers</span>
+						<span class="sidebar-value">{ joinNames(anime.Producers) }</span>
 					</div>
-				</div>
-			}
-			if len(anime.Themes) > 0 {
-				<div class="sidebar-row sidebar-row-wrap">
-					<span class="sidebar-label">Themes</span>
-					<div class="sidebar-tags">
-						for _, t := range anime.Themes {
-							<span class="sidebar-tag">{ t.Name }</span>
-						}
+				}
+				if anime.Source != "" {
+					<div class="sidebar-row">
+						<span class="sidebar-label">Source</span>
+						<span class="sidebar-value">{ anime.Source }</span>
 					</div>
-				</div>
-			}
-			if anime.Broadcast.String != "" {
-				<div class="sidebar-row">
-					<span class="sidebar-label">Broadcast</span>
-					<span class="sidebar-value">{ anime.Broadcast.String }</span>
-				</div>
-			}
-			if len(anime.Streaming) > 0 {
-				<div class="sidebar-row">
-					<span class="sidebar-label">Streaming</span>
-					<div class="sidebar-value">
-						for _, s := range anime.Streaming {
-							<div><a href={ templ.URL(s.URL) } target="_blank">{ s.Name }</a></div>
-						}
+				}
+				if len(anime.Demographics) > 0 {
+					<div class="sidebar-row sidebar-row-wrap">
+						<span class="sidebar-label">Demographics</span>
+						<div class="sidebar-tags">
+							for _, d := range anime.Demographics {
+								<span class="sidebar-tag">{ d.Name }</span>
+							}
+						</div>
 					</div>
-				</div>
-			}
+				}
+				if len(anime.Themes) > 0 {
+					<div class="sidebar-row sidebar-row-wrap">
+						<span class="sidebar-label">Themes</span>
+						<div class="sidebar-tags">
+							for _, t := range anime.Themes {
+								<span class="sidebar-tag">{ t.Name }</span>
+							}
+						</div>
+					</div>
+				}
+				if anime.Broadcast.String != "" {
+					<div class="sidebar-row">
+						<span class="sidebar-label">Broadcast</span>
+						<span class="sidebar-value">{ anime.Broadcast.String }</span>
+					</div>
+				}
+				if len(anime.Streaming) > 0 {
+					<div class="sidebar-row">
+						<span class="sidebar-label">Streaming</span>
+						<div class="sidebar-value">
+							for _, s := range anime.Streaming {
+								<div><a href={ templ.URL(s.URL) } target="_blank">{ s.Name }</a></div>
+							}
+						</div>
+					</div>
+				}
 			</aside>
 		</div>
 		<script>
@@ -206,7 +206,7 @@ templ WatchlistDropdown(animeID int, animeTitle string, animeTitleEnglish string
 			@dropdownStatusOption(animeID, animeTitle, animeTitleEnglish, animeTitleJapanese, animeImage, "plan_to_watch", currentStatus, airing)
 			if currentStatus != "" {
 				<div class="dropdown-divider"></div>
-				<button 
+				<button
 					class="dropdown-item remove"
 					hx-delete={ string(templ.URL(fmt.Sprintf("/api/watchlist/%d", animeID))) }
 					hx-target="#watchlist-dropdown"
@@ -218,7 +218,7 @@ templ WatchlistDropdown(animeID int, animeTitle string, animeTitleEnglish string
 }
 
 templ dropdownStatusOption(animeID int, animeTitle string, animeTitleEnglish string, animeTitleJapanese string, animeImage string, status string, currentStatus string, airing bool) {
-	<button 
+	<button
 		class={ "dropdown-item", templ.KV("active", status == currentStatus) }
 		hx-post="/api/watchlist"
 		hx-vals={ fmt.Sprintf(`{"anime_id": "%d", "anime_title": "%s", "anime_title_english": "%s", "anime_title_japanese": "%s", "anime_image": "%s", "status": "%s", "airing": "%v"}`, animeID, animeTitle, animeTitleEnglish, animeTitleJapanese, animeImage, status, airing) }
@@ -233,7 +233,7 @@ templ dropdownStatusOption(animeID int, animeTitle string, animeTitleEnglish str
 }
 
 templ statusOption(anime jikan.Anime, status string, currentStatus string) {
-	<button 
+	<button
 		class={ "dropdown-item", templ.KV("active", status == currentStatus) }
 		hx-post="/api/watchlist"
 		hx-vals={ fmt.Sprintf(`{"anime_id": "%d", "anime_title": "%s", "anime_title_english": "%s", "anime_title_japanese": "%s", "anime_image": "%s", "status": "%s"}`, anime.MalID, anime.Title, anime.TitleEnglish, anime.TitleJapanese, anime.ImageURL(), status) }
@@ -272,7 +272,7 @@ templ AnimeRelationsList(relations []jikan.RelationEntry) {
 				if rel.IsCurrent {
 					<div class="relation-card current">
 						if rel.Anime.ImageURL() != "" {
-							<img src={ rel.Anime.ImageURL() } alt={ rel.Anime.DisplayTitle() } class="relation-thumb" />
+							<img src={ rel.Anime.ImageURL() } alt={ rel.Anime.DisplayTitle() } class="relation-thumb"/>
 						} else {
 							<div class="no-image">no image</div>
 						}
@@ -281,7 +281,7 @@ templ AnimeRelationsList(relations []jikan.RelationEntry) {
 				} else {
 					<a href={ templ.URL(fmt.Sprintf("/anime/%d", rel.Anime.MalID)) } class="relation-card">
 						if rel.Anime.ImageURL() != "" {
-							<img src={ rel.Anime.ImageURL() } alt={ rel.Anime.DisplayTitle() } class="relation-thumb" />
+							<img src={ rel.Anime.ImageURL() } alt={ rel.Anime.DisplayTitle() } class="relation-thumb"/>
 						} else {
 							<div class="no-image">no image</div>
 						}

@@ -172,3 +172,41 @@ func (h *Handler) HandleQuickSearch(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(output)
 }
+
+func (h *Handler) HandleDiscover(w http.ResponseWriter, r *http.Request) {
+	templates.Discover().Render(r.Context(), w)
+}
+
+func (h *Handler) HandleAPIDiscoverAiring(w http.ResponseWriter, r *http.Request) {
+	pageStr := r.URL.Query().Get("page")
+	page, _ := strconv.Atoi(pageStr)
+	if page < 1 {
+		page = 1
+	}
+
+	res, err := h.svc.GetAiringAnime(page)
+	if err != nil {
+		log.Printf("airing anime error: %v", err)
+		http.Error(w, "Failed to fetch airing anime", http.StatusInternalServerError)
+		return
+	}
+
+	templates.DiscoverItems(res.Animes, "airing", page+1, res.HasNextPage).Render(r.Context(), w)
+}
+
+func (h *Handler) HandleAPIDiscoverUpcoming(w http.ResponseWriter, r *http.Request) {
+	pageStr := r.URL.Query().Get("page")
+	page, _ := strconv.Atoi(pageStr)
+	if page < 1 {
+		page = 1
+	}
+
+	res, err := h.svc.GetUpcomingAnime(page)
+	if err != nil {
+		log.Printf("upcoming anime error: %v", err)
+		http.Error(w, "Failed to fetch upcoming anime", http.StatusInternalServerError)
+		return
+	}
+
+	templates.DiscoverItems(res.Animes, "upcoming", page+1, res.HasNextPage).Render(r.Context(), w)
+}

@@ -35,7 +35,7 @@ templ CatalogItems(animes []jikan.Anime, nextPage int, hasNext bool) {
 templ CatalogItem(anime jikan.Anime) {
 	<a href={ templ.URL(fmt.Sprintf("/anime/%d", anime.MalID)) }>
 		if anime.ImageURL() != "" {
-			<img src={ anime.ImageURL() } alt={ anime.DisplayTitle() } class="catalog-thumb" loading="lazy" />
+			<img src={ anime.ImageURL() } alt={ anime.DisplayTitle() } class="catalog-thumb" loading="lazy"/>
 		} else {
 			<div class="no-image">no image</div>
 		}
