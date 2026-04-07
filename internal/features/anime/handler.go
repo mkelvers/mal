@@ -7,9 +7,22 @@ import (
 	"strconv"
 
 	"mal/internal/database"
+	"mal/internal/jikan"
 	"mal/internal/shared/middleware"
 	"mal/internal/templates"
 )
+
+func deduplicateAnimes(animes []jikan.Anime) []jikan.Anime {
+	seen := make(map[int]bool)
+	var result []jikan.Anime
+	for _, a := range animes {
+		if !seen[a.MalID] {
+			seen[a.MalID] = true
+			result = append(result, a)
+		}
+	}
+	return result
+}
 
 type Handler struct {
 	svc *Service
@@ -65,6 +78,8 @@ func (h *Handler) HandleAPISearch(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	res.Animes = deduplicateAnimes(res.Animes)
+
 	templates.SearchItems(query, res.Animes, page+1, res.HasNextPage).Render(r.Context(), w)
 }
 
@@ -81,6 +96,8 @@ func (h *Handler) HandleAPICatalog(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Failed to fetch top anime", http.StatusInternalServerError)
 		return
 	}
+
+	res.Animes = deduplicateAnimes(res.Animes)
 
 	templates.CatalogItems(res.Animes, page+1, res.HasNextPage).Render(r.Context(), w)
 }
@@ -191,6 +208,8 @@ func (h *Handler) HandleAPIDiscoverAiring(w http.ResponseWriter, r *http.Request
 		return
 	}
 
+	res.Animes = deduplicateAnimes(res.Animes)
+
 	templates.DiscoverItems(res.Animes, "airing", page+1, res.HasNextPage).Render(r.Context(), w)
 }
 
@@ -207,6 +226,8 @@ func (h *Handler) HandleAPIDiscoverUpcoming(w http.ResponseWriter, r *http.Reque
 		http.Error(w, "Failed to fetch upcoming anime", http.StatusInternalServerError)
 		return
 	}
+
+	res.Animes = deduplicateAnimes(res.Animes)
 
 	templates.DiscoverItems(res.Animes, "upcoming", page+1, res.HasNextPage).Render(r.Context(), w)
 }

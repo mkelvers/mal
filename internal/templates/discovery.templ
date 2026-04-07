@@ -39,15 +39,28 @@ templ Discover() {
 }
 
 templ DiscoverItems(animes []jikan.Anime, listType string, nextPage int, hasNext bool) {
-	for i, anime := range animes {
-		if i == len(animes)-1 && hasNext {
-			<div class="catalog-item" hx-get={ string(templ.URL(fmt.Sprintf("/api/discover/%s?page=%d", listType, nextPage))) } hx-trigger="revealed" hx-swap="afterend">
-				@CatalogItem(anime)
-			</div>
-		} else {
-			<div class="catalog-item">
-				@CatalogItem(anime)
-			</div>
-		}
+	for _, anime := range animes {
+		<div class="catalog-item" data-id={ fmt.Sprintf("%d", anime.MalID) }>
+			@CatalogItem(anime)
+		</div>
 	}
+	if hasNext {
+		<div class="scroll-trigger" style="grid-column: 1 / -1; height: 20px;" hx-get={ string(templ.URL(fmt.Sprintf("/api/discover/%s?page=%d", listType, nextPage))) } hx-trigger="revealed" hx-swap="outerHTML"></div>
+	}
+	<script>
+		(function() {
+			const items = document.querySelectorAll('#discover-content .catalog-item[data-id]');
+			const seen = new Set();
+			items.forEach(item => {
+				const id = item.getAttribute('data-id');
+				if (id) {
+					if (seen.has(id)) {
+						item.remove();
+					} else {
+						seen.add(id);
+					}
+				}
+			});
+		})();
+	</script>
 }
