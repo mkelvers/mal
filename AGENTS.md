@@ -1,4 +1,4 @@
-# malago
+# mal
 
 personal anime tracking platform. go/htmx rewrite.
 
@@ -158,7 +158,7 @@ make create-user  # cli user creation
 ## env
 
 ```bash
-DATABASE_FILE=malago.db
+DATABASE_FILE=mal.db
 SESSION_SECRET=min_32_chars_random
 PORT=3000
 ```
