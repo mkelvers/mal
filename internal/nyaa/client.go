@@ -197,35 +197,97 @@ func (c *Client) SearchEpisode(animeTitle string, episode int) ([]Torrent, error
 		return nil, err
 	}
 
-	// Filter to torrents that match the episode number
+	// Strict filter: only return torrents that exactly match the episode
 	var filtered []Torrent
 	for _, t := range torrents {
-		if t.Episode == episode || t.Episode == 0 {
-			// Episode 0 means we couldn't parse it, include anyway
+		parsedEp := t.Episode
+		if parsedEp == 0 {
+			// Re-parse to be sure
+			parsedEp = parseEpisodeNumber(t.Title)
+		}
+		if parsedEp == episode {
 			filtered = append(filtered, t)
 		}
 	}
 
-	// If no filtered results, return all (search might be specific enough)
+	// If strict filtering returns nothing, try a more specific search
 	if len(filtered) == 0 {
-		return torrents, nil
+		// Try with episode marker formats
+		altQueries := []string{
+			fmt.Sprintf("%s E%02d", animeTitle, episode),
+			fmt.Sprintf("%s - %02d", animeTitle, episode),
+			fmt.Sprintf("%s Episode %d", animeTitle, episode),
+		}
+
+		for _, altQuery := range altQueries {
+			altTorrents, err := c.SearchAnime(altQuery)
+			if err != nil {
+				continue
+			}
+			for _, t := range altTorrents {
+				parsedEp := parseEpisodeNumber(t.Title)
+				if parsedEp == episode {
+					filtered = append(filtered, t)
+				}
+			}
+			if len(filtered) > 0 {
+				break
+			}
+		}
 	}
-	return filtered, nil
+
+	// Deduplicate by magnet link
+	seen := make(map[string]bool)
+	var deduped []Torrent
+	for _, t := range filtered {
+		if t.Magnet != "" && !seen[t.Magnet] {
+			seen[t.Magnet] = true
+			deduped = append(deduped, t)
+		} else if t.Magnet == "" && !seen[t.ViewURL] {
+			seen[t.ViewURL] = true
+			deduped = append(deduped, t)
+		}
+	}
+
+	return deduped, nil
 }
 
 // parseEpisodeNumber tries to extract episode number from torrent title
 func parseEpisodeNumber(title string) int {
+	// First, check if this is a batch/complete series (should return 0)
+	batchPatterns := []string{
+		`(?i)\b(batch|complete|全話|全\d+話)\b`,
+		`(?i)\b(\d{1,4})\s*[-~]\s*(\d{1,4})\b`, // Range like 01-12 or 01~24
+	}
+	for _, p := range batchPatterns {
+		if regexp.MustCompile(p).MatchString(title) {
+			return 0
+		}
+	}
+
+	// Patterns ordered by specificity (most specific first)
 	patterns := []*regexp.Regexp{
-		regexp.MustCompile(`(?i)[-–]\s*(\d{1,4})(?:v\d)?(?:\s|\[|$)`),    // - 01 or - 01v2
-		regexp.MustCompile(`(?i)\bE(\d{1,4})(?:v\d)?(?:\s|\[|$)`),        // E01
-		regexp.MustCompile(`(?i)S\d{1,2}E(\d{1,4})(?:v\d)?(?:\s|\[|$)`),  // S01E01
-		regexp.MustCompile(`(?i)Episode\s*(\d{1,4})(?:v\d)?(?:\s|\[|$)`), // Episode 01
-		regexp.MustCompile(`(?i)\s(\d{2,4})(?:v\d)?\s*[\[\(]`),           // 01 [quality]
+		// S01E01 format (most specific)
+		regexp.MustCompile(`(?i)S\d{1,2}E(\d{1,4})(?:v\d)?(?:\s|\[|\]|$)`),
+		// Episode 01 format
+		regexp.MustCompile(`(?i)Episode\s*(\d{1,4})(?:v\d)?(?:\s|\[|\]|$)`),
+		// - 01 format (common in fansubs like [SubGroup] Anime - 01)
+		regexp.MustCompile(`[-–]\s*(\d{1,4})(?:v\d)?(?:\s|\[|\]|$)`),
+		// E01 format (standalone)
+		regexp.MustCompile(`(?i)\bE(\d{1,4})(?:v\d)?(?:\s|\[|\]|$)`),
+		// #01 format
+		regexp.MustCompile(`#(\d{1,4})(?:v\d)?(?:\s|\[|\]|$)`),
 	}
 
 	for _, re := range patterns {
 		if matches := re.FindStringSubmatch(title); len(matches) > 1 {
-			if ep, err := strconv.Atoi(matches[1]); err == nil {
+			ep, err := strconv.Atoi(matches[1])
+			if err != nil {
+				continue
+			}
+			// Sanity check: episode numbers are typically < 2000
+			// This filters out years (2024) and resolutions (1920)
+			if ep > 0 && ep < 2000 {
 				return ep
 			}
 		}

@@ -67,11 +67,26 @@ func (h *Handler) HandleWatchPage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Search for torrents for this episode
-	torrents, err := h.svc.SearchEpisode(anime.Title, episode)
-	if err != nil {
-		log.Printf("torrent search error: %v", err)
-		torrents = nil
+	// Build list of title variations to try
+	// Fansubs typically use English titles or romaji
+	var titles []string
+	if anime.TitleEnglish != "" {
+		titles = append(titles, anime.TitleEnglish)
+	}
+	titles = append(titles, anime.Title) // Usually romaji
+	titles = append(titles, anime.TitleSynonyms...)
+
+	// Search using title variations until we find results
+	var torrents []nyaa.Torrent
+	for _, title := range titles {
+		torrents, err = h.svc.SearchEpisode(title, episode)
+		if err != nil {
+			log.Printf("torrent search error for %q: %v", title, err)
+			continue
+		}
+		if len(torrents) > 0 {
+			break
+		}
 	}
 
 	// Filter to 1080p by default, fallback to all
