@@ -28,6 +28,8 @@ func (h *Handler) HandleCatalog(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) HandleSearch(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Vary", "HX-Request")
+
 	query := r.URL.Query().Get("q")
 	if query == "" {
 		templates.Search("").Render(r.Context(), w)
