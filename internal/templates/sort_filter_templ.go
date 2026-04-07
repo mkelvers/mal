@@ -36,7 +36,7 @@ func SortFilter(opts SortFilterOptions) templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"sort-filter\"><div class=\"sort-filter-group\"><label for=\"sort-select\">sort by</label> <select id=\"sort-select\" class=\"sort-filter-select\" onchange=\"document.getElementById('sort-form').submit()\"><option value=\"date\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"sort-filter\"><div class=\"sort-filter-group\"><label for=\"sort-select\">sort by</label> <select id=\"sort-select\" class=\"sort-filter-select\" onchange=\"document.getElementById('sort-input').value = this.value; document.getElementById('sort-form').submit()\"><option value=\"date\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -66,7 +66,7 @@ func SortFilter(opts SortFilterOptions) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, ">score</option></select></div><div class=\"sort-filter-group\"><label for=\"order-select\">order</label> <select id=\"order-select\" class=\"sort-filter-select\" onchange=\"document.getElementById('sort-form').submit()\"><option value=\"desc\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, ">score</option></select></div><div class=\"sort-filter-group\"><label for=\"order-select\">order</label> <select id=\"order-select\" class=\"sort-filter-select\" onchange=\"document.getElementById('order-input').value = this.value; document.getElementById('sort-form').submit()\"><option value=\"desc\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -154,7 +154,7 @@ func SortFilter(opts SortFilterOptions) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "</form><script>\n\t\tdocument.getElementById('sort-select').addEventListener('change', (e) => {\n\t\t\tdocument.getElementById('sort-input').value = e.target.value;\n\t\t});\n\t\tdocument.getElementById('order-select').addEventListener('change', (e) => {\n\t\t\tdocument.getElementById('order-input').value = e.target.value;\n\t\t});\n\t</script>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "</form>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

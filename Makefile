@@ -10,7 +10,7 @@ test:
 	go test ./...
 
 migrate:
-	sqlite3 mal.db < migrations/001_init.sql
+	for f in migrations/*.sql; do sqlite3 mal.db < "$$f" 2>/dev/null || true; done
 
 sqlc:
 	sqlc generate
