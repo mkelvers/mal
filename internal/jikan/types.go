@@ -169,3 +169,24 @@ func (a Anime) DisplayTitle() string {
 	}
 	return a.Title
 }
+
+// Episode represents a single anime episode from Jikan API
+type Episode struct {
+	MalID    int    `json:"mal_id"`
+	Title    string `json:"title"`
+	TitleJP  string `json:"title_japanese"`
+	TitleRom string `json:"title_romanji"`
+	Aired    string `json:"aired"`
+	Filler   bool   `json:"filler"`
+	Recap    bool   `json:"recap"`
+}
+
+type EpisodesResponse struct {
+	Data       []Episode  `json:"data"`
+	Pagination Pagination `json:"pagination"`
+}
+
+type EpisodesResult struct {
+	Episodes    []Episode
+	HasNextPage bool
+}

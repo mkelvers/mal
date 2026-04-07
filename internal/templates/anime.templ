@@ -56,6 +56,14 @@ templ AnimeDetails(anime jikan.Anime, currentStatus string) {
 						<span>loading relations</span>
 					</div>
 				</section>
+				<section class="anime-episodes" hx-get={ string(templ.URL(fmt.Sprintf("/api/anime/%d/episodes", anime.MalID))) } hx-trigger="load">
+					<div class="loading-indicator">
+						<div class="loading-dot"></div>
+						<div class="loading-dot"></div>
+						<div class="loading-dot"></div>
+						<span>loading episodes</span>
+					</div>
+				</section>
 			</div>
 			<aside class="anime-sidebar">
 				if anime.TitleJapanese != "" {

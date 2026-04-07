@@ -1,0 +1,336 @@
+package templates
+
+import "mal/internal/jikan"
+import "mal/internal/nyaa"
+import "fmt"
+
+// WatchPage renders the video player page
+templ WatchPage(anime jikan.Anime, episode int, torrents []nyaa.Torrent) {
+	@Layout(fmt.Sprintf("Watch %s - Episode %d", anime.DisplayTitle(), episode)) {
+		<div class="watch-page">
+			<div class="watch-header">
+				<a href={ templ.URL(fmt.Sprintf("/anime/%d", anime.MalID)) } class="back-link">
+					<svg viewBox="0 0 24 24" fill="currentColor" class="back-icon">
+						<path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
+					</svg>
+					back to { anime.DisplayTitle() }
+				</a>
+				<h1>Episode { fmt.Sprintf("%d", episode) }</h1>
+			</div>
+
+			<div class="watch-content">
+				<div class="player-container" id="player-container">
+					<div class="player-placeholder" id="player-placeholder">
+						<div class="player-message">
+							<svg viewBox="0 0 24 24" fill="currentColor" class="player-icon">
+								<path d="M8 5v14l11-7z"/>
+							</svg>
+							<p>select a source to start streaming</p>
+						</div>
+					</div>
+					<div id="player-loading" class="player-loading hidden">
+						<div class="loading-stream">
+							<div class="loading-dot"></div>
+							<div class="loading-dot"></div>
+							<div class="loading-dot"></div>
+						</div>
+						<p id="loading-status">connecting to peers...</p>
+						<p id="loading-progress" class="loading-progress"></p>
+					</div>
+					<video 
+						id="video-player" 
+						class="video-player hidden"
+						controls
+						playsinline
+					>
+					</video>
+				</div>
+
+				<div class="sources-panel">
+					<h3>available sources</h3>
+					if len(torrents) == 0 {
+						<div class="no-sources">
+							<p>no torrents found for this episode</p>
+							<p class="hint">try searching manually</p>
+						</div>
+					} else {
+						<div class="sources-list">
+							for _, t := range torrents {
+								if t.Magnet != "" {
+									@TorrentSource(t)
+								}
+							}
+						</div>
+					}
+
+					<div class="manual-search">
+						<h4>manual search</h4>
+						<form 
+							hx-get="/api/stream/search-htmx"
+							hx-target="#search-results"
+							hx-indicator="#search-loading"
+						>
+							<input 
+								type="text" 
+								name="q" 
+								placeholder={ fmt.Sprintf("%s %02d", anime.Title, episode) }
+								value={ fmt.Sprintf("%s %02d", anime.Title, episode) }
+								class="search-input"
+							/>
+							<button type="submit" class="search-btn">search</button>
+						</form>
+						<div id="search-loading" class="htmx-indicator">searching...</div>
+						<div id="search-results"></div>
+					</div>
+				</div>
+			</div>
+
+			<div class="episode-nav">
+				if episode > 1 {
+					<a 
+						href={ templ.URL(fmt.Sprintf("/watch/%d/%d", anime.MalID, episode-1)) }
+						class="nav-btn prev"
+					>
+						<svg viewBox="0 0 24 24" fill="currentColor">
+							<path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>
+						</svg>
+						previous
+					</a>
+				} else {
+					<span class="nav-btn disabled">previous</span>
+				}
+				if anime.Episodes == 0 || episode < anime.Episodes {
+					<a 
+						href={ templ.URL(fmt.Sprintf("/watch/%d/%d", anime.MalID, episode+1)) }
+						class="nav-btn next"
+					>
+						next
+						<svg viewBox="0 0 24 24" fill="currentColor">
+							<path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
+						</svg>
+					</a>
+				} else {
+					<span class="nav-btn disabled">next</span>
+				}
+			</div>
+		</div>
+
+		<!-- HLS.js for browser playback -->
+		<script src="https://cdn.jsdelivr.net/npm/hls.js@1"></script>
+		<script>
+			let currentStreamHash = null;
+			let progressInterval = null;
+			let hls = null;
+
+			function startStream(magnet) {
+				if (!magnet) {
+					showError('no magnet link available for this torrent');
+					return;
+				}
+
+				showLoading('connecting to peers...');
+				
+				fetch('/api/stream/start', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({ magnet: magnet })
+				})
+				.then(res => {
+					if (!res.ok) {
+						return res.text().then(text => { throw new Error(text); });
+					}
+					return res.json();
+				})
+				.then(data => {
+					if (data.info_hash) {
+						currentStreamHash = data.info_hash;
+						showLoading('starting transcoding...');
+						startProgressUpdates();
+						startHLS();
+					} else {
+						showError('invalid response from server');
+					}
+				})
+				.catch(err => {
+					showError(err.message || 'failed to start stream');
+				});
+			}
+
+			function startHLS() {
+				showLoading('preparing video stream...');
+
+				fetch('/api/stream/hls/' + currentStreamHash, {
+					method: 'POST'
+				})
+				.then(res => {
+					if (!res.ok) {
+						return res.text().then(text => { throw new Error(text); });
+					}
+					return res.json();
+				})
+				.then(data => {
+					playHLS(data.playlist);
+				})
+				.catch(err => {
+					showError('transcoding failed: ' + (err.message || 'unknown error'));
+				});
+			}
+
+			function playHLS(playlistUrl) {
+				const video = document.getElementById('video-player');
+				
+				// Cleanup previous instance
+				if (hls) {
+					hls.destroy();
+					hls = null;
+				}
+
+				document.getElementById('player-placeholder').classList.add('hidden');
+				document.getElementById('player-loading').classList.add('hidden');
+				video.classList.remove('hidden');
+
+				if (Hls.isSupported()) {
+					hls = new Hls({
+						enableWorker: true,
+						lowLatencyMode: false,
+						backBufferLength: 90
+					});
+					
+					hls.loadSource(playlistUrl);
+					hls.attachMedia(video);
+					
+					hls.on(Hls.Events.MANIFEST_PARSED, function() {
+						video.play().catch(e => console.log('Autoplay blocked:', e));
+					});
+
+					hls.on(Hls.Events.ERROR, function(event, data) {
+						if (data.fatal) {
+							switch(data.type) {
+								case Hls.ErrorTypes.NETWORK_ERROR:
+									console.error('Network error, trying to recover...');
+									hls.startLoad();
+									break;
+								case Hls.ErrorTypes.MEDIA_ERROR:
+									console.error('Media error, trying to recover...');
+									hls.recoverMediaError();
+									break;
+								default:
+									showError('Playback error: ' + data.details);
+									hls.destroy();
+									break;
+							}
+						}
+					});
+				} else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+					// Native HLS support (Safari)
+					video.src = playlistUrl;
+					video.addEventListener('loadedmetadata', function() {
+						video.play().catch(e => console.log('Autoplay blocked:', e));
+					});
+				} else {
+					showError('HLS playback not supported in this browser');
+				}
+			}
+
+			function showLoading(status) {
+				document.getElementById('player-placeholder').classList.add('hidden');
+				document.getElementById('video-player').classList.add('hidden');
+				document.getElementById('player-loading').classList.remove('hidden');
+				document.getElementById('loading-status').textContent = status;
+				document.getElementById('loading-progress').textContent = '';
+			}
+
+			function showError(message) {
+				stopProgressUpdates();
+				document.getElementById('player-loading').classList.add('hidden');
+				document.getElementById('video-player').classList.add('hidden');
+				
+				const placeholder = document.getElementById('player-placeholder');
+				placeholder.classList.remove('hidden');
+				placeholder.innerHTML = '<div class="player-error">' + escapeHtml(message) + '</div>';
+			}
+
+			function startProgressUpdates() {
+				if (progressInterval) clearInterval(progressInterval);
+				progressInterval = setInterval(updateProgress, 2000);
+				updateProgress();
+			}
+
+			function stopProgressUpdates() {
+				if (progressInterval) {
+					clearInterval(progressInterval);
+					progressInterval = null;
+				}
+			}
+
+			function updateProgress() {
+				if (!currentStreamHash) return;
+				
+				fetch('/api/stream/info/' + currentStreamHash)
+				.then(res => res.json())
+				.then(data => {
+					const progress = data.progress.toFixed(1);
+					const peers = data.peers;
+					const progressEl = document.getElementById('loading-progress');
+					if (progressEl) {
+						progressEl.textContent = progress + '% downloaded | ' + peers + ' peers';
+					}
+				})
+				.catch(() => {});
+			}
+
+			function formatSize(bytes) {
+				if (bytes < 1024) return bytes + ' B';
+				if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+				if (bytes < 1024 * 1024 * 1024) return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+				return (bytes / (1024 * 1024 * 1024)).toFixed(2) + ' GB';
+			}
+
+			function escapeHtml(text) {
+				const div = document.createElement('div');
+				div.textContent = text;
+				return div.innerHTML;
+			}
+
+			// Handle torrent selection from search results and source list
+			document.addEventListener('click', function(e) {
+				const item = e.target.closest('[data-magnet]');
+				if (item && item.dataset.magnet) {
+					e.preventDefault();
+					
+					// Mark selected
+					document.querySelectorAll('[data-magnet]').forEach(el => el.classList.remove('selected'));
+					item.classList.add('selected');
+					
+					startStream(item.dataset.magnet);
+				}
+			});
+
+			// Cleanup on page leave
+			window.addEventListener('beforeunload', function() {
+				stopProgressUpdates();
+				if (hls) {
+					hls.destroy();
+				}
+			});
+		</script>
+	}
+}
+
+// TorrentSource renders a single torrent source option
+templ TorrentSource(t nyaa.Torrent) {
+	<div class="source-item" data-magnet={ t.Magnet }>
+		<div class="source-title">{ truncateTitle(t.Title, 60) }</div>
+		<div class="source-meta">
+			<span class="source-size">{ t.Size }</span>
+			<span class="source-seeds">{ fmt.Sprintf("%d", t.Seeders) } seeds</span>
+		</div>
+	</div>
+}
+
+func truncateTitle(s string, max int) string {
+	if len(s) <= max {
+		return s
+	}
+	return s[:max-3] + "..."
+}

@@ -24,14 +24,16 @@ DELETE FROM session WHERE id = ?;
 DELETE FROM session WHERE user_id = ?;
 
 -- name: UpsertAnime :one
-INSERT INTO anime (id, title_original, title_english, title_japanese, image_url, airing)
-VALUES (?, ?, ?, ?, ?, ?)
+INSERT INTO anime (id, title_original, title_english, title_japanese, image_url, airing, magnet_link, torrent_hash)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?)
 ON CONFLICT (id) DO UPDATE SET
     title_original = excluded.title_original,
     title_english = excluded.title_english,
     title_japanese = excluded.title_japanese,
     image_url = excluded.image_url,
-    airing = excluded.airing
+    airing = excluded.airing,
+    magnet_link = excluded.magnet_link,
+    torrent_hash = excluded.torrent_hash
 RETURNING *;
 
 -- name: GetAnime :one
@@ -56,7 +58,9 @@ SELECT
     a.title_english,
     a.title_japanese,
     a.image_url,
-    a.airing
+    a.airing,
+    a.magnet_link,
+    a.torrent_hash
 FROM watch_list_entry e
 JOIN anime a ON e.anime_id = a.id
 WHERE e.user_id = ?
