@@ -61,8 +61,10 @@ func RequireAuth(next http.Handler) http.Handler {
 // RequireGlobalAuth ensures that a valid user is in the context for all routes except login and static
 func RequireGlobalAuth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Allow unauthenticated access to login and static files
-		if r.URL.Path == "/login" || strings.HasPrefix(r.URL.Path, "/static/") {
+		// Allow unauthenticated access to login, search, and static files
+		if r.URL.Path == "/login" || strings.HasPrefix(r.URL.Path, "/static/") ||
+			r.URL.Path == "/search" || r.URL.Path == "/api/search" || r.URL.Path == "/api/search-quick" ||
+			r.URL.Path == "/" {
 			next.ServeHTTP(w, r)
 			return
 		}
