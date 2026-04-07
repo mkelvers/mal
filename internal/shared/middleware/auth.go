@@ -61,10 +61,12 @@ func RequireAuth(next http.Handler) http.Handler {
 // RequireGlobalAuth ensures that a valid user is in the context for all routes except login and static
 func RequireGlobalAuth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Allow unauthenticated access to login, search, and static files
+		// Allow unauthenticated access to login, search, static files, and streaming
 		if r.URL.Path == "/login" || strings.HasPrefix(r.URL.Path, "/static/") ||
 			r.URL.Path == "/search" || r.URL.Path == "/api/search" || r.URL.Path == "/api/search-quick" ||
-			r.URL.Path == "/" {
+			r.URL.Path == "/" ||
+			strings.HasPrefix(r.URL.Path, "/watch/") || strings.HasPrefix(r.URL.Path, "/api/stream/") ||
+			strings.HasPrefix(r.URL.Path, "/anime/") || strings.HasPrefix(r.URL.Path, "/api/anime/") {
 			next.ServeHTTP(w, r)
 			return
 		}

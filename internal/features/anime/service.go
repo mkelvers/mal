@@ -51,3 +51,15 @@ func (s *Service) GetAnimeDetails(ctx context.Context, id int, userID string) (j
 func (s *Service) GetRelations(id int) []jikan.RelationEntry {
 	return s.jikanClient.GetFullRelations(id)
 }
+
+func (s *Service) GetEpisodes(id int, page int) (jikan.EpisodesResult, error) {
+	return s.jikanClient.GetEpisodes(id, page)
+}
+
+func (s *Service) GetAllEpisodes(id int) ([]jikan.Episode, error) {
+	return s.jikanClient.GetAllEpisodes(id)
+}
+
+func (s *Service) GetAnime(id int) (jikan.Anime, error) {
+	return s.jikanClient.GetAnimeByID(id)
+}

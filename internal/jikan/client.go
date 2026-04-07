@@ -16,6 +16,7 @@ type Client struct {
 	topCache       *expirable.LRU[int, TopAnimeResult]
 	animeCache     *expirable.LRU[int, Anime]
 	relationsCache *expirable.LRU[int, JikanRelationsResponse]
+	episodesCache  *expirable.LRU[string, EpisodesResult]
 }
 
 func NewClient() *Client {
@@ -23,6 +24,7 @@ func NewClient() *Client {
 	topCache := expirable.NewLRU[int, TopAnimeResult](100, nil, time.Hour*1)
 	animeCache := expirable.NewLRU[int, Anime](1000, nil, time.Hour*24)
 	relationsCache := expirable.NewLRU[int, JikanRelationsResponse](1000, nil, time.Hour*24)
+	episodesCache := expirable.NewLRU[string, EpisodesResult](500, nil, time.Hour*6)
 
 	return &Client{
 		httpClient:     &http.Client{Timeout: 10 * time.Second},
@@ -31,6 +33,7 @@ func NewClient() *Client {
 		topCache:       topCache,
 		animeCache:     animeCache,
 		relationsCache: relationsCache,
+		episodesCache:  episodesCache,
 	}
 }
 
@@ -62,4 +65,45 @@ func (c *Client) fetchWithRetry(urlStr string, out interface{}) error {
 		return err
 	}
 	return fmt.Errorf("max retries exceeded for %s", urlStr)
+}
+
+// GetEpisodes fetches episodes for an anime (paginated, 100 per page)
+func (c *Client) GetEpisodes(animeID int, page int) (EpisodesResult, error) {
+	cacheKey := fmt.Sprintf("%d-%d", animeID, page)
+	if cached, ok := c.episodesCache.Get(cacheKey); ok {
+		return cached, nil
+	}
+
+	url := fmt.Sprintf("%s/anime/%d/episodes?page=%d", c.baseURL, animeID, page)
+	var resp EpisodesResponse
+	if err := c.fetchWithRetry(url, &resp); err != nil {
+		return EpisodesResult{}, err
+	}
+
+	result := EpisodesResult{
+		Episodes:    resp.Data,
+		HasNextPage: resp.Pagination.HasNextPage,
+	}
+	c.episodesCache.Add(cacheKey, result)
+	return result, nil
+}
+
+// GetAllEpisodes fetches all episodes for an anime (handles pagination)
+func (c *Client) GetAllEpisodes(animeID int) ([]Episode, error) {
+	var allEpisodes []Episode
+	page := 1
+
+	for {
+		result, err := c.GetEpisodes(animeID, page)
+		if err != nil {
+			return nil, err
+		}
+		allEpisodes = append(allEpisodes, result.Episodes...)
+		if !result.HasNextPage {
+			break
+		}
+		page++
+	}
+
+	return allEpisodes, nil
 }

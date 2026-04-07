@@ -109,15 +109,7 @@ func (h *Handler) HandleAnimeDetails(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) HandleAPIAnimeRelations(w http.ResponseWriter, r *http.Request) {
-	path := r.URL.Path[len("/api/anime/"):]
-	idStr := ""
-	for i, c := range path {
-		if c == '/' {
-			idStr = path[:i]
-			break
-		}
-	}
-
+	idStr := r.PathValue("id")
 	id, _ := strconv.Atoi(idStr)
 	if id <= 0 {
 		http.Error(w, "invalid id", http.StatusBadRequest)
@@ -171,4 +163,30 @@ func (h *Handler) HandleQuickSearch(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(output)
+}
+
+func (h *Handler) HandleAPIAnimeEpisodes(w http.ResponseWriter, r *http.Request) {
+	idStr := r.PathValue("id")
+	id, _ := strconv.Atoi(idStr)
+	if id <= 0 {
+		http.Error(w, "invalid id", http.StatusBadRequest)
+		return
+	}
+
+	anime, err := h.svc.GetAnime(id)
+	if err != nil {
+		log.Printf("anime fetch error: %v", err)
+		http.Error(w, "Failed to fetch anime", http.StatusInternalServerError)
+		return
+	}
+
+	episodes, err := h.svc.GetEpisodes(id, 1)
+	if err != nil {
+		log.Printf("episodes fetch error: %v", err)
+		// Return empty episodes instead of error
+		templates.EpisodesList(id, anime.Title, nil, anime.Episodes).Render(r.Context(), w)
+		return
+	}
+
+	templates.EpisodesList(id, anime.Title, episodes.Episodes, anime.Episodes).Render(r.Context(), w)
 }

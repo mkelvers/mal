@@ -8,7 +8,7 @@ import (
 	"log"
 	"os"
 
-	_ "github.com/mattn/go-sqlite3"
+	_ "modernc.org/sqlite"
 
 	"mal/internal/database"
 	"mal/internal/features/auth"
@@ -30,7 +30,7 @@ func main() {
 		dbFile = "mal.db"
 	}
 
-	db, err := sql.Open("sqlite3", dbFile)
+	db, err := sql.Open("sqlite", dbFile)
 	if err != nil {
 		log.Fatalf("failed to open db: %v", err)
 	}
