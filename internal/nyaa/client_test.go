@@ -31,6 +31,9 @@ func TestParseEpisodeNumber(t *testing.T) {
 		{"[SubsPlease] Naruto (01-220) [Batch]", 0},
 		{"Naruto Complete Series 1-220", 0},
 		{"Naruto Batch 01~220", 0},
+		{"[Erai-raws] Death Note - 01 ~ 37 [1080p][BATCH][Multiple Subtitle]", 0},
+		{"[SubGroup] Anime - 01-12 [BD][1080p]", 0},
+		{"Show Name 01 - 24 Complete", 0},
 
 		// Should NOT match resolutions/years as episodes
 		{"Naruto The Movie 2024 [1080p]", 0},
