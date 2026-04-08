@@ -41,25 +41,30 @@ templ Notifications(watching []WatchingAnimeWithDetails) {
 	}
 }
 
-templ UpcomingSeasonsList(upcomingSeasons []database.GetUpcomingSeasonsRow) {
-	// Split into Airing vs Upcoming
-	var airing []database.GetUpcomingSeasonsRow
-	var upcoming []database.GetUpcomingSeasonsRow
-	
-	for _, item := range upcomingSeasons {
+func splitUpcomingSeasons(items []database.GetUpcomingSeasonsRow) (airing []database.GetUpcomingSeasonsRow, upcoming []database.GetUpcomingSeasonsRow) {
+	for _, item := range items {
 		if item.Status.Valid && item.Status.String == "Currently Airing" {
 			airing = append(airing, item)
 		} else {
 			upcoming = append(upcoming, item)
 		}
 	}
+	return
+}
 
+templ UpcomingSeasonsList(upcomingSeasons []database.GetUpcomingSeasonsRow) {
 	if len(upcomingSeasons) == 0 {
 		<div class="no-notifications">
 			<p>no upcoming seasons for anime you've watched</p>
 			<p class="hint">as you watch more shows, new seasons will appear here</p>
 		</div>
 	} else {
+		@renderSplitSeasons(upcomingSeasons)
+	}
+}
+
+templ renderSplitSeasons(upcomingSeasons []database.GetUpcomingSeasonsRow) {
+	if airing, upcoming := splitUpcomingSeasons(upcomingSeasons); true {
 		if len(airing) > 0 {
 			<h2 style="font-size: var(--text-md); margin-bottom: var(--space-md); color: var(--text-muted);">airing now (not tracked)</h2>
 			<div class="notifications-list" style="margin-bottom: var(--space-xl);">
