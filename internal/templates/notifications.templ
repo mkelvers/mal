@@ -12,8 +12,8 @@ type WatchingAnimeWithDetails struct {
 templ Notifications(watching []WatchingAnimeWithDetails) {
 	@Layout("mal - notifications") {
 		<div class="notifications-page">
-			<h1>upcoming episodes</h1>
-			<p class="notifications-subtitle">anime you're watching</p>
+			<h1>airing shows (tracking)</h1>
+			<p class="notifications-subtitle">shows you're currently watching or planning to watch</p>
 			
 			if len(watching) == 0 {
 				<div class="no-notifications">
@@ -28,7 +28,7 @@ templ Notifications(watching []WatchingAnimeWithDetails) {
 				</div>
 			}
 
-			<h1 style="margin-top: var(--space-2xl);">upcoming seasons</h1>
+			<h1 style="margin-top: var(--space-2xl);">discovered sequels</h1>
 			<p class="notifications-subtitle">because you've watched prequels</p>
 			
 			<div hx-get="/notifications/upcoming" hx-trigger="load, every 15s" hx-swap="innerHTML">
@@ -42,17 +42,41 @@ templ Notifications(watching []WatchingAnimeWithDetails) {
 }
 
 templ UpcomingSeasonsList(upcomingSeasons []database.GetUpcomingSeasonsRow) {
+	// Split into Airing vs Upcoming
+	var airing []database.GetUpcomingSeasonsRow
+	var upcoming []database.GetUpcomingSeasonsRow
+	
+	for _, item := range upcomingSeasons {
+		if item.Status.Valid && item.Status.String == "Currently Airing" {
+			airing = append(airing, item)
+		} else {
+			upcoming = append(upcoming, item)
+		}
+	}
+
 	if len(upcomingSeasons) == 0 {
 		<div class="no-notifications">
 			<p>no upcoming seasons for anime you've watched</p>
 			<p class="hint">as you watch more shows, new seasons will appear here</p>
 		</div>
 	} else {
-		<div class="notifications-list">
-			for _, item := range upcomingSeasons {
-				@UpcomingSeasonCard(item)
-			}
-		</div>
+		if len(airing) > 0 {
+			<h2 style="font-size: var(--text-md); margin-bottom: var(--space-md); color: var(--text-muted);">airing now (not tracked)</h2>
+			<div class="notifications-list" style="margin-bottom: var(--space-xl);">
+				for _, item := range airing {
+					@UpcomingSeasonCard(item)
+				}
+			</div>
+		}
+
+		if len(upcoming) > 0 {
+			<h2 style="font-size: var(--text-md); margin-bottom: var(--space-md); color: var(--text-muted);">announced & upcoming</h2>
+			<div class="notifications-list">
+				for _, item := range upcoming {
+					@UpcomingSeasonCard(item)
+				}
+			</div>
+		}
 	}
 }
 
