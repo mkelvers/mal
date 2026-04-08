@@ -89,25 +89,60 @@ ON CONFLICT (anime_id, related_anime_id) DO UPDATE SET
 UPDATE anime SET status = ?, relations_synced_at = CURRENT_TIMESTAMP WHERE id = ?;
 
 -- name: GetAnimeNeedingRelationSync :many
-SELECT a.id, a.title_original
-FROM watch_list_entry w
-JOIN anime a ON w.anime_id = a.id
-WHERE w.status IN ('completed', 'watching')
-  AND (a.relations_synced_at IS NULL OR a.relations_synced_at < datetime('now', '-7 days'))
-GROUP BY a.id
-ORDER BY MAX(w.updated_at) DESC
+WITH RECURSIVE sequel_chain AS (
+    SELECT a.id, a.title_original, a.relations_synced_at, w.updated_at as base_updated_at, 0 as depth
+    FROM watch_list_entry w
+    JOIN anime a ON w.anime_id = a.id
+    WHERE w.status IN ('completed', 'watching')
+    
+    UNION
+    
+    SELECT a.id, a.title_original, a.relations_synced_at, sc.base_updated_at, sc.depth + 1
+    FROM sequel_chain sc
+    JOIN anime_relation r ON sc.id = r.anime_id AND r.relation_type = 'Sequel'
+    JOIN anime a ON r.related_anime_id = a.id
+    WHERE sc.depth < 10
+)
+SELECT id, title_original
+FROM sequel_chain
+WHERE relations_synced_at IS NULL OR relations_synced_at < datetime('now', '-7 days')
+GROUP BY id, title_original
+ORDER BY MAX(base_updated_at) DESC, MIN(depth) ASC
 LIMIT 50;
 
 -- name: GetUpcomingSeasons :many
+WITH RECURSIVE sequel_chain AS (
+    SELECT 
+        w.anime_id as root_id, 
+        a.title_original as root_title, 
+        r.related_anime_id as current_id, 
+        1 as depth
+    FROM watch_list_entry w
+    JOIN anime a ON w.anime_id = a.id
+    JOIN anime_relation r ON w.anime_id = r.anime_id
+    WHERE w.user_id = sqlc.arg('user_id') 
+      AND w.status IN ('completed', 'watching') 
+      AND r.relation_type = 'Sequel'
+
+    UNION
+
+    SELECT 
+        sc.root_id, 
+        sc.root_title, 
+        r.related_anime_id, 
+        sc.depth + 1
+    FROM sequel_chain sc
+    JOIN anime_relation r ON sc.current_id = r.anime_id
+    WHERE r.relation_type = 'Sequel' AND sc.depth < 10
+)
 SELECT DISTINCT
     related.*,
-    a.title_original AS prequel_title
-FROM watch_list_entry w
-JOIN anime_relation r ON w.anime_id = r.anime_id
-JOIN anime a ON w.anime_id = a.id
-JOIN anime related ON r.related_anime_id = related.id
-WHERE w.user_id = ?
-  AND w.status IN ('completed', 'watching')
-  AND r.relation_type = 'Sequel'
-  AND related.status IN ('Not yet aired', 'Currently Airing')
+    sc.root_title AS prequel_title
+FROM sequel_chain sc
+JOIN anime related ON sc.current_id = related.id
+WHERE related.status IN ('Not yet aired', 'Currently Airing')
+  AND NOT EXISTS (
+      SELECT 1 FROM watch_list_entry we 
+      WHERE we.user_id = sqlc.arg('user_id') AND we.anime_id = related.id
+  )
 ORDER BY related.id DESC;

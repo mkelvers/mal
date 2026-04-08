@@ -9,7 +9,7 @@ type WatchingAnimeWithDetails struct {
 	Anime jikan.Anime
 }
 
-templ Notifications(watching []WatchingAnimeWithDetails, upcomingSeasons []database.GetUpcomingSeasonsRow) {
+templ Notifications(watching []WatchingAnimeWithDetails) {
 	@Layout("mal - notifications") {
 		<div class="notifications-page">
 			<h1>upcoming episodes</h1>
@@ -31,17 +31,26 @@ templ Notifications(watching []WatchingAnimeWithDetails, upcomingSeasons []datab
 			<h1 style="margin-top: var(--space-2xl);">upcoming seasons</h1>
 			<p class="notifications-subtitle">because you've watched prequels</p>
 			
-			if len(upcomingSeasons) == 0 {
-				<div class="no-notifications">
-					<p>no upcoming seasons for anime you've watched</p>
-					<p class="hint">as you watch more shows, new seasons will appear here</p>
+			<div hx-get="/notifications/upcoming" hx-trigger="load, every 15s" hx-swap="innerHTML">
+				<div class="loading-indicator">
+					<div class="loading-dot"></div><div class="loading-dot"></div><div class="loading-dot"></div>
+					<span>syncing sequel graphs...</span>
 				</div>
-			} else {
-				<div class="notifications-list">
-					for _, item := range upcomingSeasons {
-						@UpcomingSeasonCard(item)
-					}
-				</div>
+			</div>
+		</div>
+	}
+}
+
+templ UpcomingSeasonsList(upcomingSeasons []database.GetUpcomingSeasonsRow) {
+	if len(upcomingSeasons) == 0 {
+		<div class="no-notifications">
+			<p>no upcoming seasons for anime you've watched</p>
+			<p class="hint">as you watch more shows, new seasons will appear here</p>
+		</div>
+	} else {
+		<div class="notifications-list">
+			for _, item := range upcomingSeasons {
+				@UpcomingSeasonCard(item)
 			}
 		</div>
 	}

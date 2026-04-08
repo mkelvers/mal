@@ -24,8 +24,11 @@ func New(db *database.Queries, client *jikan.Client) *Worker {
 
 func (w *Worker) Start(ctx context.Context) {
 	log.Println("Starting relations sync worker...")
-	ticker := time.NewTicker(2 * time.Minute)
+	ticker := time.NewTicker(1 * time.Minute)
 	defer ticker.Stop()
+
+	// Run once immediately
+	w.syncRelations(ctx)
 
 	for {
 		select {
@@ -38,7 +41,7 @@ func (w *Worker) Start(ctx context.Context) {
 }
 
 func (w *Worker) syncRelations(ctx context.Context) {
-	// Find up to 50 anime that need their relations synced
+	// Find up to 20 anime that need their relations synced
 	animes, err := w.db.GetAnimeNeedingRelationSync(ctx)
 	if err != nil {
 		log.Printf("worker: failed to get anime needing sync: %v", err)

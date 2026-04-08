@@ -328,6 +328,20 @@ func (h *Handler) HandleNotifications(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	templates.Notifications(watching).Render(r.Context(), w)
+}
+
+func (h *Handler) HandleNotificationsUpcoming(w http.ResponseWriter, r *http.Request) {
+	userID := ""
+	if user, ok := r.Context().Value(middleware.UserContextKey).(*database.User); ok && user != nil {
+		userID = user.ID
+	}
+
+	if userID == "" {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
 	upcomingSeasons, err := h.svc.GetUpcomingSeasons(r.Context(), userID)
 	if err != nil {
 		log.Printf("upcoming seasons error: %v", err)
@@ -335,5 +349,5 @@ func (h *Handler) HandleNotifications(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	templates.Notifications(watching, upcomingSeasons).Render(r.Context(), w)
+	templates.UpcomingSeasonsList(upcomingSeasons).Render(r.Context(), w)
 }
