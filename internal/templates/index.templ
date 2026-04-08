@@ -3,17 +3,15 @@ package templates
 import (
 	"fmt"
 	"mal/internal/jikan"
+	"mal/internal/shared/ui"
 	"net/url"
 )
 
 templ Search(q string) {
 	@Layout("mal - search") {
 		if q != "" {
-			<div class="loading-indicator htmx-indicator" id="loading">
-				<div class="loading-dot"></div>
-				<div class="loading-dot"></div>
-				<div class="loading-dot"></div>
-				<span>Searching...</span>
+			<div id="loading" class="htmx-indicator">
+				@ui.LoadingIndicator("Searching...")
 			</div>
 			<div id="results" hx-get={ string(templ.URL("/search?q=" + url.QueryEscape(q))) } hx-trigger="load" hx-indicator="#loading"></div>
 		} else {

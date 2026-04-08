@@ -1,6 +1,7 @@
 package templates
 
 import "mal/internal/jikan"
+import "mal/internal/shared/ui"
 import "fmt"
 import "strings"
 
@@ -21,12 +22,7 @@ templ Schedule() {
 			</div>
 
 			<div id="schedule-content" hx-get="/api/schedule?day=monday" hx-trigger="load">
-				<div class="loading-indicator">
-					<div class="loading-dot"></div>
-					<div class="loading-dot"></div>
-					<div class="loading-dot"></div>
-					<span>Loading schedule</span>
-				</div>
+				@ui.LoadingIndicator("Loading schedule")
 			</div>
 		</div>
 
