@@ -186,11 +186,12 @@ WITH RECURSIVE sequel_chain AS (
         w.anime_id as root_id, 
         a.title_original as root_title, 
         r.related_anime_id as current_id, 
-        1 as depth
+        1 as depth,
+        w.user_id
     FROM watch_list_entry w
     JOIN anime a ON w.anime_id = a.id
     JOIN anime_relation r ON w.anime_id = r.anime_id
-    WHERE w.user_id = ?1 
+    WHERE w.user_id = ? 
       AND w.status IN ('completed', 'watching') 
       AND r.relation_type = 'Sequel'
 
@@ -200,7 +201,8 @@ WITH RECURSIVE sequel_chain AS (
         sc.root_id, 
         sc.root_title, 
         r.related_anime_id, 
-        sc.depth + 1
+        sc.depth + 1,
+        sc.user_id
     FROM sequel_chain sc
     JOIN anime_relation r ON sc.current_id = r.anime_id
     WHERE r.relation_type = 'Sequel' AND sc.depth < 10
@@ -213,7 +215,7 @@ JOIN anime related ON sc.current_id = related.id
 WHERE related.status IN ('Not yet aired', 'Currently Airing')
   AND NOT EXISTS (
       SELECT 1 FROM watch_list_entry we 
-      WHERE we.user_id = sqlc.arg('user_id') AND we.anime_id = related.id
+      WHERE we.user_id = sc.user_id AND we.anime_id = related.id
   )
 ORDER BY related.id DESC
 `
