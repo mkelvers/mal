@@ -2,10 +2,12 @@ package database
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
 	"os"
 	"path/filepath"
 	"sort"
+	"strings"
 )
 
 func RunMigrations(db *sql.DB) error {
@@ -44,8 +46,24 @@ func RunMigrations(db *sql.DB) error {
 		if err != nil {
 			return err
 		}
-		if _, err := db.Exec(string(migrationSQL)); err != nil {
-			return err
+
+		// Split by statement and execute one by one
+		statements := strings.Split(string(migrationSQL), ";")
+		for _, stmt := range statements {
+			stmt = strings.TrimSpace(stmt)
+			if stmt == "" {
+				continue
+			}
+
+			if _, err := db.Exec(stmt); err != nil {
+				errStr := err.Error()
+				// Safely ignore duplicate columns/tables caused by old manual sqlite3 runs
+				if strings.Contains(errStr, "duplicate column name") || strings.Contains(errStr, "already exists") {
+					log.Printf("warning: ignoring expected error in %s: %v", migrationFile, err)
+				} else {
+					return fmt.Errorf("failed to execute statement in %s: %v\nStatement: %s", migrationFile, err, stmt)
+				}
+			}
 		}
 
 		// Mark as applied
