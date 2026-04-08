@@ -726,18 +726,17 @@ a.htmx-request {
   display: flex;
   flex-direction: column;
   gap: var(--space-xs);
+  text-decoration: none;
+  color: var(--text);
 }
 
-.relation-card.current {
-  position: relative;
+.relation-card:hover {
+  text-decoration: none;
+  color: var(--text);
 }
 
-.relation-card.current::before {
-  content: '';
-  position: absolute;
-  inset: -2px;
+.relation-card.current .relation-thumb {
   border: 2px solid var(--link);
-  pointer-events: none;
 }
 
 .relation-thumb {
@@ -758,6 +757,11 @@ a.htmx-request {
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  text-decoration: none;
+}
+
+.relation-card:hover .relation-title {
+  text-decoration: none;
 }
 
 /* Anime Sidebar */
@@ -1124,6 +1128,8 @@ a.htmx-request {
 .schedule-card:hover {
   border-color: var(--link);
   transform: translateY(-2px);
+  text-decoration: none;
+  color: var(--text);
 }
 
 .schedule-card-image {
@@ -1235,11 +1241,15 @@ a.htmx-request {
   transition: border-color 0.15s, transform 0.15s;
   display: flex;
   flex-direction: column;
+  text-decoration: none;
+  color: var(--text);
 }
 
 .notification-card:hover {
   border-color: var(--link);
   transform: translateY(-2px);
+  text-decoration: none;
+  color: var(--text);
 }
 
 .notification-image {
