@@ -57,7 +57,7 @@ func (s *Service) GetAnimeDetails(ctx context.Context, id int, userID string) (j
 	return anime, currentStatus, nil
 }
 
-func (s *Service) GetRelations(id int) []jikan.RelationEntry {
+func (s *Service) GetRelations(id int) ([]jikan.RelationEntry, error) {
 	return s.jikanClient.GetFullRelations(id)
 }
 

@@ -5,15 +5,18 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"sync"
 	"time"
 
 	"mal/internal/database"
 )
 
 type Client struct {
-	httpClient *http.Client
-	baseURL    string
-	db         database.Querier
+	httpClient  *http.Client
+	baseURL     string
+	db          database.Querier
+	mu          sync.Mutex
+	lastReqTime time.Time
 }
 
 func NewClient(db database.Querier) *Client {
@@ -21,6 +24,20 @@ func NewClient(db database.Querier) *Client {
 		httpClient: &http.Client{Timeout: 10 * time.Second},
 		baseURL:    "https://api.jikan.moe/v4",
 		db:         db,
+	}
+}
+
+func (c *Client) waitRateLimit() {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	now := time.Now()
+	nextAllowed := c.lastReqTime.Add(340 * time.Millisecond)
+	if now.Before(nextAllowed) {
+		time.Sleep(nextAllowed.Sub(now))
+		c.lastReqTime = time.Now()
+	} else {
+		c.lastReqTime = now
 	}
 }
 
@@ -57,8 +74,7 @@ func (c *Client) setCache(key string, data interface{}, ttl time.Duration) {
 func (c *Client) fetchWithRetry(urlStr string, out interface{}) error {
 	maxRetries := 3
 	for i := 0; i < maxRetries; i++ {
-		// Base delay for Jikan rate limiting (3 requests per second)
-		time.Sleep(340 * time.Millisecond)
+		c.waitRateLimit()
 
 		resp, err := c.httpClient.Get(urlStr)
 		if err != nil {

@@ -141,7 +141,12 @@ func (h *Handler) HandleAPIAnimeRelations(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	relations := h.svc.GetRelations(id)
+	relations, err := h.svc.GetRelations(id)
+	if err != nil {
+		log.Printf("failed to get relations for anime %d: %v", id, err)
+		http.Error(w, "Failed to load relations", http.StatusInternalServerError)
+		return
+	}
 	templates.AnimeRelationsList(relations).Render(r.Context(), w)
 }
 
@@ -164,17 +169,21 @@ func (h *Handler) HandleAPIAnime(w http.ResponseWriter, r *http.Request) {
 
 	switch parts[1] {
 	case "relations":
-		relations := h.svc.GetRelations(id)
+		relations, err := h.svc.GetRelations(id)
+		if err != nil {
+			log.Printf("relations error for %d: %v", id, err)
+			w.Header().Set("Content-Type", "text/html")
+			w.Write([]byte(`<p style="color: var(--text-muted); font-size: var(--text-sm);">Failed to load relations.</p>`))
+			return
+		}
 		templates.AnimeRelationsList(relations).Render(r.Context(), w)
 	case "recommendations":
 		recs, err := h.svc.GetRecommendations(id, 10)
 		if err != nil {
 			log.Printf("recommendations error for %d: %v", id, err)
-			http.Error(w, "Failed to fetch recommendations", http.StatusInternalServerError)
+			w.Header().Set("Content-Type", "text/html")
+			w.Write([]byte(`<p style="color: var(--text-muted); font-size: var(--text-sm);">Failed to load recommendations.</p>`))
 			return
-		}
-		if len(recs) > 10 {
-			recs = recs[:10]
 		}
 		templates.AnimeRecommendations(recs).Render(r.Context(), w)
 	default:
