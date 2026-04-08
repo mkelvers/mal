@@ -4,6 +4,8 @@ import (
 	"database/sql"
 	"log"
 	"os"
+	"path/filepath"
+	"sort"
 )
 
 func RunMigrations(db *sql.DB) error {
@@ -18,10 +20,12 @@ func RunMigrations(db *sql.DB) error {
 		return err
 	}
 
-	migrations := []string{
-		"migrations/001_init.sql",
-		"migrations/002_add_anime_titles.sql",
+	migrations, err := filepath.Glob("migrations/*.sql")
+	if err != nil {
+		return err
 	}
+
+	sort.Strings(migrations)
 
 	for _, migrationFile := range migrations {
 		// Check if migration already applied
