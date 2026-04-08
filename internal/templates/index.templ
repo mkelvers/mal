@@ -13,13 +13,13 @@ templ Search(q string) {
 				<div class="loading-dot"></div>
 				<div class="loading-dot"></div>
 				<div class="loading-dot"></div>
-				<span>searching</span>
+				<span>Searching...</span>
 			</div>
 			<div id="results" hx-get={ string(templ.URL("/search?q=" + url.QueryEscape(q))) } hx-trigger="load" hx-indicator="#loading"></div>
 		} else {
 			<div class="empty-state">
-				<div class="empty-state-title">search for anime</div>
-				<div class="empty-state-text">use the search bar above to find anime to add to your watchlist</div>
+				<div class="empty-state-title">Search for anime</div>
+				<div class="empty-state-text">Use the search bar above to find anime to add to your watchlist.</div>
 			</div>
 		}
 	}

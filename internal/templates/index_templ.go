@@ -48,7 +48,7 @@ func Search(q string) templ.Component {
 			}
 			ctx = templ.InitializeContext(ctx)
 			if q != "" {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"loading-indicator htmx-indicator\" id=\"loading\"><div class=\"loading-dot\"></div><div class=\"loading-dot\"></div><div class=\"loading-dot\"></div><span>searching</span></div><div id=\"results\" hx-get=\"")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"loading-indicator htmx-indicator\" id=\"loading\"><div class=\"loading-dot\"></div><div class=\"loading-dot\"></div><div class=\"loading-dot\"></div><span>Searching...</span></div><div id=\"results\" hx-get=\"")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -66,7 +66,7 @@ func Search(q string) templ.Component {
 					return templ_7745c5c3_Err
 				}
 			} else {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<div class=\"empty-state\"><div class=\"empty-state-title\">search for anime</div><div class=\"empty-state-text\">use the search bar above to find anime to add to your watchlist</div></div>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<div class=\"empty-state\"><div class=\"empty-state-title\">Search for anime</div><div class=\"empty-state-text\">Use the search bar above to find anime to add to your watchlist.</div></div>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}

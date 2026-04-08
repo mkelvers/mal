@@ -46,7 +46,7 @@ func Watchlist(entries []database.GetUserWatchListRow, layout string, currentSta
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"watchlist-header\"><h2>Watchlist</h2><div class=\"watchlist-controls\"><a href=\"/api/watchlist/export\" class=\"text-link\">export</a> <button class=\"text-link\" onclick=\"document.getElementById('import-file').click()\">Import</button><form id=\"import-form\" hx-post=\"/api/watchlist/import\" hx-encoding=\"multipart/form-data\" style=\"display: none;\"><input type=\"file\" id=\"import-file\" name=\"file\" accept=\".json\" onchange=\"htmx.trigger('#import-form', 'submit')\"></form><div class=\"view-toggle\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"watchlist-header\"><h2>Watchlist</h2><div class=\"watchlist-controls\"><a href=\"/api/watchlist/export\" class=\"text-link\">Export</a> <button class=\"text-link\" onclick=\"document.getElementById('import-file').click()\">Import</button><form id=\"import-form\" hx-post=\"/api/watchlist/import\" hx-encoding=\"multipart/form-data\" style=\"display: none;\"><input type=\"file\" id=\"import-file\" name=\"file\" accept=\".json\" onchange=\"htmx.trigger('#import-form', 'submit')\"></form><div class=\"view-toggle\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -81,7 +81,7 @@ func Watchlist(entries []database.GetUserWatchListRow, layout string, currentSta
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "\">grid</a> ")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "\">Grid</a> ")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -116,7 +116,7 @@ func Watchlist(entries []database.GetUserWatchListRow, layout string, currentSta
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "\">table</a></div></div></div><div class=\"status-tabs\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "\">Table</a></div></div></div><div class=\"status-tabs\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -151,7 +151,7 @@ func Watchlist(entries []database.GetUserWatchListRow, layout string, currentSta
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "\">all</a> ")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "\">All</a> ")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -221,7 +221,7 @@ func Watchlist(entries []database.GetUserWatchListRow, layout string, currentSta
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "\">continuing</a> ")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "\">Continuing</a> ")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -374,22 +374,22 @@ func Watchlist(entries []database.GetUserWatchListRow, layout string, currentSta
 				return templ_7745c5c3_Err
 			}
 			if len(entries) == 0 {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 30, "<div class=\"empty-state\"><div class=\"empty-state-title\">nothing here yet</div><div class=\"empty-state-text\">")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 30, "<div class=\"empty-state\"><div class=\"empty-state-title\">Nothing here yet</div><div class=\"empty-state-text\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				if currentStatus == "all" {
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 31, "your watchlist is empty. <a href=\"/\">search for anime</a> to get started.")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 31, "Your watchlist is empty. <a href=\"/\">Search for anime</a> to get started.")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
 				} else if currentStatus == "continuing" {
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 32, "no airing anime with watching or plan to watch status.")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 32, "No airing anime with watching or plan to watch status.")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
 				} else {
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 33, "no anime in this category.")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 33, "No anime in this category.")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}
@@ -630,7 +630,7 @@ func Watchlist(entries []database.GetUserWatchListRow, layout string, currentSta
 						if templ_7745c5c3_Err != nil {
 							return templ_7745c5c3_Err
 						}
-						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 57, "\" hx-swap=\"delete\" style=\"background: none; border: none; cursor: pointer;\">remove</button></td></tr>")
+						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 57, "\" hx-swap=\"delete\" style=\"background: none; border: none; cursor: pointer;\">Remove</button></td></tr>")
 						if templ_7745c5c3_Err != nil {
 							return templ_7745c5c3_Err
 						}

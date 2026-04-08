@@ -346,8 +346,8 @@ a.htmx-request {
 
 /* Empty State */
 .empty-state {
-  text-align: center;
-  padding: var(--space-2xl) var(--space-lg);
+  text-align: left;
+  padding: var(--space-md) 0;
 }
 
 .empty-state-title {
@@ -1205,13 +1205,13 @@ a.htmx-request {
 .notifications-subtitle {
   color: var(--text-muted);
   font-size: var(--text-sm);
-  margin: 0 0 var(--space-2xl) 0;
+  margin: 0 0 var(--space-lg) 0;
 }
 
 .no-notifications {
-  text-align: center;
+  text-align: left;
   color: var(--text-muted);
-  padding: var(--space-2xl);
+  padding: var(--space-md) 0;
 }
 
 .no-notifications .hint {

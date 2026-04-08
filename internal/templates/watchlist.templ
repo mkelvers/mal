@@ -10,21 +10,21 @@ templ Watchlist(entries []database.GetUserWatchListRow, layout string, currentSt
 		<div class="watchlist-header">
 			<h2>Watchlist</h2>
 			<div class="watchlist-controls">
-				<a href="/api/watchlist/export" class="text-link">export</a>
+				<a href="/api/watchlist/export" class="text-link">Export</a>
 				<button class="text-link" onclick="document.getElementById('import-file').click()">Import</button>
 				<form id="import-form" hx-post="/api/watchlist/import" hx-encoding="multipart/form-data" style="display: none;">
 					<input type="file" id="import-file" name="file" accept=".json" onchange="htmx.trigger('#import-form', 'submit')"/>
 				</form>
 				<div class="view-toggle">
-					<a href={ templ.URL(fmt.Sprintf("/watchlist?view=grid&status=%s&sort=%s&order=%s", currentStatus, sortBy, sortOrder)) } class={ viewClass(layout == "grid") }>grid</a>
-					<a href={ templ.URL(fmt.Sprintf("/watchlist?view=table&status=%s&sort=%s&order=%s", currentStatus, sortBy, sortOrder)) } class={ viewClass(layout == "table") }>table</a>
+					<a href={ templ.URL(fmt.Sprintf("/watchlist?view=grid&status=%s&sort=%s&order=%s", currentStatus, sortBy, sortOrder)) } class={ viewClass(layout == "grid") }>Grid</a>
+					<a href={ templ.URL(fmt.Sprintf("/watchlist?view=table&status=%s&sort=%s&order=%s", currentStatus, sortBy, sortOrder)) } class={ viewClass(layout == "table") }>Table</a>
 				</div>
 			</div>
 		</div>
 		<div class="status-tabs">
-			<a href={ templ.URL(fmt.Sprintf("/watchlist?view=%s&status=all&sort=%s&order=%s", layout, sortBy, sortOrder)) } class={ tabClass(currentStatus == "all") }>all</a>
+			<a href={ templ.URL(fmt.Sprintf("/watchlist?view=%s&status=all&sort=%s&order=%s", layout, sortBy, sortOrder)) } class={ tabClass(currentStatus == "all") }>All</a>
 			<a href={ templ.URL(fmt.Sprintf("/watchlist?view=%s&status=watching&sort=%s&order=%s", layout, sortBy, sortOrder)) } class={ tabClass(currentStatus == "watching") }>Watching</a>
-			<a href={ templ.URL(fmt.Sprintf("/watchlist?view=%s&status=continuing&sort=%s&order=%s", layout, sortBy, sortOrder)) } class={ tabClass(currentStatus == "continuing") }>continuing</a>
+			<a href={ templ.URL(fmt.Sprintf("/watchlist?view=%s&status=continuing&sort=%s&order=%s", layout, sortBy, sortOrder)) } class={ tabClass(currentStatus == "continuing") }>Continuing</a>
 			<a href={ templ.URL(fmt.Sprintf("/watchlist?view=%s&status=on_hold&sort=%s&order=%s", layout, sortBy, sortOrder)) } class={ tabClass(currentStatus == "on_hold") }>On hold</a>
 			<a href={ templ.URL(fmt.Sprintf("/watchlist?view=%s&status=plan_to_watch&sort=%s&order=%s", layout, sortBy, sortOrder)) } class={ tabClass(currentStatus == "plan_to_watch") }>Plan to watch</a>
 			<a href={ templ.URL(fmt.Sprintf("/watchlist?view=%s&status=dropped&sort=%s&order=%s", layout, sortBy, sortOrder)) } class={ tabClass(currentStatus == "dropped") }>Dropped</a>
@@ -33,14 +33,14 @@ templ Watchlist(entries []database.GetUserWatchListRow, layout string, currentSt
 		@SortFilter(SortFilterOptions{Sort: sortBy, Order: sortOrder, View: layout, Status: currentStatus})
 		if len(entries) == 0 {
 			<div class="empty-state">
-				<div class="empty-state-title">nothing here yet</div>
+				<div class="empty-state-title">Nothing here yet</div>
 				<div class="empty-state-text">
 					if currentStatus == "all" {
-						your watchlist is empty. <a href="/">search for anime</a> to get started.
+						Your watchlist is empty. <a href="/">Search for anime</a> to get started.
 					} else if currentStatus == "continuing" {
-						no airing anime with watching or plan to watch status.
+						No airing anime with watching or plan to watch status.
 					} else {
-						no anime in this category.
+						No anime in this category.
 					}
 				</div>
 			</div>
@@ -95,7 +95,7 @@ templ Watchlist(entries []database.GetUserWatchListRow, layout string, currentSt
 										hx-target={ fmt.Sprintf("#watchlist-entry-%d", entry.AnimeID) }
 										hx-swap="delete"
 										style="background: none; border: none; cursor: pointer;"
-									>remove</button>
+									>Remove</button>
 								</td>
 							</tr>
 						}

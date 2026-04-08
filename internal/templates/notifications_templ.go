@@ -75,7 +75,7 @@ func Notifications(watching []WatchingAnimeWithDetails) templ.Component {
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<h1 style=\"margin-top: var(--space-2xl);\">discovered sequels</h1><p class=\"notifications-subtitle\">Because you've watched prequels.</p><div hx-get=\"/notifications/upcoming\" hx-trigger=\"load, every 15s\" hx-swap=\"innerHTML\"><div class=\"loading-indicator\"><div class=\"loading-dot\"></div><div class=\"loading-dot\"></div><div class=\"loading-dot\"></div><span>Syncing sequel graphs...</span></div></div></div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<h1 style=\"margin-top: var(--space-2xl);\">Discovered sequels</h1><p class=\"notifications-subtitle\">Because you've watched prequels.</p><div hx-get=\"/notifications/upcoming\" hx-trigger=\"load, every 15s\" hx-swap=\"innerHTML\"><div class=\"loading-indicator\"><div class=\"loading-dot\"></div><div class=\"loading-dot\"></div><div class=\"loading-dot\"></div><span>Syncing sequel graphs...</span></div></div></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -159,7 +159,7 @@ func renderSplitSeasons(upcomingSeasons []database.GetUpcomingSeasonsRow) templ.
 		ctx = templ.ClearChildren(ctx)
 		if airing, upcoming := splitUpcomingSeasons(upcomingSeasons); true {
 			if len(airing) > 0 {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "<h2 style=\"font-size: var(--text-md); margin-bottom: var(--space-md); color: var(--text-muted);\">airing now (not tracked)</h2><div class=\"notifications-list\" style=\"margin-bottom: var(--space-xl);\">")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "<h2 style=\"font-size: var(--text-md); margin-bottom: var(--space-md); color: var(--text-muted);\">Airing now (not tracked)</h2><div class=\"notifications-list\" style=\"margin-bottom: var(--space-xl);\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -179,7 +179,7 @@ func renderSplitSeasons(upcomingSeasons []database.GetUpcomingSeasonsRow) templ.
 				return templ_7745c5c3_Err
 			}
 			if len(upcoming) > 0 {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "<h2 style=\"font-size: var(--text-md); margin-bottom: var(--space-md); color: var(--text-muted);\">announced & upcoming</h2><div class=\"notifications-list\">")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "<h2 style=\"font-size: var(--text-md); margin-bottom: var(--space-md); color: var(--text-muted);\">Announced & upcoming</h2><div class=\"notifications-list\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
