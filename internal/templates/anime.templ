@@ -48,20 +48,26 @@ templ AnimeDetails(anime jikan.Anime, currentStatus string) {
 						<p class="no-synopsis">no synopsis available.</p>
 					}
 				</section>
-				<section class="anime-relations" hx-get={ string(templ.URL(fmt.Sprintf("/api/anime/%d/relations", anime.MalID))) } hx-trigger="load">
-					<div class="loading-indicator">
-						<div class="loading-dot"></div>
-						<div class="loading-dot"></div>
-						<div class="loading-dot"></div>
-						<span>loading relations</span>
+				<section class="anime-relations">
+					<h3>related</h3>
+					<div hx-get={ string(templ.URL(fmt.Sprintf("/api/anime/%d/relations", anime.MalID))) } hx-trigger="load">
+						<div class="loading-indicator">
+							<div class="loading-dot"></div>
+							<div class="loading-dot"></div>
+							<div class="loading-dot"></div>
+							<span>loading relations</span>
+						</div>
 					</div>
 				</section>
-				<section class="anime-recommendations" hx-get={ string(templ.URL(fmt.Sprintf("/api/anime/%d/recommendations", anime.MalID))) } hx-trigger="load">
-					<div class="loading-indicator">
-						<div class="loading-dot"></div>
-						<div class="loading-dot"></div>
-						<div class="loading-dot"></div>
-						<span>loading recommendations</span>
+				<section class="anime-recommendations">
+					<h3>recommendations</h3>
+					<div hx-get={ string(templ.URL(fmt.Sprintf("/api/anime/%d/recommendations", anime.MalID))) } hx-trigger="load">
+						<div class="loading-indicator">
+							<div class="loading-dot"></div>
+							<div class="loading-dot"></div>
+							<div class="loading-dot"></div>
+							<span>loading recommendations</span>
+						</div>
 					</div>
 				</section>
 			</div>
@@ -274,7 +280,6 @@ func formatStatus(status string) string {
 
 templ AnimeRelationsList(relations []jikan.RelationEntry) {
 	if len(relations) > 1 {
-		<h3>related</h3>
 		<div class="relations-grid">
 			for _, rel := range relations {
 				if rel.IsCurrent {
@@ -298,12 +303,13 @@ templ AnimeRelationsList(relations []jikan.RelationEntry) {
 				}
 			}
 		</div>
+	} else {
+		<p style="color: var(--text-muted); font-size: var(--text-sm);">no related anime found.</p>
 	}
 }
 
 templ AnimeRecommendations(recs []jikan.Anime) {
 	if len(recs) > 0 {
-		<h3>recommendations</h3>
 		<div class="relations-grid">
 			for _, anime := range recs {
 				<a href={ templ.URL(fmt.Sprintf("/anime/%d", anime.MalID)) } class="relation-card">
@@ -316,5 +322,7 @@ templ AnimeRecommendations(recs []jikan.Anime) {
 				</a>
 			}
 		</div>
+	} else {
+		<p style="color: var(--text-muted); font-size: var(--text-sm);">no recommendations available.</p>
 	}
 }

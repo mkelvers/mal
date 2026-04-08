@@ -330,8 +330,19 @@ a:visited {
   50% { opacity: 1; }
 }
 
+/* HTMX Loading States */
 .htmx-indicator { display: none; }
-.htmx-request .htmx-indicator { display: flex; }
+.htmx-request .htmx-indicator { display: inline-block; }
+.htmx-request.htmx-indicator { display: inline-block; }
+
+.dropdown-item.htmx-request,
+.dropdown-trigger.htmx-request,
+button.htmx-request,
+a.htmx-request {
+  opacity: 0.5;
+  pointer-events: none;
+  cursor: wait;
+}
 
 /* Empty State */
 .empty-state {
@@ -947,36 +958,43 @@ a:visited {
 
 @media (max-width: 768px) {
   header {
-    padding: var(--space-md) var(--space-lg);
+    padding: var(--space-md);
   }
 
   .header-top {
     flex-wrap: wrap;
-    gap: var(--space-lg);
+    gap: var(--space-md);
   }
 
   .header-left {
-    gap: var(--space-lg);
+    flex-wrap: wrap;
+    gap: var(--space-md);
+    width: 100%;
   }
 
   .nav {
     border-left: none;
     padding-left: 0;
-    flex: 1;
-    order: 3;
+    flex-wrap: wrap;
+    gap: var(--space-sm) var(--space-md);
+    width: 100%;
+  }
+
+  .header-search-wrapper {
+    width: 100%;
   }
 
   .header-search {
     width: 100%;
-    order: 4;
   }
 
   .search-input {
     width: 100%;
+    max-width: none;
   }
 
   main {
-    padding: var(--space-lg);
+    padding: var(--space-md);
   }
 
   .catalog-grid {
