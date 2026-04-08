@@ -1,4 +1,4 @@
-.PHONY: dev build test migrate sqlc create-user
+.PHONY: dev build test sqlc templ create-user
 
 dev:
 	air
@@ -8,9 +8,6 @@ build:
 
 test:
 	go test ./...
-
-migrate:
-	for f in migrations/*.sql; do sqlite3 mal.db < "$$f" 2>/dev/null || true; done
 
 sqlc:
 	sqlc generate
