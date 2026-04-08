@@ -38,10 +38,11 @@ RETURNING *;
 SELECT * FROM anime WHERE id = ? LIMIT 1;
 
 -- name: UpsertWatchListEntry :one
-INSERT INTO watch_list_entry (id, user_id, anime_id, status, updated_at)
-VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
+INSERT INTO watch_list_entry (id, user_id, anime_id, status, current_episode, updated_at)
+VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
 ON CONFLICT (user_id, anime_id) DO UPDATE SET
     status = excluded.status,
+    current_episode = excluded.current_episode,
     updated_at = CURRENT_TIMESTAMP
 RETURNING *;
 
@@ -65,3 +66,16 @@ ORDER BY e.updated_at DESC;
 -- name: DeleteWatchListEntry :exec
 DELETE FROM watch_list_entry
 WHERE user_id = ? AND anime_id = ?;
+
+-- name: GetWatchingAnime :many
+SELECT 
+    e.*,
+    a.title_original,
+    a.title_english,
+    a.title_japanese,
+    a.image_url,
+    a.airing
+FROM watch_list_entry e
+JOIN anime a ON e.anime_id = a.id
+WHERE e.user_id = ? AND e.status = 'watching' AND a.airing = 1
+ORDER BY e.updated_at DESC;

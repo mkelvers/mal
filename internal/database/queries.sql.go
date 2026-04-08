@@ -161,7 +161,7 @@ func (q *Queries) GetUserByUsername(ctx context.Context, username string) (User,
 
 const getUserWatchList = `-- name: GetUserWatchList :many
 SELECT 
-    e.id, e.user_id, e.anime_id, e.status, e.created_at, e.updated_at,
+    e.id, e.user_id, e.anime_id, e.status, e.created_at, e.updated_at, e.current_episode, e.last_episode_at,
     a.title_original,
     a.title_english,
     a.title_japanese,
@@ -174,17 +174,19 @@ ORDER BY e.updated_at DESC
 `
 
 type GetUserWatchListRow struct {
-	ID            string         `json:"id"`
-	UserID        string         `json:"user_id"`
-	AnimeID       int64          `json:"anime_id"`
-	Status        string         `json:"status"`
-	CreatedAt     time.Time      `json:"created_at"`
-	UpdatedAt     time.Time      `json:"updated_at"`
-	TitleOriginal string         `json:"title_original"`
-	TitleEnglish  sql.NullString `json:"title_english"`
-	TitleJapanese sql.NullString `json:"title_japanese"`
-	ImageUrl      string         `json:"image_url"`
-	Airing        sql.NullBool   `json:"airing"`
+	ID             string         `json:"id"`
+	UserID         string         `json:"user_id"`
+	AnimeID        int64          `json:"anime_id"`
+	Status         string         `json:"status"`
+	CreatedAt      time.Time      `json:"created_at"`
+	UpdatedAt      time.Time      `json:"updated_at"`
+	CurrentEpisode sql.NullInt64  `json:"current_episode"`
+	LastEpisodeAt  sql.NullTime   `json:"last_episode_at"`
+	TitleOriginal  string         `json:"title_original"`
+	TitleEnglish   sql.NullString `json:"title_english"`
+	TitleJapanese  sql.NullString `json:"title_japanese"`
+	ImageUrl       string         `json:"image_url"`
+	Airing         sql.NullBool   `json:"airing"`
 }
 
 func (q *Queries) GetUserWatchList(ctx context.Context, userID string) ([]GetUserWatchListRow, error) {
@@ -203,6 +205,8 @@ func (q *Queries) GetUserWatchList(ctx context.Context, userID string) ([]GetUse
 			&i.Status,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.CurrentEpisode,
+			&i.LastEpisodeAt,
 			&i.TitleOriginal,
 			&i.TitleEnglish,
 			&i.TitleJapanese,
@@ -223,7 +227,7 @@ func (q *Queries) GetUserWatchList(ctx context.Context, userID string) ([]GetUse
 }
 
 const getWatchListEntry = `-- name: GetWatchListEntry :one
-SELECT id, user_id, anime_id, status, created_at, updated_at FROM watch_list_entry
+SELECT id, user_id, anime_id, status, created_at, updated_at, current_episode, last_episode_at FROM watch_list_entry
 WHERE user_id = ? AND anime_id = ? LIMIT 1
 `
 
@@ -242,8 +246,77 @@ func (q *Queries) GetWatchListEntry(ctx context.Context, arg GetWatchListEntryPa
 		&i.Status,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.CurrentEpisode,
+		&i.LastEpisodeAt,
 	)
 	return i, err
+}
+
+const getWatchingAnime = `-- name: GetWatchingAnime :many
+SELECT 
+    e.id, e.user_id, e.anime_id, e.status, e.created_at, e.updated_at, e.current_episode, e.last_episode_at,
+    a.title_original,
+    a.title_english,
+    a.title_japanese,
+    a.image_url,
+    a.airing
+FROM watch_list_entry e
+JOIN anime a ON e.anime_id = a.id
+WHERE e.user_id = ? AND e.status = 'watching' AND a.airing = 1
+ORDER BY e.updated_at DESC
+`
+
+type GetWatchingAnimeRow struct {
+	ID             string         `json:"id"`
+	UserID         string         `json:"user_id"`
+	AnimeID        int64          `json:"anime_id"`
+	Status         string         `json:"status"`
+	CreatedAt      time.Time      `json:"created_at"`
+	UpdatedAt      time.Time      `json:"updated_at"`
+	CurrentEpisode sql.NullInt64  `json:"current_episode"`
+	LastEpisodeAt  sql.NullTime   `json:"last_episode_at"`
+	TitleOriginal  string         `json:"title_original"`
+	TitleEnglish   sql.NullString `json:"title_english"`
+	TitleJapanese  sql.NullString `json:"title_japanese"`
+	ImageUrl       string         `json:"image_url"`
+	Airing         sql.NullBool   `json:"airing"`
+}
+
+func (q *Queries) GetWatchingAnime(ctx context.Context, userID string) ([]GetWatchingAnimeRow, error) {
+	rows, err := q.db.QueryContext(ctx, getWatchingAnime, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetWatchingAnimeRow
+	for rows.Next() {
+		var i GetWatchingAnimeRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.UserID,
+			&i.AnimeID,
+			&i.Status,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.CurrentEpisode,
+			&i.LastEpisodeAt,
+			&i.TitleOriginal,
+			&i.TitleEnglish,
+			&i.TitleJapanese,
+			&i.ImageUrl,
+			&i.Airing,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const upsertAnime = `-- name: UpsertAnime :one
@@ -290,19 +363,21 @@ func (q *Queries) UpsertAnime(ctx context.Context, arg UpsertAnimeParams) (Anime
 }
 
 const upsertWatchListEntry = `-- name: UpsertWatchListEntry :one
-INSERT INTO watch_list_entry (id, user_id, anime_id, status, updated_at)
-VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
+INSERT INTO watch_list_entry (id, user_id, anime_id, status, current_episode, updated_at)
+VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
 ON CONFLICT (user_id, anime_id) DO UPDATE SET
     status = excluded.status,
+    current_episode = excluded.current_episode,
     updated_at = CURRENT_TIMESTAMP
-RETURNING id, user_id, anime_id, status, created_at, updated_at
+RETURNING id, user_id, anime_id, status, created_at, updated_at, current_episode, last_episode_at
 `
 
 type UpsertWatchListEntryParams struct {
-	ID      string `json:"id"`
-	UserID  string `json:"user_id"`
-	AnimeID int64  `json:"anime_id"`
-	Status  string `json:"status"`
+	ID             string        `json:"id"`
+	UserID         string        `json:"user_id"`
+	AnimeID        int64         `json:"anime_id"`
+	Status         string        `json:"status"`
+	CurrentEpisode sql.NullInt64 `json:"current_episode"`
 }
 
 func (q *Queries) UpsertWatchListEntry(ctx context.Context, arg UpsertWatchListEntryParams) (WatchListEntry, error) {
@@ -311,6 +386,7 @@ func (q *Queries) UpsertWatchListEntry(ctx context.Context, arg UpsertWatchListE
 		arg.UserID,
 		arg.AnimeID,
 		arg.Status,
+		arg.CurrentEpisode,
 	)
 	var i WatchListEntry
 	err := row.Scan(
@@ -320,6 +396,8 @@ func (q *Queries) UpsertWatchListEntry(ctx context.Context, arg UpsertWatchListE
 		&i.Status,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.CurrentEpisode,
+		&i.LastEpisodeAt,
 	)
 	return i, err
 }

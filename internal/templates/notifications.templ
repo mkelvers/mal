@@ -1,0 +1,87 @@
+package templates
+
+import "mal/internal/jikan"
+import "mal/internal/database"
+import "fmt"
+
+type WatchingAnimeWithDetails struct {
+	Entry database.GetWatchingAnimeRow
+	Anime jikan.Anime
+}
+
+templ Notifications(watching []WatchingAnimeWithDetails) {
+	@Layout("mal - notifications") {
+		<div class="notifications-page">
+			<h1>upcoming episodes</h1>
+			<p class="notifications-subtitle">anime you're watching</p>
+			
+			if len(watching) == 0 {
+				<div class="no-notifications">
+					<p>no airing anime in your watching list</p>
+					<p class="hint">add currently airing shows to your watching list to see upcoming episodes here</p>
+				</div>
+			} else {
+				<div class="notifications-list">
+					for _, item := range watching {
+						@NotificationCard(item)
+					}
+				</div>
+			}
+		</div>
+	}
+}
+
+templ NotificationCard(item WatchingAnimeWithDetails) {
+	<div class="notification-card">
+		<a href={ templ.URL(fmt.Sprintf("/anime/%d", item.Entry.AnimeID)) } class="notification-image">
+			if item.Entry.ImageUrl != "" {
+				<img src={ item.Entry.ImageUrl } alt={ displayTitle(item.Entry) } loading="lazy"/>
+			} else {
+				<div class="no-image">no image</div>
+			}
+		</a>
+		<div class="notification-content">
+			<a href={ templ.URL(fmt.Sprintf("/anime/%d", item.Entry.AnimeID)) } class="notification-title">
+				{ displayTitle(item.Entry) }
+			</a>
+			<div class="notification-meta">
+				if item.Anime.Broadcast.String != "" {
+					<span class="notification-broadcast">{ item.Anime.Broadcast.String }</span>
+				}
+				if item.Anime.Episodes > 0 {
+					<span class="notification-progress">
+						if item.Entry.CurrentEpisode.Valid {
+							{ fmt.Sprintf("%d / %d episodes", item.Entry.CurrentEpisode.Int64, item.Anime.Episodes) }
+						} else {
+							{ fmt.Sprintf("0 / %d episodes", item.Anime.Episodes) }
+						}
+					</span>
+				} else if item.Entry.CurrentEpisode.Valid && item.Entry.CurrentEpisode.Int64 > 0 {
+					<span class="notification-progress">
+						{ fmt.Sprintf("%d episodes watched", item.Entry.CurrentEpisode.Int64) }
+					</span>
+				}
+			</div>
+			if item.Anime.Synopsis != "" {
+				<p class="notification-synopsis">{ truncate(item.Anime.Synopsis, 150) }</p>
+			}
+		</div>
+	</div>
+}
+
+func displayTitle(entry database.GetWatchingAnimeRow) string {
+	if entry.TitleEnglish.Valid && entry.TitleEnglish.String != "" {
+		return entry.TitleEnglish.String
+	}
+	if entry.TitleJapanese.Valid && entry.TitleJapanese.String != "" {
+		return entry.TitleJapanese.String
+	}
+	return entry.TitleOriginal
+}
+
+func truncate(s string, max int) string {
+	if len(s) <= max {
+		return s
+	}
+	return s[:max-3] + "..."
+}

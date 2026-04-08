@@ -20,6 +20,7 @@ type Querier interface {
 	GetUserByUsername(ctx context.Context, username string) (User, error)
 	GetUserWatchList(ctx context.Context, userID string) ([]GetUserWatchListRow, error)
 	GetWatchListEntry(ctx context.Context, arg GetWatchListEntryParams) (WatchListEntry, error)
+	GetWatchingAnime(ctx context.Context, userID string) ([]GetWatchingAnimeRow, error)
 	UpsertAnime(ctx context.Context, arg UpsertAnimeParams) (Anime, error)
 	UpsertWatchListEntry(ctx context.Context, arg UpsertWatchListEntryParams) (WatchListEntry, error)
 }

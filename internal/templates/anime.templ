@@ -56,6 +56,14 @@ templ AnimeDetails(anime jikan.Anime, currentStatus string) {
 						<span>loading relations</span>
 					</div>
 				</section>
+				<section class="anime-recommendations" hx-get={ string(templ.URL(fmt.Sprintf("/api/anime/%d/recommendations", anime.MalID))) } hx-trigger="load">
+					<div class="loading-indicator">
+						<div class="loading-dot"></div>
+						<div class="loading-dot"></div>
+						<div class="loading-dot"></div>
+						<span>loading recommendations</span>
+					</div>
+				</section>
 			</div>
 			<aside class="anime-sidebar">
 				if anime.TitleJapanese != "" {
@@ -288,6 +296,24 @@ templ AnimeRelationsList(relations []jikan.RelationEntry) {
 						<div class="relation-title">{ rel.Anime.DisplayTitle() }</div>
 					</a>
 				}
+			}
+		</div>
+	}
+}
+
+templ AnimeRecommendations(recs []jikan.Anime) {
+	if len(recs) > 0 {
+		<h3>recommendations</h3>
+		<div class="relations-grid">
+			for _, anime := range recs {
+				<a href={ templ.URL(fmt.Sprintf("/anime/%d", anime.MalID)) } class="relation-card">
+					if anime.ImageURL() != "" {
+						<img src={ anime.ImageURL() } alt={ anime.DisplayTitle() } class="relation-thumb"/>
+					} else {
+						<div class="no-image">no image</div>
+					}
+					<div class="relation-title">{ anime.DisplayTitle() }</div>
+				</a>
 			}
 		</div>
 	}

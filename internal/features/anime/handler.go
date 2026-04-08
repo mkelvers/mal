@@ -145,6 +145,62 @@ func (h *Handler) HandleAPIAnimeRelations(w http.ResponseWriter, r *http.Request
 	templates.AnimeRelationsList(relations).Render(r.Context(), w)
 }
 
+// HandleAPIAnime routes anime API requests
+func (h *Handler) HandleAPIAnime(w http.ResponseWriter, r *http.Request) {
+	path := r.URL.Path[len("/api/anime/"):]
+
+	// Parse: {id}/relations or {id}/recommendations
+	parts := splitPath(path)
+	if len(parts) < 2 {
+		http.Error(w, "invalid path", http.StatusBadRequest)
+		return
+	}
+
+	id, err := strconv.Atoi(parts[0])
+	if err != nil || id <= 0 {
+		http.Error(w, "invalid id", http.StatusBadRequest)
+		return
+	}
+
+	switch parts[1] {
+	case "relations":
+		relations := h.svc.GetRelations(id)
+		templates.AnimeRelationsList(relations).Render(r.Context(), w)
+	case "recommendations":
+		recs, err := h.svc.GetRecommendations(id)
+		if err != nil {
+			log.Printf("recommendations error for %d: %v", id, err)
+			http.Error(w, "Failed to fetch recommendations", http.StatusInternalServerError)
+			return
+		}
+		if len(recs) > 10 {
+			recs = recs[:10]
+		}
+		templates.AnimeRecommendations(recs).Render(r.Context(), w)
+	default:
+		http.Error(w, "not found", http.StatusNotFound)
+	}
+}
+
+func splitPath(path string) []string {
+	var parts []string
+	var current string
+	for _, c := range path {
+		if c == '/' {
+			if current != "" {
+				parts = append(parts, current)
+				current = ""
+			}
+		} else {
+			current += string(c)
+		}
+	}
+	if current != "" {
+		parts = append(parts, current)
+	}
+	return parts
+}
+
 func (h *Handler) HandleQuickSearch(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Query().Get("q")
 	if query == "" {
@@ -230,4 +286,47 @@ func (h *Handler) HandleAPIDiscoverUpcoming(w http.ResponseWriter, r *http.Reque
 	res.Animes = deduplicateAnimes(res.Animes)
 
 	templates.DiscoverItems(res.Animes, "upcoming", page+1, res.HasNextPage).Render(r.Context(), w)
+}
+
+func (h *Handler) HandleSchedule(w http.ResponseWriter, r *http.Request) {
+	templates.Schedule().Render(r.Context(), w)
+}
+
+func (h *Handler) HandleAPISchedule(w http.ResponseWriter, r *http.Request) {
+	day := r.URL.Query().Get("day")
+	if day == "" {
+		day = "monday"
+	}
+
+	res, err := h.svc.GetSchedule(day)
+	if err != nil {
+		log.Printf("schedule error for %s: %v", day, err)
+		http.Error(w, "Failed to fetch schedule", http.StatusInternalServerError)
+		return
+	}
+
+	res.Animes = deduplicateAnimes(res.Animes)
+
+	templates.ScheduleDay(day, res.Animes).Render(r.Context(), w)
+}
+
+func (h *Handler) HandleNotifications(w http.ResponseWriter, r *http.Request) {
+	userID := ""
+	if user, ok := r.Context().Value(middleware.UserContextKey).(*database.User); ok && user != nil {
+		userID = user.ID
+	}
+
+	if userID == "" {
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		return
+	}
+
+	watching, err := h.svc.GetWatchingAnime(r.Context(), userID)
+	if err != nil {
+		log.Printf("watching anime error: %v", err)
+		http.Error(w, "Failed to fetch watching anime", http.StatusInternalServerError)
+		return
+	}
+
+	templates.Notifications(watching).Render(r.Context(), w)
 }

@@ -1,0 +1,85 @@
+package templates
+
+import "mal/internal/jikan"
+import "fmt"
+import "strings"
+
+templ Schedule() {
+	@Layout("mal - schedule") {
+		<div class="schedule-page">
+			<h1>weekly schedule</h1>
+			<p class="schedule-subtitle">airing times in JST</p>
+			
+			<div class="schedule-tabs">
+				<button class="schedule-tab active" data-day="monday" onclick="loadDay('monday', this)">mon</button>
+				<button class="schedule-tab" data-day="tuesday" onclick="loadDay('tuesday', this)">tue</button>
+				<button class="schedule-tab" data-day="wednesday" onclick="loadDay('wednesday', this)">wed</button>
+				<button class="schedule-tab" data-day="thursday" onclick="loadDay('thursday', this)">thu</button>
+				<button class="schedule-tab" data-day="friday" onclick="loadDay('friday', this)">fri</button>
+				<button class="schedule-tab" data-day="saturday" onclick="loadDay('saturday', this)">sat</button>
+				<button class="schedule-tab" data-day="sunday" onclick="loadDay('sunday', this)">sun</button>
+			</div>
+
+			<div id="schedule-content" hx-get="/api/schedule?day=monday" hx-trigger="load">
+				<div class="loading-indicator">
+					<div class="loading-dot"></div>
+					<div class="loading-dot"></div>
+					<div class="loading-dot"></div>
+					<span>loading schedule</span>
+				</div>
+			</div>
+		</div>
+
+		<script>
+			function loadDay(day, btn) {
+				document.querySelectorAll('.schedule-tab').forEach(t => t.classList.remove('active'));
+				btn.classList.add('active');
+				htmx.ajax('GET', '/api/schedule?day=' + day, '#schedule-content');
+			}
+		</script>
+	}
+}
+
+templ ScheduleDay(day string, animes []jikan.Anime) {
+	<div class="schedule-day">
+		<h2>{ strings.Title(day) }</h2>
+		if len(animes) == 0 {
+			<p class="no-anime">no anime scheduled</p>
+		} else {
+			<div class="schedule-grid">
+				for _, anime := range animes {
+					@ScheduleAnimeCard(anime)
+				}
+			</div>
+		}
+	</div>
+}
+
+templ ScheduleAnimeCard(anime jikan.Anime) {
+	<a href={ templ.URL(fmt.Sprintf("/anime/%d", anime.MalID)) } class="schedule-card">
+		<div class="schedule-card-image">
+			if anime.ImageURL() != "" {
+				<img src={ anime.ImageURL() } alt={ anime.DisplayTitle() } loading="lazy"/>
+			} else {
+				<div class="no-image">no image</div>
+			}
+		</div>
+		<div class="schedule-card-info">
+			<div class="schedule-card-title">{ anime.DisplayTitle() }</div>
+			<div class="schedule-card-meta">
+				if anime.Broadcast.Time != "" {
+					<span class="schedule-time">{ anime.Broadcast.Time }</span>
+				}
+				if anime.Type != "" {
+					<span class="schedule-type">{ anime.Type }</span>
+				}
+				if anime.Episodes > 0 {
+					<span class="schedule-eps">{ fmt.Sprintf("%d ep", anime.Episodes) }</span>
+				}
+			</div>
+			if anime.Score > 0 {
+				<div class="schedule-card-score">★ { fmt.Sprintf("%.1f", anime.Score) }</div>
+			}
+		</div>
+	</a>
+}

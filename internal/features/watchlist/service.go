@@ -48,10 +48,11 @@ func (s *Service) AddEntry(ctx context.Context, userID string, req AddRequest) e
 
 	entryID := uuid.New().String()
 	_, err = s.db.UpsertWatchListEntry(ctx, database.UpsertWatchListEntryParams{
-		ID:      entryID,
-		UserID:  userID,
-		AnimeID: req.AnimeID,
-		Status:  req.Status,
+		ID:             entryID,
+		UserID:         userID,
+		AnimeID:        req.AnimeID,
+		Status:         req.Status,
+		CurrentEpisode: sql.NullInt64{Int64: 0, Valid: false},
 	})
 	if err != nil {
 		return fmt.Errorf("failed to update watchlist: %w", err)
@@ -152,10 +153,11 @@ func (s *Service) Import(ctx context.Context, userID string, export ExportData) 
 		}
 
 		_, err = s.db.UpsertWatchListEntry(ctx, database.UpsertWatchListEntryParams{
-			ID:      uuid.New().String(),
-			UserID:  userID,
-			AnimeID: entry.AnimeID,
-			Status:  entry.Status,
+			ID:             uuid.New().String(),
+			UserID:         userID,
+			AnimeID:        entry.AnimeID,
+			Status:         entry.Status,
+			CurrentEpisode: sql.NullInt64{Int64: 0, Valid: false},
 		})
 		if err != nil {
 			continue

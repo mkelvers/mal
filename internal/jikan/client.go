@@ -18,6 +18,8 @@ type Client struct {
 	upcomingCache  *expirable.LRU[int, TopAnimeResult]
 	animeCache     *expirable.LRU[int, Anime]
 	relationsCache *expirable.LRU[int, JikanRelationsResponse]
+	scheduleCache  *expirable.LRU[string, ScheduleResult]
+	recsCache      *expirable.LRU[int, []Anime]
 }
 
 func NewClient() *Client {
@@ -27,6 +29,8 @@ func NewClient() *Client {
 	upcomingCache := expirable.NewLRU[int, TopAnimeResult](100, nil, time.Hour*1)
 	animeCache := expirable.NewLRU[int, Anime](1000, nil, time.Hour*24)
 	relationsCache := expirable.NewLRU[int, JikanRelationsResponse](1000, nil, time.Hour*24)
+	scheduleCache := expirable.NewLRU[string, ScheduleResult](50, nil, time.Hour*1)
+	recsCache := expirable.NewLRU[int, []Anime](500, nil, time.Hour*24)
 
 	return &Client{
 		httpClient:     &http.Client{Timeout: 10 * time.Second},
@@ -37,6 +41,8 @@ func NewClient() *Client {
 		upcomingCache:  upcomingCache,
 		animeCache:     animeCache,
 		relationsCache: relationsCache,
+		scheduleCache:  scheduleCache,
+		recsCache:      recsCache,
 	}
 }
 

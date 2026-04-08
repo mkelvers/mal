@@ -1026,3 +1026,248 @@ a:visited {
   color: var(--link);
   font-weight: bold;
 }
+
+/* Schedule Page */
+.schedule-page {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: var(--space-2xl) var(--space-xl);
+}
+
+.schedule-page h1 {
+  font-size: var(--text-2xl);
+  font-weight: 600;
+  margin: 0 0 var(--space-xs) 0;
+}
+
+.schedule-subtitle {
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  margin: 0 0 var(--space-2xl) 0;
+}
+
+.schedule-tabs {
+  display: flex;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-xl);
+  border-bottom: 1px solid var(--border);
+  padding-bottom: var(--space-sm);
+}
+
+.schedule-tab {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: var(--text-base);
+  padding: var(--space-sm) var(--space-md);
+  border-radius: 4px 4px 0 0;
+  transition: all 0.15s;
+}
+
+.schedule-tab:hover {
+  color: var(--text);
+  background: var(--surface-hover);
+}
+
+.schedule-tab.active {
+  color: var(--link);
+  background: var(--surface);
+  font-weight: 600;
+}
+
+.schedule-day h2 {
+  font-size: var(--text-xl);
+  font-weight: 600;
+  margin: 0 0 var(--space-lg) 0;
+}
+
+.schedule-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(clamp(140px, 12vw + 80px, 200px), 1fr));
+  gap: var(--space-lg);
+}
+
+.schedule-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+  transition: border-color 0.15s, transform 0.15s;
+  text-decoration: none;
+  color: var(--text);
+  display: flex;
+  flex-direction: column;
+}
+
+.schedule-card:hover {
+  border-color: var(--link);
+  transform: translateY(-2px);
+}
+
+.schedule-card-image {
+  aspect-ratio: 2/3;
+  background: var(--bg);
+  overflow: hidden;
+}
+
+.schedule-card-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.schedule-card-info {
+  padding: var(--space-md);
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.schedule-card-title {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  margin-bottom: var(--space-xs);
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.schedule-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  margin-top: auto;
+}
+
+.schedule-card-meta span {
+  background: var(--surface-hover);
+  padding: 2px 6px;
+  border-radius: 3px;
+}
+
+.schedule-time {
+  color: var(--link) !important;
+  font-weight: 600;
+}
+
+.schedule-card-score {
+  font-size: var(--text-xs);
+  color: var(--link);
+  font-weight: 600;
+  margin-top: var(--space-xs);
+}
+
+.no-anime {
+  color: var(--text-muted);
+  font-size: var(--text-base);
+  text-align: center;
+  padding: var(--space-2xl);
+}
+
+
+/* Notifications Page */
+.notifications-page {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: var(--space-2xl) var(--space-xl);
+}
+
+.notifications-page h1 {
+  font-size: var(--text-2xl);
+  font-weight: 600;
+  margin: 0 0 var(--space-xs) 0;
+}
+
+.notifications-subtitle {
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  margin: 0 0 var(--space-2xl) 0;
+}
+
+.no-notifications {
+  text-align: center;
+  color: var(--text-muted);
+  padding: var(--space-2xl);
+}
+
+.no-notifications .hint {
+  font-size: var(--text-sm);
+  margin-top: var(--space-sm);
+}
+
+.notifications-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+.notification-card {
+  display: flex;
+  gap: var(--space-lg);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: var(--space-lg);
+  border-radius: 4px;
+  transition: border-color 0.15s;
+}
+
+.notification-card:hover {
+  border-color: var(--link);
+}
+
+.notification-image {
+  flex-shrink: 0;
+  width: var(--thumb-width);
+}
+
+.notification-image img {
+  width: 100%;
+  aspect-ratio: 2/3;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+.notification-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.notification-title {
+  font-size: var(--text-md);
+  font-weight: 600;
+  color: var(--text);
+  text-decoration: none;
+  display: block;
+  margin-bottom: var(--space-xs);
+}
+
+.notification-title:hover {
+  color: var(--link);
+}
+
+.notification-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  margin-bottom: var(--space-md);
+}
+
+.notification-broadcast {
+  color: var(--link);
+  font-weight: 600;
+}
+
+.notification-synopsis {
+  font-size: var(--text-sm);
+  line-height: 1.5;
+  color: var(--text-muted);
+  margin: 0;
+}
+
