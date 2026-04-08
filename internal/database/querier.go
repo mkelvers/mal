@@ -11,11 +11,13 @@ import (
 type Querier interface {
 	CreateSession(ctx context.Context, arg CreateSessionParams) (Session, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
+	DeleteExpiredJikanCache(ctx context.Context) error
 	DeleteSession(ctx context.Context, id string) error
 	DeleteUserSessions(ctx context.Context, userID string) error
 	DeleteWatchListEntry(ctx context.Context, arg DeleteWatchListEntryParams) error
 	GetAnime(ctx context.Context, id int64) (Anime, error)
 	GetAnimeNeedingRelationSync(ctx context.Context) ([]GetAnimeNeedingRelationSyncRow, error)
+	GetJikanCache(ctx context.Context, key string) (string, error)
 	GetSession(ctx context.Context, id string) (Session, error)
 	GetUpcomingSeasons(ctx context.Context, userID string) ([]GetUpcomingSeasonsRow, error)
 	GetUser(ctx context.Context, id string) (User, error)
@@ -24,6 +26,7 @@ type Querier interface {
 	GetWatchListEntry(ctx context.Context, arg GetWatchListEntryParams) (WatchListEntry, error)
 	GetWatchingAnime(ctx context.Context, userID string) ([]GetWatchingAnimeRow, error)
 	MarkRelationsSynced(ctx context.Context, id int64) error
+	SetJikanCache(ctx context.Context, arg SetJikanCacheParams) error
 	UpdateAnimeStatus(ctx context.Context, arg UpdateAnimeStatusParams) error
 	UpsertAnime(ctx context.Context, arg UpsertAnimeParams) (Anime, error)
 	UpsertAnimeRelation(ctx context.Context, arg UpsertAnimeRelationParams) error

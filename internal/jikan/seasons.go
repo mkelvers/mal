@@ -3,6 +3,7 @@ package jikan
 import (
 	"fmt"
 	"strings"
+	"time"
 )
 
 // ScheduleResult contains anime grouped by day
@@ -17,7 +18,8 @@ func (c *Client) GetSchedule(day string) (ScheduleResult, error) {
 	day = strings.ToLower(day)
 	cacheKey := fmt.Sprintf("schedule_%s", day)
 
-	if cached, ok := c.scheduleCache.Get(cacheKey); ok {
+	var cached ScheduleResult
+	if c.getCache(cacheKey, &cached) {
 		return cached, nil
 	}
 
@@ -32,7 +34,7 @@ func (c *Client) GetSchedule(day string) (ScheduleResult, error) {
 		HasNextPage: result.Pagination.HasNextPage,
 	}
 
-	c.scheduleCache.Add(cacheKey, res)
+	c.setCache(cacheKey, res, time.Hour*1)
 	return res, nil
 }
 
@@ -57,7 +59,9 @@ func (c *Client) GetSeasonsNow(page int) (TopAnimeResult, error) {
 	if page < 1 {
 		page = 1
 	}
-	if cached, ok := c.airingCache.Get(page); ok {
+	cacheKey := fmt.Sprintf("seasons_now:%d", page)
+	var cached TopAnimeResult
+	if c.getCache(cacheKey, &cached) {
 		return cached, nil
 	}
 
@@ -72,7 +76,7 @@ func (c *Client) GetSeasonsNow(page int) (TopAnimeResult, error) {
 		HasNextPage: result.Pagination.HasNextPage,
 	}
 
-	c.airingCache.Add(page, res)
+	c.setCache(cacheKey, res, time.Hour*1)
 	return res, nil
 }
 
@@ -81,7 +85,9 @@ func (c *Client) GetSeasonsUpcoming(page int) (TopAnimeResult, error) {
 	if page < 1 {
 		page = 1
 	}
-	if cached, ok := c.upcomingCache.Get(page); ok {
+	cacheKey := fmt.Sprintf("seasons_upcoming:%d", page)
+	var cached TopAnimeResult
+	if c.getCache(cacheKey, &cached) {
 		return cached, nil
 	}
 
@@ -96,6 +102,6 @@ func (c *Client) GetSeasonsUpcoming(page int) (TopAnimeResult, error) {
 		HasNextPage: result.Pagination.HasNextPage,
 	}
 
-	c.upcomingCache.Add(page, res)
+	c.setCache(cacheKey, res, time.Hour*1)
 	return res, nil
 }

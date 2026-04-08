@@ -1,49 +1,56 @@
 package jikan
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"time"
 
-	"github.com/hashicorp/golang-lru/v2/expirable"
+	"mal/internal/database"
 )
 
 type Client struct {
-	httpClient     *http.Client
-	baseURL        string
-	cache          *expirable.LRU[string, SearchResult]
-	topCache       *expirable.LRU[int, TopAnimeResult]
-	airingCache    *expirable.LRU[int, TopAnimeResult]
-	upcomingCache  *expirable.LRU[int, TopAnimeResult]
-	animeCache     *expirable.LRU[int, Anime]
-	relationsCache *expirable.LRU[int, JikanRelationsResponse]
-	scheduleCache  *expirable.LRU[string, ScheduleResult]
-	recsCache      *expirable.LRU[int, []Anime]
+	httpClient *http.Client
+	baseURL    string
+	db         database.Querier
 }
 
-func NewClient() *Client {
-	cache := expirable.NewLRU[string, SearchResult](500, nil, time.Hour*1)
-	topCache := expirable.NewLRU[int, TopAnimeResult](100, nil, time.Hour*1)
-	airingCache := expirable.NewLRU[int, TopAnimeResult](100, nil, time.Hour*1)
-	upcomingCache := expirable.NewLRU[int, TopAnimeResult](100, nil, time.Hour*1)
-	animeCache := expirable.NewLRU[int, Anime](1000, nil, time.Hour*24)
-	relationsCache := expirable.NewLRU[int, JikanRelationsResponse](1000, nil, time.Hour*24)
-	scheduleCache := expirable.NewLRU[string, ScheduleResult](50, nil, time.Hour*1)
-	recsCache := expirable.NewLRU[int, []Anime](500, nil, time.Hour*24)
-
+func NewClient(db database.Querier) *Client {
 	return &Client{
-		httpClient:     &http.Client{Timeout: 10 * time.Second},
-		baseURL:        "https://api.jikan.moe/v4",
-		cache:          cache,
-		topCache:       topCache,
-		airingCache:    airingCache,
-		upcomingCache:  upcomingCache,
-		animeCache:     animeCache,
-		relationsCache: relationsCache,
-		scheduleCache:  scheduleCache,
-		recsCache:      recsCache,
+		httpClient: &http.Client{Timeout: 10 * time.Second},
+		baseURL:    "https://api.jikan.moe/v4",
+		db:         db,
 	}
+}
+
+func (c *Client) getCache(key string, out interface{}) bool {
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+
+	data, err := c.db.GetJikanCache(ctx, key)
+	if err != nil {
+		return false
+	}
+
+	err = json.Unmarshal([]byte(data), out)
+	return err == nil
+}
+
+func (c *Client) setCache(key string, data interface{}, ttl time.Duration) {
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+
+	bytes, err := json.Marshal(data)
+	if err != nil {
+		return
+	}
+
+	_ = c.db.SetJikanCache(ctx, database.SetJikanCacheParams{
+		Key:       key,
+		Data:      string(bytes),
+		ExpiresAt: time.Now().Add(ttl),
+	})
 }
 
 // fetchWithRetry provides robust fetching respecting Jikan's strict 3 req/sec rate limit

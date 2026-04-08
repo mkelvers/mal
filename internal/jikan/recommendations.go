@@ -1,6 +1,9 @@
 package jikan
 
-import "fmt"
+import (
+	"fmt"
+	"time"
+)
 
 // RecommendationEntry represents a single recommendation
 type RecommendationEntry struct {
@@ -23,7 +26,9 @@ type RecommendationsResponse struct {
 
 // GetRecommendations fetches full details for the top recommended anime
 func (c *Client) GetRecommendations(animeID int, limit int) ([]Anime, error) {
-	if cached, ok := c.recsCache.Get(animeID); ok {
+	cacheKey := fmt.Sprintf("recs:%d", animeID)
+	var cached []Anime
+	if c.getCache(cacheKey, &cached) {
 		if len(cached) > limit {
 			return cached[:limit], nil
 		}
@@ -71,6 +76,6 @@ func (c *Client) GetRecommendations(animeID int, limit int) ([]Anime, error) {
 		}
 	}
 
-	c.recsCache.Add(animeID, animes)
+	c.setCache(cacheKey, animes, time.Hour*24)
 	return animes, nil
 }

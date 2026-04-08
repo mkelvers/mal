@@ -59,6 +59,15 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 	return i, err
 }
 
+const deleteExpiredJikanCache = `-- name: DeleteExpiredJikanCache :exec
+DELETE FROM jikan_cache WHERE expires_at <= CURRENT_TIMESTAMP
+`
+
+func (q *Queries) DeleteExpiredJikanCache(ctx context.Context) error {
+	_, err := q.db.ExecContext(ctx, deleteExpiredJikanCache)
+	return err
+}
+
 const deleteSession = `-- name: DeleteSession :exec
 DELETE FROM session WHERE id = ?
 `
@@ -162,6 +171,18 @@ func (q *Queries) GetAnimeNeedingRelationSync(ctx context.Context) ([]GetAnimeNe
 		return nil, err
 	}
 	return items, nil
+}
+
+const getJikanCache = `-- name: GetJikanCache :one
+SELECT data FROM jikan_cache
+WHERE key = ? AND expires_at > CURRENT_TIMESTAMP LIMIT 1
+`
+
+func (q *Queries) GetJikanCache(ctx context.Context, key string) (string, error) {
+	row := q.db.QueryRowContext(ctx, getJikanCache, key)
+	var data string
+	err := row.Scan(&data)
+	return data, err
 }
 
 const getSession = `-- name: GetSession :one
@@ -465,6 +486,26 @@ UPDATE anime SET relations_synced_at = CURRENT_TIMESTAMP WHERE id = ?
 
 func (q *Queries) MarkRelationsSynced(ctx context.Context, id int64) error {
 	_, err := q.db.ExecContext(ctx, markRelationsSynced, id)
+	return err
+}
+
+const setJikanCache = `-- name: SetJikanCache :exec
+INSERT INTO jikan_cache (key, data, expires_at)
+VALUES (?, ?, ?)
+ON CONFLICT (key) DO UPDATE SET
+    data = excluded.data,
+    expires_at = excluded.expires_at,
+    created_at = CURRENT_TIMESTAMP
+`
+
+type SetJikanCacheParams struct {
+	Key       string    `json:"key"`
+	Data      string    `json:"data"`
+	ExpiresAt time.Time `json:"expires_at"`
+}
+
+func (q *Queries) SetJikanCache(ctx context.Context, arg SetJikanCacheParams) error {
+	_, err := q.db.ExecContext(ctx, setJikanCache, arg.Key, arg.Data, arg.ExpiresAt)
 	return err
 }
 

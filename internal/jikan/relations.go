@@ -1,10 +1,15 @@
 package jikan
 
-import "fmt"
+import (
+	"fmt"
+	"time"
+)
 
 // GetRelationsData fetches the raw relationships for an anime
 func (c *Client) GetRelationsData(id int) (JikanRelationsResponse, error) {
-	if cached, ok := c.relationsCache.Get(id); ok {
+	cacheKey := fmt.Sprintf("relations:%d", id)
+	var cached JikanRelationsResponse
+	if c.getCache(cacheKey, &cached) {
 		return cached, nil
 	}
 
@@ -14,7 +19,7 @@ func (c *Client) GetRelationsData(id int) (JikanRelationsResponse, error) {
 		return JikanRelationsResponse{}, err
 	}
 
-	c.relationsCache.Add(id, result)
+	c.setCache(cacheKey, result, time.Hour*24)
 	return result, nil
 }
 

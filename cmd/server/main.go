@@ -36,7 +36,7 @@ func main() {
 
 	queries := database.New(db)
 	authService := auth.NewService(queries)
-	jikanClient := jikan.NewClient()
+	jikanClient := jikan.NewClient(queries)
 
 	// Start background workers
 	relationsWorker := worker.New(queries, jikanClient)

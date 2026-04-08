@@ -1,10 +1,15 @@
 package jikan
 
-import "fmt"
+import (
+	"fmt"
+	"time"
+)
 
 // GetAnimeByID fetches full details for a single anime
 func (c *Client) GetAnimeByID(id int) (Anime, error) {
-	if cached, ok := c.animeCache.Get(id); ok {
+	cacheKey := fmt.Sprintf("anime:%d", id)
+	var cached Anime
+	if c.getCache(cacheKey, &cached) {
 		return cached, nil
 	}
 
@@ -14,6 +19,6 @@ func (c *Client) GetAnimeByID(id int) (Anime, error) {
 		return Anime{}, err
 	}
 
-	c.animeCache.Add(id, result.Data)
+	c.setCache(cacheKey, result.Data, time.Hour*24)
 	return result.Data, nil
 }

@@ -3,6 +3,7 @@ package jikan
 import (
 	"fmt"
 	"net/url"
+	"time"
 )
 
 // Search returns the anime list with pagination support
@@ -15,7 +16,8 @@ func (c *Client) Search(query string, page int) (SearchResult, error) {
 	}
 
 	cacheKey := fmt.Sprintf("search:%s:%d", query, page)
-	if cached, ok := c.cache.Get(cacheKey); ok {
+	var cached SearchResult
+	if c.getCache(cacheKey, &cached) {
 		return cached, nil
 	}
 
@@ -30,7 +32,7 @@ func (c *Client) Search(query string, page int) (SearchResult, error) {
 		HasNextPage: result.Pagination.HasNextPage,
 	}
 
-	c.cache.Add(cacheKey, res)
+	c.setCache(cacheKey, res, time.Hour*1)
 	return res, nil
 }
 
@@ -39,7 +41,9 @@ func (c *Client) GetTopAnime(page int) (TopAnimeResult, error) {
 	if page < 1 {
 		page = 1
 	}
-	if cached, ok := c.topCache.Get(page); ok {
+	cacheKey := fmt.Sprintf("top:%d", page)
+	var cached TopAnimeResult
+	if c.getCache(cacheKey, &cached) {
 		return cached, nil
 	}
 
@@ -54,6 +58,6 @@ func (c *Client) GetTopAnime(page int) (TopAnimeResult, error) {
 		HasNextPage: result.Pagination.HasNextPage,
 	}
 
-	c.topCache.Add(page, res)
+	c.setCache(cacheKey, res, time.Hour*1)
 	return res, nil
 }

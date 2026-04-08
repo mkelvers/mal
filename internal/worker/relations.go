@@ -29,6 +29,9 @@ func (w *Worker) Start(ctx context.Context) {
 
 	// Run once immediately
 	w.syncRelations(ctx)
+	w.cleanupCache(ctx)
+
+	cleanupCounter := 0
 
 	for {
 		select {
@@ -36,7 +39,21 @@ func (w *Worker) Start(ctx context.Context) {
 			return
 		case <-ticker.C:
 			w.syncRelations(ctx)
+
+			// Clean up cache every 60 runs (approx 1 hour)
+			cleanupCounter++
+			if cleanupCounter >= 60 {
+				w.cleanupCache(ctx)
+				cleanupCounter = 0
+			}
 		}
+	}
+}
+
+func (w *Worker) cleanupCache(ctx context.Context) {
+	err := w.db.DeleteExpiredJikanCache(ctx)
+	if err != nil {
+		log.Printf("worker: failed to clean up expired jikan cache: %v", err)
 	}
 }
 

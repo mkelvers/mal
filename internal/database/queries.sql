@@ -151,3 +151,18 @@ WHERE related.status IN ('Not yet aired', 'Currently Airing')
       WHERE we.user_id = sc.user_id AND we.anime_id = related.id
   )
 ORDER BY related.id DESC;
+
+-- name: GetJikanCache :one
+SELECT data FROM jikan_cache
+WHERE key = ? AND expires_at > CURRENT_TIMESTAMP LIMIT 1;
+
+-- name: SetJikanCache :exec
+INSERT INTO jikan_cache (key, data, expires_at)
+VALUES (?, ?, ?)
+ON CONFLICT (key) DO UPDATE SET
+    data = excluded.data,
+    expires_at = excluded.expires_at,
+    created_at = CURRENT_TIMESTAMP;
+
+-- name: DeleteExpiredJikanCache :exec
+DELETE FROM jikan_cache WHERE expires_at <= CURRENT_TIMESTAMP;
