@@ -32,18 +32,18 @@ templ Notifications(watching []WatchingAnimeWithDetails) {
 }
 
 templ NotificationCard(item WatchingAnimeWithDetails) {
-	<div class="notification-card">
-		<a href={ templ.URL(fmt.Sprintf("/anime/%d", item.Entry.AnimeID)) } class="notification-image">
+	<a href={ templ.URL(fmt.Sprintf("/anime/%d", item.Entry.AnimeID)) } class="notification-card">
+		<div class="notification-image">
 			if item.Entry.ImageUrl != "" {
 				<img src={ item.Entry.ImageUrl } alt={ displayTitle(item.Entry) } loading="lazy"/>
 			} else {
 				<div class="no-image">no image</div>
 			}
-		</a>
+		</div>
 		<div class="notification-content">
-			<a href={ templ.URL(fmt.Sprintf("/anime/%d", item.Entry.AnimeID)) } class="notification-title">
+			<div class="notification-title">
 				{ displayTitle(item.Entry) }
-			</a>
+			</div>
 			<div class="notification-meta">
 				if item.Anime.Broadcast.String != "" {
 					<span class="notification-broadcast">{ item.Anime.Broadcast.String }</span>
@@ -51,22 +51,19 @@ templ NotificationCard(item WatchingAnimeWithDetails) {
 				if item.Anime.Episodes > 0 {
 					<span class="notification-progress">
 						if item.Entry.CurrentEpisode.Valid {
-							{ fmt.Sprintf("%d / %d episodes", item.Entry.CurrentEpisode.Int64, item.Anime.Episodes) }
+							{ fmt.Sprintf("%d / %d eps", item.Entry.CurrentEpisode.Int64, item.Anime.Episodes) }
 						} else {
-							{ fmt.Sprintf("0 / %d episodes", item.Anime.Episodes) }
+							{ fmt.Sprintf("0 / %d eps", item.Anime.Episodes) }
 						}
 					</span>
 				} else if item.Entry.CurrentEpisode.Valid && item.Entry.CurrentEpisode.Int64 > 0 {
 					<span class="notification-progress">
-						{ fmt.Sprintf("%d episodes watched", item.Entry.CurrentEpisode.Int64) }
+						{ fmt.Sprintf("%d eps watched", item.Entry.CurrentEpisode.Int64) }
 					</span>
 				}
 			</div>
-			if item.Anime.Synopsis != "" {
-				<p class="notification-synopsis">{ truncate(item.Anime.Synopsis, 150) }</p>
-			}
 		</div>
-	</div>
+	</a>
 }
 
 func displayTitle(entry database.GetWatchingAnimeRow) string {
