@@ -95,6 +95,7 @@ JOIN anime a ON w.anime_id = a.id
 WHERE w.status IN ('completed', 'watching')
   AND (a.relations_synced_at IS NULL OR a.relations_synced_at < datetime('now', '-7 days'))
 GROUP BY a.id
+ORDER BY MAX(w.updated_at) DESC
 LIMIT 50;
 
 -- name: GetUpcomingSeasons :many
