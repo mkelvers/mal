@@ -47,14 +47,11 @@ templ Watchlist(entries []database.GetUserWatchListRow, layout string, currentSt
 				<div class="catalog-grid">
 					for _, entry := range entries {
 						<div class="catalog-item watchlist-item" id={ fmt.Sprintf("watchlist-entry-%d", entry.AnimeID) }>
-							<a href={ templ.URL(fmt.Sprintf("/anime/%d", entry.AnimeID)) }>
-								if entry.ImageUrl != "" {
-									<img src={ entry.ImageUrl } alt={ entry.DisplayTitle() } class="catalog-thumb" loading="lazy"/>
-								} else {
-									<div class="no-image">No image</div>
-								}
-							</a>
-							<div class="catalog-title">{ entry.DisplayTitle() }</div>
+							@ui.AnimeCard(ui.AnimeCardProps{
+								ID:       int(entry.AnimeID),
+								Title:    entry.DisplayTitle(),
+								ImageURL: entry.ImageUrl,
+							})
 							<button
 								class="remove-btn"
 								hx-delete={ string(templ.URL(fmt.Sprintf("/api/watchlist/%d?from=watchlist", entry.AnimeID))) }

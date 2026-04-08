@@ -1,0 +1,22 @@
+package ui
+
+import "fmt"
+
+type AnimeCardProps struct {
+	ID       int
+	Title    string
+	ImageURL string
+}
+
+templ AnimeCard(props AnimeCardProps) {
+	<a href={ templ.URL(fmt.Sprintf("/anime/%d", props.ID)) }>
+		if props.ImageURL != "" {
+			<img src={ props.ImageURL } alt={ props.Title } class="catalog-thumb" loading="lazy"/>
+		} else {
+			<div class="no-image">No image</div>
+		}
+	</a>
+	<div class="catalog-title">
+		{ props.Title }
+	</div>
+}

@@ -36,14 +36,9 @@ templ InfiniteAnimeList(animes []jikan.Anime, hasNext bool, nextURL string, cont
 }
 
 templ CatalogItem(anime jikan.Anime) {
-	<a href={ templ.URL(fmt.Sprintf("/anime/%d", anime.MalID)) }>
-		if anime.ImageURL() != "" {
-			<img src={ anime.ImageURL() } alt={ anime.DisplayTitle() } class="catalog-thumb" loading="lazy"/>
-		} else {
-			<div class="no-image">No image</div>
-		}
-	</a>
-	<div class="catalog-title">
-		{ anime.DisplayTitle() }
-	</div>
+	@AnimeCard(AnimeCardProps{
+		ID:       anime.MalID,
+		Title:    anime.DisplayTitle(),
+		ImageURL: anime.ImageURL(),
+	})
 }
