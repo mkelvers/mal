@@ -53,10 +53,19 @@ func NewRouter(cfg Config) http.Handler {
 		if r.Method == http.MethodGet {
 			authHandler.HandleLoginPage(w, r)
 		} else {
-			authHandler.HandleLogin(w, r)
+			middleware.RateLimitAuth(middleware.VerifyOrigin(http.HandlerFunc(authHandler.HandleLogin))).ServeHTTP(w, r)
 		}
 	})
-	mux.HandleFunc("/logout", authHandler.HandleLogout)
+	mux.HandleFunc("/register", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodGet {
+			authHandler.HandleRegisterPage(w, r)
+		} else {
+			middleware.RateLimitAuth(middleware.VerifyOrigin(http.HandlerFunc(authHandler.HandleRegister))).ServeHTTP(w, r)
+		}
+	})
+	mux.HandleFunc("/logout", func(w http.ResponseWriter, r *http.Request) {
+		middleware.VerifyOrigin(http.HandlerFunc(authHandler.HandleLogout)).ServeHTTP(w, r)
+	})
 
 	// Watchlist POST endpoint (Protected)
 	mux.Handle("/api/watchlist/export", middleware.RequireAuth(http.HandlerFunc(watchlistHandler.HandleExportWatchlist)))

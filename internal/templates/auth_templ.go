@@ -41,13 +41,60 @@ func Login() templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"login-container\"><h2>sign in</h2><p class=\"login-subtitle\">enter your credentials to continue</p><form action=\"/login\" method=\"POST\" class=\"login-form\"><div class=\"form-group\"><label for=\"username\">email</label> <input type=\"text\" id=\"username\" name=\"username\" required placeholder=\"you@example.com\"></div><div class=\"form-group\"><label for=\"password\">password</label> <input type=\"password\" id=\"password\" name=\"password\" required placeholder=\"your password\"></div><button type=\"submit\" class=\"login-button\">sign in</button></form></div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"login-container\"><h2>sign in</h2><p class=\"login-subtitle\">enter your credentials to continue</p><form action=\"/login\" method=\"POST\" class=\"login-form\"><div class=\"form-group\"><label for=\"username\">username / email</label> <input type=\"text\" id=\"username\" name=\"username\" required placeholder=\"you@example.com\"></div><div class=\"form-group\"><label for=\"password\">password</label> <input type=\"password\" id=\"password\" name=\"password\" required placeholder=\"your password\"></div><button type=\"submit\" class=\"login-button\">sign in</button></form><p style=\"margin-top: 1rem; text-align: center; color: var(--text-muted); font-size: var(--text-sm);\">don't have an account? <a href=\"/register\" style=\"color: var(--primary);\">register</a></p></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			return nil
 		})
 		templ_7745c5c3_Err = Layout("Login").Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		return nil
+	})
+}
+
+func Register() templ.Component {
+	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
+		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
+			return templ_7745c5c3_CtxErr
+		}
+		templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
+		if !templ_7745c5c3_IsBuffer {
+			defer func() {
+				templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
+				if templ_7745c5c3_Err == nil {
+					templ_7745c5c3_Err = templ_7745c5c3_BufErr
+				}
+			}()
+		}
+		ctx = templ.InitializeContext(ctx)
+		templ_7745c5c3_Var3 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var3 == nil {
+			templ_7745c5c3_Var3 = templ.NopComponent
+		}
+		ctx = templ.ClearChildren(ctx)
+		templ_7745c5c3_Var4 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+			templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
+			templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
+			if !templ_7745c5c3_IsBuffer {
+				defer func() {
+					templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
+					if templ_7745c5c3_Err == nil {
+						templ_7745c5c3_Err = templ_7745c5c3_BufErr
+					}
+				}()
+			}
+			ctx = templ.InitializeContext(ctx)
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<div class=\"login-container\"><h2>register</h2><p class=\"login-subtitle\">create a new account to track anime</p><form action=\"/register\" method=\"POST\" class=\"login-form\"><div class=\"form-group\"><label for=\"username\">username / email</label> <input type=\"text\" id=\"username\" name=\"username\" required placeholder=\"you@example.com\"></div><div class=\"form-group\"><label for=\"password\">password</label> <input type=\"password\" id=\"password\" name=\"password\" required placeholder=\"minimum 12 chars\"></div><p style=\"font-size: 0.75rem; color: var(--text-muted); margin-bottom: 1rem; line-height: 1.4;\">Password must be at least 12 characters and include an uppercase letter, lowercase letter, number, and special character.</p><button type=\"submit\" class=\"login-button\">create account</button></form><p style=\"margin-top: 1rem; text-align: center; color: var(--text-muted); font-size: var(--text-sm);\">already have an account? <a href=\"/login\" style=\"color: var(--primary);\">sign in</a></p></div>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			return nil
+		})
+		templ_7745c5c3_Err = Layout("Register").Render(templ.WithChildren(ctx, templ_7745c5c3_Var4), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

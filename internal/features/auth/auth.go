@@ -8,7 +8,9 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"os"
 	"time"
+	"unicode"
 
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
@@ -20,6 +22,7 @@ var (
 	ErrInvalidCredentials = errors.New("invalid username or password")
 	ErrUserExists         = errors.New("username already exists")
 	ErrNotAuthenticated   = errors.New("not authenticated")
+	ErrInvalidPassword    = errors.New("password does not meet security requirements")
 )
 
 type Service struct {
@@ -39,8 +42,37 @@ func generateSessionToken() (string, error) {
 	return base64.URLEncoding.EncodeToString(b), nil
 }
 
+func ValidatePassword(password string) error {
+	if len(password) < 12 {
+		return fmt.Errorf("password must be at least 12 characters long")
+	}
+
+	var hasUpper, hasLower, hasNumber, hasSpecial bool
+	for _, c := range password {
+		switch {
+		case unicode.IsNumber(c):
+			hasNumber = true
+		case unicode.IsUpper(c):
+			hasUpper = true
+		case unicode.IsLower(c):
+			hasLower = true
+		case unicode.IsPunct(c) || unicode.IsSymbol(c) || !unicode.IsLetter(c) && !unicode.IsNumber(c):
+			hasSpecial = true
+		}
+	}
+
+	if !hasUpper || !hasLower || !hasNumber || !hasSpecial {
+		return fmt.Errorf("password must contain at least one uppercase letter, one lowercase letter, one number, and one special character")
+	}
+	return nil
+}
+
 func (s *Service) RegisterUser(ctx context.Context, username, password string) (*database.User, error) {
-	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err := ValidatePassword(password); err != nil {
+		return nil, fmt.Errorf("%w: %v", ErrInvalidPassword, err)
+	}
+
+	hash, err := bcrypt.GenerateFromPassword([]byte(password), 12) // higher cost
 	if err != nil {
 		return nil, fmt.Errorf("failed to hash password: %w", err)
 	}
@@ -117,25 +149,27 @@ func (s *Service) ValidateSession(ctx context.Context, sessionID string) (*datab
 }
 
 func SetSessionCookie(w http.ResponseWriter, sessionID string, expiresAt time.Time) {
+	isProd := os.Getenv("ENV") == "production"
 	http.SetCookie(w, &http.Cookie{
 		Name:     "session_id",
 		Value:    sessionID,
 		Expires:  expiresAt,
 		HttpOnly: true,
-		Secure:   false, // False for local development without TLS
-		SameSite: http.SameSiteLaxMode,
+		Secure:   isProd,
+		SameSite: http.SameSiteStrictMode,
 		Path:     "/",
 	})
 }
 
 func ClearSessionCookie(w http.ResponseWriter) {
+	isProd := os.Getenv("ENV") == "production"
 	http.SetCookie(w, &http.Cookie{
 		Name:     "session_id",
 		Value:    "",
 		Expires:  time.Unix(0, 0),
 		HttpOnly: true,
-		Secure:   false, // False for local development without TLS
-		SameSite: http.SameSiteLaxMode,
+		Secure:   isProd,
+		SameSite: http.SameSiteStrictMode,
 		Path:     "/",
 	})
 }
