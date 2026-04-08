@@ -15,13 +15,17 @@ type Querier interface {
 	DeleteUserSessions(ctx context.Context, userID string) error
 	DeleteWatchListEntry(ctx context.Context, arg DeleteWatchListEntryParams) error
 	GetAnime(ctx context.Context, id int64) (Anime, error)
+	GetAnimeNeedingRelationSync(ctx context.Context) ([]GetAnimeNeedingRelationSyncRow, error)
 	GetSession(ctx context.Context, id string) (Session, error)
+	GetUpcomingSeasons(ctx context.Context, userID string) ([]GetUpcomingSeasonsRow, error)
 	GetUser(ctx context.Context, id string) (User, error)
 	GetUserByUsername(ctx context.Context, username string) (User, error)
 	GetUserWatchList(ctx context.Context, userID string) ([]GetUserWatchListRow, error)
 	GetWatchListEntry(ctx context.Context, arg GetWatchListEntryParams) (WatchListEntry, error)
 	GetWatchingAnime(ctx context.Context, userID string) ([]GetWatchingAnimeRow, error)
+	UpdateAnimeStatus(ctx context.Context, arg UpdateAnimeStatusParams) error
 	UpsertAnime(ctx context.Context, arg UpsertAnimeParams) (Anime, error)
+	UpsertAnimeRelation(ctx context.Context, arg UpsertAnimeRelationParams) error
 	UpsertWatchListEntry(ctx context.Context, arg UpsertWatchListEntryParams) (WatchListEntry, error)
 }
 

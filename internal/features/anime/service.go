@@ -82,7 +82,6 @@ func (s *Service) GetWatchingAnime(ctx context.Context, userID string) ([]templa
 			// Skip if we can't fetch anime details
 			continue
 		}
-
 		result = append(result, templates.WatchingAnimeWithDetails{
 			Entry: row,
 			Anime: anime,
@@ -90,4 +89,12 @@ func (s *Service) GetWatchingAnime(ctx context.Context, userID string) ([]templa
 	}
 
 	return result, nil
+}
+
+func (s *Service) GetUpcomingSeasons(ctx context.Context, userID string) ([]database.GetUpcomingSeasonsRow, error) {
+	rows, err := s.db.GetUpcomingSeasons(ctx, userID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get upcoming seasons: %w", err)
+	}
+	return rows, nil
 }

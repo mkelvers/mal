@@ -8,10 +8,12 @@ import (
 
 	_ "github.com/mattn/go-sqlite3"
 
+	"context"
 	"mal/internal/database"
 	"mal/internal/features/auth"
 	"mal/internal/jikan"
 	"mal/internal/server"
+	"mal/internal/worker"
 )
 
 func main() {
@@ -35,6 +37,10 @@ func main() {
 	queries := database.New(db)
 	authService := auth.NewService(queries)
 	jikanClient := jikan.NewClient()
+
+	// Start background workers
+	relationsWorker := worker.New(queries, jikanClient)
+	go relationsWorker.Start(context.Background())
 
 	app := server.Config{
 		DB:          queries,

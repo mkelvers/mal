@@ -9,7 +9,7 @@ type WatchingAnimeWithDetails struct {
 	Anime jikan.Anime
 }
 
-templ Notifications(watching []WatchingAnimeWithDetails) {
+templ Notifications(watching []WatchingAnimeWithDetails, upcomingSeasons []database.GetUpcomingSeasonsRow) {
 	@Layout("mal - notifications") {
 		<div class="notifications-page">
 			<h1>upcoming episodes</h1>
@@ -27,8 +27,54 @@ templ Notifications(watching []WatchingAnimeWithDetails) {
 					}
 				</div>
 			}
+
+			<h1 style="margin-top: var(--space-2xl);">upcoming seasons</h1>
+			<p class="notifications-subtitle">because you've watched prequels</p>
+			
+			if len(upcomingSeasons) == 0 {
+				<div class="no-notifications">
+					<p>no upcoming seasons for anime you've watched</p>
+					<p class="hint">as you watch more shows, new seasons will appear here</p>
+				</div>
+			} else {
+				<div class="notifications-list">
+					for _, item := range upcomingSeasons {
+						@UpcomingSeasonCard(item)
+					}
+				</div>
+			}
 		</div>
 	}
+}
+
+templ UpcomingSeasonCard(item database.GetUpcomingSeasonsRow) {
+	<a href={ templ.URL(fmt.Sprintf("/anime/%d", item.ID)) } class="notification-card">
+		<div class="notification-image">
+			if item.ImageUrl != "" {
+				<img src={ item.ImageUrl } alt={ displaySeasonTitle(item) } loading="lazy"/>
+			} else {
+				<div class="no-image">no image</div>
+			}
+		</div>
+		<div class="notification-content">
+			<div class="notification-title">
+				{ displaySeasonTitle(item) }
+			</div>
+			<div class="notification-meta">
+				<span class="notification-broadcast" style="color: var(--text-muted) !important;">because you watched { item.PrequelTitle }</span>
+			</div>
+		</div>
+	</a>
+}
+
+func displaySeasonTitle(entry database.GetUpcomingSeasonsRow) string {
+	if entry.TitleEnglish.Valid && entry.TitleEnglish.String != "" {
+		return entry.TitleEnglish.String
+	}
+	if entry.TitleJapanese.Valid && entry.TitleJapanese.String != "" {
+		return entry.TitleJapanese.String
+	}
+	return entry.TitleOriginal
 }
 
 templ NotificationCard(item WatchingAnimeWithDetails) {

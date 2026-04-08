@@ -79,3 +79,34 @@ FROM watch_list_entry e
 JOIN anime a ON e.anime_id = a.id
 WHERE e.user_id = ? AND e.status IN ('watching', 'plan_to_watch') AND a.airing = 1
 ORDER BY e.updated_at DESC;
+-- name: UpsertAnimeRelation :exec
+INSERT INTO anime_relation (anime_id, related_anime_id, relation_type)
+VALUES (?, ?, ?)
+ON CONFLICT (anime_id, related_anime_id) DO UPDATE SET
+    relation_type = excluded.relation_type;
+
+-- name: UpdateAnimeStatus :exec
+UPDATE anime SET status = ?, relations_synced_at = CURRENT_TIMESTAMP WHERE id = ?;
+
+-- name: GetAnimeNeedingRelationSync :many
+SELECT a.id, a.title_original
+FROM watch_list_entry w
+JOIN anime a ON w.anime_id = a.id
+WHERE w.status IN ('completed', 'watching')
+  AND (a.relations_synced_at IS NULL OR a.relations_synced_at < datetime('now', '-7 days'))
+GROUP BY a.id
+LIMIT 50;
+
+-- name: GetUpcomingSeasons :many
+SELECT DISTINCT
+    related.*,
+    a.title_original AS prequel_title
+FROM watch_list_entry w
+JOIN anime_relation r ON w.anime_id = r.anime_id
+JOIN anime a ON w.anime_id = a.id
+JOIN anime related ON r.related_anime_id = related.id
+WHERE w.user_id = ?
+  AND w.status IN ('completed', 'watching')
+  AND r.relation_type = 'Sequel'
+  AND related.status IN ('Not yet aired', 'Currently Airing')
+ORDER BY related.id DESC;

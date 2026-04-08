@@ -328,5 +328,12 @@ func (h *Handler) HandleNotifications(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	templates.Notifications(watching).Render(r.Context(), w)
+	upcomingSeasons, err := h.svc.GetUpcomingSeasons(r.Context(), userID)
+	if err != nil {
+		log.Printf("upcoming seasons error: %v", err)
+		http.Error(w, "Failed to fetch upcoming seasons", http.StatusInternalServerError)
+		return
+	}
+
+	templates.Notifications(watching, upcomingSeasons).Render(r.Context(), w)
 }

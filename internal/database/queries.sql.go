@@ -93,7 +93,7 @@ func (q *Queries) DeleteWatchListEntry(ctx context.Context, arg DeleteWatchListE
 }
 
 const getAnime = `-- name: GetAnime :one
-SELECT id, title_original, image_url, created_at, title_english, title_japanese, airing FROM anime WHERE id = ? LIMIT 1
+SELECT id, title_original, image_url, created_at, title_english, title_japanese, airing, status, relations_synced_at FROM anime WHERE id = ? LIMIT 1
 `
 
 func (q *Queries) GetAnime(ctx context.Context, id int64) (Anime, error) {
@@ -107,8 +107,48 @@ func (q *Queries) GetAnime(ctx context.Context, id int64) (Anime, error) {
 		&i.TitleEnglish,
 		&i.TitleJapanese,
 		&i.Airing,
+		&i.Status,
+		&i.RelationsSyncedAt,
 	)
 	return i, err
+}
+
+const getAnimeNeedingRelationSync = `-- name: GetAnimeNeedingRelationSync :many
+SELECT a.id, a.title_original
+FROM watch_list_entry w
+JOIN anime a ON w.anime_id = a.id
+WHERE w.status IN ('completed', 'watching')
+  AND (a.relations_synced_at IS NULL OR a.relations_synced_at < datetime('now', '-7 days'))
+GROUP BY a.id
+LIMIT 50
+`
+
+type GetAnimeNeedingRelationSyncRow struct {
+	ID            int64  `json:"id"`
+	TitleOriginal string `json:"title_original"`
+}
+
+func (q *Queries) GetAnimeNeedingRelationSync(ctx context.Context) ([]GetAnimeNeedingRelationSyncRow, error) {
+	rows, err := q.db.QueryContext(ctx, getAnimeNeedingRelationSync)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetAnimeNeedingRelationSyncRow
+	for rows.Next() {
+		var i GetAnimeNeedingRelationSyncRow
+		if err := rows.Scan(&i.ID, &i.TitleOriginal); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const getSession = `-- name: GetSession :one
@@ -125,6 +165,68 @@ func (q *Queries) GetSession(ctx context.Context, id string) (Session, error) {
 		&i.CreatedAt,
 	)
 	return i, err
+}
+
+const getUpcomingSeasons = `-- name: GetUpcomingSeasons :many
+SELECT DISTINCT
+    related.id, related.title_original, related.image_url, related.created_at, related.title_english, related.title_japanese, related.airing, related.status, related.relations_synced_at,
+    a.title_original AS prequel_title
+FROM watch_list_entry w
+JOIN anime_relation r ON w.anime_id = r.anime_id
+JOIN anime a ON w.anime_id = a.id
+JOIN anime related ON r.related_anime_id = related.id
+WHERE w.user_id = ?
+  AND w.status IN ('completed', 'watching')
+  AND r.relation_type = 'Sequel'
+  AND related.status IN ('Not yet aired', 'Currently Airing')
+ORDER BY related.id DESC
+`
+
+type GetUpcomingSeasonsRow struct {
+	ID                int64          `json:"id"`
+	TitleOriginal     string         `json:"title_original"`
+	ImageUrl          string         `json:"image_url"`
+	CreatedAt         time.Time      `json:"created_at"`
+	TitleEnglish      sql.NullString `json:"title_english"`
+	TitleJapanese     sql.NullString `json:"title_japanese"`
+	Airing            sql.NullBool   `json:"airing"`
+	Status            sql.NullString `json:"status"`
+	RelationsSyncedAt sql.NullTime   `json:"relations_synced_at"`
+	PrequelTitle      string         `json:"prequel_title"`
+}
+
+func (q *Queries) GetUpcomingSeasons(ctx context.Context, userID string) ([]GetUpcomingSeasonsRow, error) {
+	rows, err := q.db.QueryContext(ctx, getUpcomingSeasons, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetUpcomingSeasonsRow
+	for rows.Next() {
+		var i GetUpcomingSeasonsRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.TitleOriginal,
+			&i.ImageUrl,
+			&i.CreatedAt,
+			&i.TitleEnglish,
+			&i.TitleJapanese,
+			&i.Airing,
+			&i.Status,
+			&i.RelationsSyncedAt,
+			&i.PrequelTitle,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const getUser = `-- name: GetUser :one
@@ -319,6 +421,20 @@ func (q *Queries) GetWatchingAnime(ctx context.Context, userID string) ([]GetWat
 	return items, nil
 }
 
+const updateAnimeStatus = `-- name: UpdateAnimeStatus :exec
+UPDATE anime SET status = ?, relations_synced_at = CURRENT_TIMESTAMP WHERE id = ?
+`
+
+type UpdateAnimeStatusParams struct {
+	Status sql.NullString `json:"status"`
+	ID     int64          `json:"id"`
+}
+
+func (q *Queries) UpdateAnimeStatus(ctx context.Context, arg UpdateAnimeStatusParams) error {
+	_, err := q.db.ExecContext(ctx, updateAnimeStatus, arg.Status, arg.ID)
+	return err
+}
+
 const upsertAnime = `-- name: UpsertAnime :one
 INSERT INTO anime (id, title_original, title_english, title_japanese, image_url, airing)
 VALUES (?, ?, ?, ?, ?, ?)
@@ -328,7 +444,7 @@ ON CONFLICT (id) DO UPDATE SET
     title_japanese = excluded.title_japanese,
     image_url = excluded.image_url,
     airing = excluded.airing
-RETURNING id, title_original, image_url, created_at, title_english, title_japanese, airing
+RETURNING id, title_original, image_url, created_at, title_english, title_japanese, airing, status, relations_synced_at
 `
 
 type UpsertAnimeParams struct {
@@ -358,8 +474,28 @@ func (q *Queries) UpsertAnime(ctx context.Context, arg UpsertAnimeParams) (Anime
 		&i.TitleEnglish,
 		&i.TitleJapanese,
 		&i.Airing,
+		&i.Status,
+		&i.RelationsSyncedAt,
 	)
 	return i, err
+}
+
+const upsertAnimeRelation = `-- name: UpsertAnimeRelation :exec
+INSERT INTO anime_relation (anime_id, related_anime_id, relation_type)
+VALUES (?, ?, ?)
+ON CONFLICT (anime_id, related_anime_id) DO UPDATE SET
+    relation_type = excluded.relation_type
+`
+
+type UpsertAnimeRelationParams struct {
+	AnimeID        int64  `json:"anime_id"`
+	RelatedAnimeID int64  `json:"related_anime_id"`
+	RelationType   string `json:"relation_type"`
+}
+
+func (q *Queries) UpsertAnimeRelation(ctx context.Context, arg UpsertAnimeRelationParams) error {
+	_, err := q.db.ExecContext(ctx, upsertAnimeRelation, arg.AnimeID, arg.RelatedAnimeID, arg.RelationType)
+	return err
 }
 
 const upsertWatchListEntry = `-- name: UpsertWatchListEntry :one
