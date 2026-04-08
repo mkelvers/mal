@@ -80,13 +80,13 @@ func (w *Worker) syncRelations(ctx context.Context) {
 				time.Sleep(400 * time.Millisecond)
 			}()
 
-			relations, err := w.client.GetRelationsData(int(a.ID))
+			animeData, err := w.client.GetAnimeByID(int(a.ID))
 			if err != nil {
-				log.Printf("worker: failed to fetch relations for %d: %v", a.ID, err)
+				log.Printf("worker: failed to fetch anime details for %d: %v", a.ID, err)
 				return
 			}
 
-			for _, rel := range relations.Data {
+			for _, rel := range animeData.Relations {
 				for _, entry := range rel.Entry {
 					if entry.Type == "anime" {
 						// We just insert the relation.

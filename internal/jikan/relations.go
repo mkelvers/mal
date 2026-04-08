@@ -1,31 +1,8 @@
 package jikan
 
-import (
-	"fmt"
-	"time"
-)
-
-// GetRelationsData fetches the raw relationships for an anime
-func (c *Client) GetRelationsData(id int) (JikanRelationsResponse, error) {
-	cacheKey := fmt.Sprintf("relations:%d", id)
-	var cached JikanRelationsResponse
-	if c.getCache(cacheKey, &cached) {
-		return cached, nil
-	}
-
-	var result JikanRelationsResponse
-	reqURL := fmt.Sprintf("%s/anime/%d/relations", c.baseURL, id)
-	if err := c.fetchWithRetry(reqURL, &result); err != nil {
-		return JikanRelationsResponse{}, err
-	}
-
-	c.setCache(cacheKey, result, time.Hour*24)
-	return result, nil
-}
-
 // findFirstAnimeRelation extracts the first related anime ID for a specific relation type
-func findFirstAnimeRelation(res JikanRelationsResponse, relType string) *int {
-	for _, group := range res.Data {
+func findFirstAnimeRelation(groups []JikanRelationGroup, relType string) *int {
+	for _, group := range groups {
 		if group.Relation == relType {
 			for _, entry := range group.Entry {
 				if entry.Type == "anime" {
@@ -40,12 +17,12 @@ func findFirstAnimeRelation(res JikanRelationsResponse, relType string) *int {
 
 // fetchChain recursively builds the relational chain (Prequels or Sequels)
 func (c *Client) fetchChain(startID int, direction string, visited map[int]bool) ([]RelationEntry, error) {
-	rels, err := c.GetRelationsData(startID)
+	anime, err := c.GetAnimeByID(startID)
 	if err != nil {
 		return nil, err
 	}
 
-	nextIDPtr := findFirstAnimeRelation(rels, direction)
+	nextIDPtr := findFirstAnimeRelation(anime.Relations, direction)
 	if nextIDPtr == nil {
 		return nil, nil // normal end of chain
 	}
@@ -56,12 +33,12 @@ func (c *Client) fetchChain(startID int, direction string, visited map[int]bool)
 	}
 	visited[nextID] = true
 
-	anime, err := c.GetAnimeByID(nextID)
+	nextAnime, err := c.GetAnimeByID(nextID)
 	if err != nil {
 		return nil, err
 	}
 
-	entry := RelationEntry{Anime: anime, IsCurrent: false}
+	entry := RelationEntry{Anime: nextAnime, IsCurrent: false}
 	rest, err := c.fetchChain(nextID, direction, visited)
 	if err != nil {
 		return nil, err
@@ -91,8 +68,6 @@ func (c *Client) GetFullRelations(id int) ([]RelationEntry, error) {
 
 	sequels, err2 := c.fetchChain(id, "Sequel", visitedSeq)
 
-	// If both chains errored and it wasn't just "no relations", we should probably error out
-	// But it's safer to just return what we have and the error so the UI can decide
 	var result []RelationEntry
 	result = append(result, prequels...)
 	result = append(result, RelationEntry{Anime: currentAnime, IsCurrent: true})
