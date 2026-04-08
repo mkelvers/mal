@@ -31,7 +31,7 @@ templ Watchlist(entries []database.GetUserWatchListRow, layout string, currentSt
 			<a href={ templ.URL(fmt.Sprintf("/watchlist?view=%s&status=dropped&sort=%s&order=%s", layout, sortBy, sortOrder)) } class={ tabClass(currentStatus == "dropped") }>Dropped</a>
 			<a href={ templ.URL(fmt.Sprintf("/watchlist?view=%s&status=completed&sort=%s&order=%s", layout, sortBy, sortOrder)) } class={ tabClass(currentStatus == "completed") }>Completed</a>
 		</div>
-		@SortFilter(SortFilterOptions{Sort: sortBy, Order: sortOrder, View: layout, Status: currentStatus})
+		@ui.SortFilter(ui.SortFilterOptions{Sort: sortBy, Order: sortOrder, View: layout, Status: currentStatus})
 		if len(entries) == 0 {
 			@ui.EmptyState("Nothing here yet") {
 				if currentStatus == "all" {

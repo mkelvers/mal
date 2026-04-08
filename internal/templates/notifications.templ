@@ -17,10 +17,9 @@ templ Notifications(watching []WatchingAnimeWithDetails) {
 			<p class="notifications-subtitle">Shows you're currently watching or planning to watch.</p>
 			
 			if len(watching) == 0 {
-				<div class="no-notifications">
-					<p>No airing anime in your watching list.</p>
-					<p class="hint">Add currently airing shows to your watching list to see upcoming episodes here.</p>
-				</div>
+				@ui.EmptyState("No airing anime in your watching list.") {
+					<span style="font-size: var(--text-sm); margin-top: var(--space-sm); display: block;">Add currently airing shows to your watching list to see upcoming episodes here.</span>
+				}
 			} else {
 				<div class="notifications-list">
 					for _, item := range watching {
@@ -52,10 +51,9 @@ func splitUpcomingSeasons(items []database.GetUpcomingSeasonsRow) (airing []data
 
 templ UpcomingSeasonsList(upcomingSeasons []database.GetUpcomingSeasonsRow) {
 	if len(upcomingSeasons) == 0 {
-		<div class="no-notifications">
-			<p>No upcoming seasons for anime you've watched.</p>
-			<p class="hint">As you watch more shows, new seasons will appear here.</p>
-		</div>
+		@ui.EmptyState("No upcoming seasons for anime you've watched.") {
+			<span style="font-size: var(--text-sm); margin-top: var(--space-sm); display: block;">As you watch more shows, new seasons will appear here.</span>
+		}
 	} else {
 		@renderSplitSeasons(upcomingSeasons)
 	}
