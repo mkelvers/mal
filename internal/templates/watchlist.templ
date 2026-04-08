@@ -3,6 +3,7 @@ package templates
 import (
 	"fmt"
 	"mal/internal/database"
+	"mal/internal/shared/ui"
 )
 
 templ Watchlist(entries []database.GetUserWatchListRow, layout string, currentStatus string, sortBy string, sortOrder string) {
@@ -32,18 +33,15 @@ templ Watchlist(entries []database.GetUserWatchListRow, layout string, currentSt
 		</div>
 		@SortFilter(SortFilterOptions{Sort: sortBy, Order: sortOrder, View: layout, Status: currentStatus})
 		if len(entries) == 0 {
-			<div class="empty-state">
-				<div class="empty-state-title">Nothing here yet</div>
-				<div class="empty-state-text">
-					if currentStatus == "all" {
-						Your watchlist is empty. <a href="/">Search for anime</a> to get started.
-					} else if currentStatus == "continuing" {
-						No airing anime with watching or plan to watch status.
-					} else {
-						No anime in this category.
-					}
-				</div>
-			</div>
+			@ui.EmptyState("Nothing here yet") {
+				if currentStatus == "all" {
+					Your watchlist is empty. <a href="/">Search for anime</a> to get started.
+				} else if currentStatus == "continuing" {
+					No airing anime with watching or plan to watch status.
+				} else {
+					No anime in this category.
+				}
+			}
 		} else {
 			if layout == "grid" {
 				<div class="catalog-grid">

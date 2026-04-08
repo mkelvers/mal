@@ -1,0 +1,10 @@
+package ui
+
+templ EmptyState(title string) {
+	<div class="empty-state">
+		<div class="empty-state-title">{ title }</div>
+		<div class="empty-state-text">
+			{ children... }
+		</div>
+	</div>
+}

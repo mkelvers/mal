@@ -15,20 +15,18 @@ templ Search(q string) {
 			</div>
 			<div id="results" hx-get={ string(templ.URL("/search?q=" + url.QueryEscape(q))) } hx-trigger="load" hx-indicator="#loading"></div>
 		} else {
-			<div class="empty-state">
-				<div class="empty-state-title">Search for anime</div>
-				<div class="empty-state-text">Use the search bar above to find anime to add to your watchlist.</div>
-			</div>
+			@ui.EmptyState("Search for anime") {
+				Use the search bar above to find anime to add to your watchlist.
+			}
 		}
 	}
 }
 
 templ SearchResultsWrapper(query string, animes []jikan.Anime, nextPage int, hasNext bool) {
 	if len(animes) == 0 {
-		<div class="empty-state">
-			<div class="empty-state-title">No results found.</div>
-			<div class="empty-state-text">Try a different search term.</div>
-		</div>
+		@ui.EmptyState("No results found.") {
+			Try a different search term.
+		}
 	} else {
 		<div class="catalog-grid">
 			@SearchItems(query, animes, nextPage, hasNext)
