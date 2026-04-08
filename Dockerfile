@@ -5,10 +5,16 @@ WORKDIR /app
 # Enable CGO for sqlite3
 ENV CGO_ENABLED=1
 
+# Install templ
+RUN go install github.com/a-h/templ/cmd/templ@latest
+
 COPY go.mod go.sum ./
 RUN go mod download
 
 COPY . .
+
+# Generate templ files
+RUN templ generate
 
 # Build the server and the CLI tools
 RUN go build -o main_server ./cmd/server
