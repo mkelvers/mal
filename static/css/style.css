@@ -692,7 +692,8 @@ a.htmx-request {
 }
 
 .anime-synopsis h3,
-.anime-relations h3 {
+.anime-relations h3,
+.anime-recommendations h3 {
   font-size: var(--text-base);
   font-weight: 600;
   color: var(--text);
