@@ -34,7 +34,6 @@ func cleanupVisitors() {
 	}
 }
 
-// getIP attempts to get the real IP, falling back to RemoteAddr
 func getIP(r *http.Request) string {
 	if xff := r.Header.Get("X-Forwarded-For"); xff != "" {
 		ips := strings.Split(xff, ",")
@@ -50,7 +49,6 @@ func getIP(r *http.Request) string {
 	return ip
 }
 
-// RateLimitAuth limits login/register attempts to prevent brute force
 func RateLimitAuth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ip := getIP(r)
@@ -67,7 +65,7 @@ func RateLimitAuth(next http.Handler) http.Handler {
 			v.attempts++
 			v.lastSeen = time.Now()
 		}
-		
+
 		// If more than 5 attempts within a minute, block
 		if exists && v.attempts > 5 {
 			mu.Unlock()

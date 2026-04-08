@@ -215,7 +215,7 @@ func (h *Handler) HandleQuickSearch(w http.ResponseWriter, r *http.Request) {
 	if query == "" {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode([]interface{}{})
+		json.NewEncoder(w).Encode([]any{})
 		return
 	}
 

@@ -32,7 +32,6 @@ func NewRouter(cfg Config) http.Handler {
 	fs := http.FileServer(http.Dir("./static"))
 	mux.Handle("/static/", http.StripPrefix("/static/", fs))
 
-	// Anime / Search / Catalog
 	mux.HandleFunc("/", animeHandler.HandleCatalog)
 	mux.HandleFunc("/discover", animeHandler.HandleDiscover)
 	mux.HandleFunc("/schedule", animeHandler.HandleSchedule)
@@ -67,12 +66,12 @@ func NewRouter(cfg Config) http.Handler {
 		middleware.VerifyOrigin(http.HandlerFunc(authHandler.HandleLogout)).ServeHTTP(w, r)
 	})
 
-	// Watchlist POST endpoint (Protected)
-	mux.Handle("/api/watchlist/export", middleware.RequireAuth(http.HandlerFunc(watchlistHandler.HandleExportWatchlist)))
-	mux.Handle("/api/watchlist/import", middleware.RequireAuth(http.HandlerFunc(watchlistHandler.HandleImportWatchlist)))
-	mux.Handle("/api/watchlist", middleware.RequireAuth(http.HandlerFunc(watchlistHandler.HandleUpdateWatchlist)))
-	mux.Handle("/api/watchlist/", middleware.RequireAuth(http.HandlerFunc(watchlistHandler.HandleDeleteWatchlist)))
-	mux.Handle("/watchlist", middleware.RequireAuth(http.HandlerFunc(watchlistHandler.HandleGetWatchlist)))
+	// Watchlist Endpoints
+	mux.HandleFunc("/api/watchlist/export", watchlistHandler.HandleExportWatchlist)
+	mux.HandleFunc("/api/watchlist/import", watchlistHandler.HandleImportWatchlist)
+	mux.HandleFunc("/api/watchlist", watchlistHandler.HandleUpdateWatchlist)
+	mux.HandleFunc("/api/watchlist/", watchlistHandler.HandleDeleteWatchlist)
+	mux.HandleFunc("/watchlist", watchlistHandler.HandleGetWatchlist)
 
 	// Wrap mux with global auth checking, THEN auth context parsing
 	protectedHandler := middleware.RequireGlobalAuth(mux)

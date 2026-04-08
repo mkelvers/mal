@@ -41,7 +41,6 @@ func Auth(authService *auth.Service) func(http.Handler) http.Handler {
 	}
 }
 
-// RequireAuth ensures that a valid user is in the context, otherwise unauthorized
 func RequireAuth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		user, ok := r.Context().Value(UserContextKey).(*database.User)
@@ -58,7 +57,6 @@ func RequireAuth(next http.Handler) http.Handler {
 	})
 }
 
-// RequireGlobalAuth ensures that a valid user is in the context for all routes except login and static
 func RequireGlobalAuth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Allow unauthenticated access to login, register, search, and static files
@@ -83,7 +81,6 @@ func RequireGlobalAuth(next http.Handler) http.Handler {
 	})
 }
 
-// GetUser returns the user from context, or nil if not logged in
 func GetUser(ctx context.Context) *database.User {
 	user, ok := ctx.Value(UserContextKey).(*database.User)
 	if !ok {

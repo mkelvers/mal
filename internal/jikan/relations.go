@@ -1,6 +1,7 @@
 package jikan
 
-// findFirstAnimeRelation extracts the first related anime ID for a specific relation type
+import "maps"
+
 func findFirstAnimeRelation(groups []JikanRelationGroup, relType string) *int {
 	for _, group := range groups {
 		if group.Relation == relType {
@@ -15,7 +16,6 @@ func findFirstAnimeRelation(groups []JikanRelationGroup, relType string) *int {
 	return nil
 }
 
-// fetchChain recursively builds the relational chain (Prequels or Sequels)
 func (c *Client) fetchChain(startID int, direction string, visited map[int]bool) ([]RelationEntry, error) {
 	anime, err := c.GetAnimeByID(startID)
 	if err != nil {
@@ -24,7 +24,7 @@ func (c *Client) fetchChain(startID int, direction string, visited map[int]bool)
 
 	nextIDPtr := findFirstAnimeRelation(anime.Relations, direction)
 	if nextIDPtr == nil {
-		return nil, nil // normal end of chain
+		return nil, nil
 	}
 
 	nextID := *nextIDPtr
@@ -50,7 +50,6 @@ func (c *Client) fetchChain(startID int, direction string, visited map[int]bool)
 	return append([]RelationEntry{entry}, rest...), nil
 }
 
-// GetFullRelations resolves the full Prequel/Sequel chronological chain synchronously
 func (c *Client) GetFullRelations(id int) ([]RelationEntry, error) {
 	currentAnime, err := c.GetAnimeByID(id)
 	if err != nil {
@@ -62,9 +61,7 @@ func (c *Client) GetFullRelations(id int) ([]RelationEntry, error) {
 	prequels, err1 := c.fetchChain(id, "Prequel", visited)
 
 	visitedSeq := make(map[int]bool)
-	for k, v := range visited {
-		visitedSeq[k] = v
-	}
+	maps.Copy(visitedSeq, visited)
 
 	sequels, err2 := c.fetchChain(id, "Sequel", visitedSeq)
 

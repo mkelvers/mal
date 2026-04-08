@@ -5,7 +5,6 @@ import (
 	"time"
 )
 
-// RecommendationEntry represents a single recommendation
 type RecommendationEntry struct {
 	Entry struct {
 		MalID  int    `json:"mal_id"`
@@ -24,7 +23,6 @@ type RecommendationsResponse struct {
 	Data []RecommendationEntry `json:"data"`
 }
 
-// GetRecommendations fetches recommended anime
 func (c *Client) GetRecommendations(animeID int, limit int) ([]Anime, error) {
 	cacheKey := fmt.Sprintf("recs:%d", animeID)
 	var cached []Anime

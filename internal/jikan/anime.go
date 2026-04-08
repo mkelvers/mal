@@ -5,7 +5,6 @@ import (
 	"time"
 )
 
-// GetAnimeByID fetches full details for a single anime
 func (c *Client) GetAnimeByID(id int) (Anime, error) {
 	cacheKey := fmt.Sprintf("anime:%d", id)
 	var cached Anime

@@ -12,20 +12,17 @@ type TopAnimeResult struct {
 	HasNextPage bool
 }
 
-// NamedEntity represents genres, studios, producers, etc.
 type NamedEntity struct {
 	MalID int    `json:"mal_id"`
 	Name  string `json:"name"`
 }
 
-// Aired represents the airing date range
 type Aired struct {
 	From   string `json:"from"`
 	To     string `json:"to"`
 	String string `json:"string"`
 }
 
-// Anime struct matching the Jikan v4 API structure
 type Anime struct {
 	MalID         int      `json:"mal_id"`
 	Title         string   `json:"title"`
@@ -73,12 +70,10 @@ type Anime struct {
 	Relations []JikanRelationGroup `json:"relations"`
 }
 
-// ImageURL returns the webp large image URL
 func (a Anime) ImageURL() string {
 	return a.Images.Webp.LargeImageURL
 }
 
-// ShortRating returns abbreviated rating (e.g., "PG-13" from "PG-13 - Teens 13 or older")
 func (a Anime) ShortRating() string {
 	if a.Rating == "" {
 		return ""
@@ -92,7 +87,6 @@ func (a Anime) ShortRating() string {
 	return a.Rating
 }
 
-// ShortDuration returns abbreviated duration (e.g., "23m" from "23 min per ep")
 func (a Anime) ShortDuration() string {
 	if a.Duration == "" {
 		return ""
@@ -112,7 +106,6 @@ func (a Anime) ShortDuration() string {
 	return a.Duration
 }
 
-// Premiered returns season + year (e.g., "Fall 2002")
 func (a Anime) Premiered() string {
 	if a.Season != "" && a.Year > 0 {
 		return fmt.Sprintf("%s %d", a.Season, a.Year)
@@ -138,7 +131,6 @@ type TopAnimeResponse struct {
 	Pagination Pagination `json:"pagination"`
 }
 
-// Relation Types
 type JikanRelationEntry struct {
 	MalID int    `json:"mal_id"`
 	Type  string `json:"type"`
@@ -160,7 +152,6 @@ type RelationEntry struct {
 	IsCurrent bool
 }
 
-// DisplayTitle prefers English, falls back to Japanese, then standard Title
 func (a Anime) DisplayTitle() string {
 	if a.TitleEnglish != "" {
 		return a.TitleEnglish

@@ -43,7 +43,7 @@ func (c *Client) waitRateLimit() {
 	}
 }
 
-func (c *Client) getCache(key string, out interface{}) bool {
+func (c *Client) getCache(key string, out any) bool {
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
 
@@ -56,7 +56,7 @@ func (c *Client) getCache(key string, out interface{}) bool {
 	return err == nil
 }
 
-func (c *Client) setCache(key string, data interface{}, ttl time.Duration) {
+func (c *Client) setCache(key string, data any, ttl time.Duration) {
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
 
@@ -72,10 +72,9 @@ func (c *Client) setCache(key string, data interface{}, ttl time.Duration) {
 	})
 }
 
-// fetchWithRetry provides robust fetching respecting Jikan's strict 3 req/sec rate limit
-func (c *Client) fetchWithRetry(urlStr string, out interface{}) error {
+func (c *Client) fetchWithRetry(urlStr string, out any) error {
 	maxRetries := 5
-	for i := 0; i < maxRetries; i++ {
+	for range maxRetries {
 		c.waitRateLimit()
 
 		resp, err := c.httpClient.Get(urlStr)

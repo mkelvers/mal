@@ -6,7 +6,6 @@ import (
 	"time"
 )
 
-// Search returns the anime list with pagination support
 func (c *Client) Search(query string, page int) (SearchResult, error) {
 	if query == "" {
 		return SearchResult{}, nil
@@ -36,7 +35,6 @@ func (c *Client) Search(query string, page int) (SearchResult, error) {
 	return res, nil
 }
 
-// GetTopAnime fetches the top anime by popularity (default) or other filters
 func (c *Client) GetTopAnime(page int) (TopAnimeResult, error) {
 	if page < 1 {
 		page = 1

@@ -269,7 +269,7 @@ func (h *Handler) sortEntries(entries []database.GetUserWatchListRow, sortBy, so
 	}
 
 	// Simple bubble sort for small lists
-	for i := 0; i < len(entries); i++ {
+	for i := range len(entries) {
 		for j := i + 1; j < len(entries); j++ {
 			if less(j, i) {
 				entries[i], entries[j] = entries[j], entries[i]

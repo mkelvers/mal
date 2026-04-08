@@ -6,14 +6,11 @@ import (
 	"time"
 )
 
-// ScheduleResult contains anime grouped by day
 type ScheduleResult struct {
 	Animes      []Anime
 	HasNextPage bool
 }
 
-// GetSchedule fetches anime airing on a specific day
-// day can be: monday, tuesday, wednesday, thursday, friday, saturday, sunday, unknown, other
 func (c *Client) GetSchedule(day string) (ScheduleResult, error) {
 	day = strings.ToLower(day)
 	cacheKey := fmt.Sprintf("schedule_%s", day)
@@ -38,7 +35,6 @@ func (c *Client) GetSchedule(day string) (ScheduleResult, error) {
 	return res, nil
 }
 
-// GetFullSchedule fetches all days at once
 func (c *Client) GetFullSchedule() (map[string][]Anime, error) {
 	days := []string{"monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"}
 	schedule := make(map[string][]Anime)
@@ -54,7 +50,6 @@ func (c *Client) GetFullSchedule() (map[string][]Anime, error) {
 	return schedule, nil
 }
 
-// GetSeasonsNow fetches currently airing anime
 func (c *Client) GetSeasonsNow(page int) (TopAnimeResult, error) {
 	if page < 1 {
 		page = 1
@@ -80,7 +75,6 @@ func (c *Client) GetSeasonsNow(page int) (TopAnimeResult, error) {
 	return res, nil
 }
 
-// GetSeasonsUpcoming fetches upcoming anime
 func (c *Client) GetSeasonsUpcoming(page int) (TopAnimeResult, error) {
 	if page < 1 {
 		page = 1
