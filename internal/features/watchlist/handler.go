@@ -47,7 +47,7 @@ func (h *Handler) HandleUpdateWatchlist(w http.ResponseWriter, r *http.Request) 
 	airingStr := r.FormValue("airing")
 	airing := airingStr == "true"
 
-	log.Printf("watchlist add: id=%s, title=%s", animeIDStr, animeTitle)
+	log.Printf("watchlist add: user_id=%s, anime_id=%s, title=%s", user.ID, animeIDStr, animeTitle)
 
 	animeID, err := strconv.ParseInt(animeIDStr, 10, 64)
 	if err != nil {
