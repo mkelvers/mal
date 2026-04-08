@@ -128,7 +128,7 @@ func (h *Handler) HandleGetWatchlist(w http.ResponseWriter, r *http.Request) {
 
 	layout := r.URL.Query().Get("view")
 	if layout != "grid" && layout != "table" {
-		layout = "table"
+		layout = "grid"
 	}
 
 	statusFilter := r.URL.Query().Get("status")
