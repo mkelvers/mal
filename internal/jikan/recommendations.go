@@ -24,12 +24,12 @@ type RecommendationsResponse struct {
 	Data []RecommendationEntry `json:"data"`
 }
 
-// GetRecommendations fetches full details for the top recommended anime
+// GetRecommendations fetches recommended anime
 func (c *Client) GetRecommendations(animeID int, limit int) ([]Anime, error) {
 	cacheKey := fmt.Sprintf("recs:%d", animeID)
 	var cached []Anime
 	if c.getCache(cacheKey, &cached) {
-		if len(cached) > limit {
+		if limit > 0 && len(cached) > limit {
 			return cached[:limit], nil
 		}
 		return cached, nil
@@ -49,31 +49,30 @@ func (c *Client) GetRecommendations(animeID int, limit int) ([]Anime, error) {
 	animes := make([]Anime, 0, max)
 	for i := 0; i < max; i++ {
 		rec := result.Data[i]
-		// Fetch full details so we get English/Japanese titles
-		fullAnime, err := c.GetAnimeByID(rec.Entry.MalID)
-		if err == nil {
-			animes = append(animes, fullAnime)
-		} else {
-			// Fallback to partial data if full fetch fails
-			animes = append(animes, Anime{
-				MalID: rec.Entry.MalID,
-				Title: rec.Entry.Title,
-				Images: struct {
-					Jpg struct {
-						LargeImageURL string `json:"large_image_url"`
-					} `json:"jpg"`
-					Webp struct {
-						LargeImageURL string `json:"large_image_url"`
-					} `json:"webp"`
+
+		// Map the recommendation data directly into an Anime struct.
+		// By doing this locally, we avoid N additional rate-limited API calls
+		// which was destroying the Jikan limit buckets.
+		anime := Anime{
+			MalID: rec.Entry.MalID,
+			Title: rec.Entry.Title,
+			Images: struct {
+				Jpg struct {
+					LargeImageURL string `json:"large_image_url"`
+				} `json:"jpg"`
+				Webp struct {
+					LargeImageURL string `json:"large_image_url"`
+				} `json:"webp"`
+			}{
+				Webp: struct {
+					LargeImageURL string `json:"large_image_url"`
 				}{
-					Webp: struct {
-						LargeImageURL string `json:"large_image_url"`
-					}{
-						LargeImageURL: rec.Entry.Images.Webp.LargeImageURL,
-					},
+					LargeImageURL: rec.Entry.Images.Webp.LargeImageURL,
 				},
-			})
+			},
 		}
+
+		animes = append(animes, anime)
 	}
 
 	c.setCache(cacheKey, animes, time.Hour*24)
