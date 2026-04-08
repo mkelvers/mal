@@ -50,29 +50,35 @@ func (c *Client) GetRecommendations(animeID int, limit int) ([]Anime, error) {
 	for i := 0; i < max; i++ {
 		rec := result.Data[i]
 
-		// Map the recommendation data directly into an Anime struct.
-		// By doing this locally, we avoid N additional rate-limited API calls
-		// which was destroying the Jikan limit buckets.
-		anime := Anime{
-			MalID: rec.Entry.MalID,
-			Title: rec.Entry.Title,
-			Images: struct {
-				Jpg struct {
-					LargeImageURL string `json:"large_image_url"`
-				} `json:"jpg"`
-				Webp struct {
-					LargeImageURL string `json:"large_image_url"`
-				} `json:"webp"`
-			}{
-				Webp: struct {
-					LargeImageURL string `json:"large_image_url"`
-				}{
-					LargeImageURL: rec.Entry.Images.Webp.LargeImageURL,
-				},
-			},
-		}
+		// Try to see if we already have the full anime details in our local cache.
+		// If we do, we can use it to get the English title without making an API call!
+		var fullAnime Anime
+		animeCacheKey := fmt.Sprintf("anime:%d", rec.Entry.MalID)
 
-		animes = append(animes, anime)
+		if c.getCache(animeCacheKey, &fullAnime) {
+			animes = append(animes, fullAnime)
+		} else {
+			// Otherwise, map the basic recommendation data directly into an Anime struct.
+			anime := Anime{
+				MalID: rec.Entry.MalID,
+				Title: rec.Entry.Title,
+				Images: struct {
+					Jpg struct {
+						LargeImageURL string `json:"large_image_url"`
+					} `json:"jpg"`
+					Webp struct {
+						LargeImageURL string `json:"large_image_url"`
+					} `json:"webp"`
+				}{
+					Webp: struct {
+						LargeImageURL string `json:"large_image_url"`
+					}{
+						LargeImageURL: rec.Entry.Images.Webp.LargeImageURL,
+					},
+				},
+			}
+			animes = append(animes, anime)
+		}
 	}
 
 	c.setCache(cacheKey, animes, time.Hour*24)
