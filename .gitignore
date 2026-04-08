@@ -42,3 +42,5 @@ malago
 *.db-wal
 tmp/
 server
+*.log
+*.pid
