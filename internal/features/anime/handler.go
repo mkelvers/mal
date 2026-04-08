@@ -178,7 +178,7 @@ func (h *Handler) HandleAPIAnime(w http.ResponseWriter, r *http.Request) {
 		}
 		templates.AnimeRelationsList(relations).Render(r.Context(), w)
 	case "recommendations":
-		recs, err := h.svc.GetRecommendations(id, 10)
+		recs, err := h.svc.GetRecommendations(id, 12)
 		if err != nil {
 			log.Printf("recommendations error for %d: %v", id, err)
 			w.Header().Set("Content-Type", "text/html")
