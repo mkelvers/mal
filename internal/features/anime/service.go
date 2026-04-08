@@ -65,8 +65,8 @@ func (s *Service) GetSchedule(day string) (jikan.ScheduleResult, error) {
 	return s.jikanClient.GetSchedule(day)
 }
 
-func (s *Service) GetRecommendations(animeID int) ([]jikan.Anime, error) {
-	return s.jikanClient.GetRecommendations(animeID)
+func (s *Service) GetRecommendations(animeID int, limit int) ([]jikan.Anime, error) {
+	return s.jikanClient.GetRecommendations(animeID, limit)
 }
 
 func (s *Service) GetWatchingAnime(ctx context.Context, userID string) ([]templates.WatchingAnimeWithDetails, error) {

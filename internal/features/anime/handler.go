@@ -167,7 +167,7 @@ func (h *Handler) HandleAPIAnime(w http.ResponseWriter, r *http.Request) {
 		relations := h.svc.GetRelations(id)
 		templates.AnimeRelationsList(relations).Render(r.Context(), w)
 	case "recommendations":
-		recs, err := h.svc.GetRecommendations(id)
+		recs, err := h.svc.GetRecommendations(id, 10)
 		if err != nil {
 			log.Printf("recommendations error for %d: %v", id, err)
 			http.Error(w, "Failed to fetch recommendations", http.StatusInternalServerError)

@@ -21,9 +21,12 @@ type RecommendationsResponse struct {
 	Data []RecommendationEntry `json:"data"`
 }
 
-// GetRecommendations fetches recommendations for an anime
-func (c *Client) GetRecommendations(animeID int) ([]Anime, error) {
+// GetRecommendations fetches full details for the top recommended anime
+func (c *Client) GetRecommendations(animeID int, limit int) ([]Anime, error) {
 	if cached, ok := c.recsCache.Get(animeID); ok {
+		if len(cached) > limit {
+			return cached[:limit], nil
+		}
 		return cached, nil
 	}
 
@@ -33,27 +36,39 @@ func (c *Client) GetRecommendations(animeID int) ([]Anime, error) {
 		return nil, err
 	}
 
-	// Convert to Anime slice (partial data)
-	animes := make([]Anime, 0, len(result.Data))
-	for _, rec := range result.Data {
-		animes = append(animes, Anime{
-			MalID: rec.Entry.MalID,
-			Title: rec.Entry.Title,
-			Images: struct {
-				Jpg struct {
-					LargeImageURL string `json:"large_image_url"`
-				} `json:"jpg"`
-				Webp struct {
-					LargeImageURL string `json:"large_image_url"`
-				} `json:"webp"`
-			}{
-				Webp: struct {
-					LargeImageURL string `json:"large_image_url"`
+	max := len(result.Data)
+	if limit > 0 && max > limit {
+		max = limit
+	}
+
+	animes := make([]Anime, 0, max)
+	for i := 0; i < max; i++ {
+		rec := result.Data[i]
+		// Fetch full details so we get English/Japanese titles
+		fullAnime, err := c.GetAnimeByID(rec.Entry.MalID)
+		if err == nil {
+			animes = append(animes, fullAnime)
+		} else {
+			// Fallback to partial data if full fetch fails
+			animes = append(animes, Anime{
+				MalID: rec.Entry.MalID,
+				Title: rec.Entry.Title,
+				Images: struct {
+					Jpg struct {
+						LargeImageURL string `json:"large_image_url"`
+					} `json:"jpg"`
+					Webp struct {
+						LargeImageURL string `json:"large_image_url"`
+					} `json:"webp"`
 				}{
-					LargeImageURL: rec.Entry.Images.Webp.LargeImageURL,
+					Webp: struct {
+						LargeImageURL string `json:"large_image_url"`
+					}{
+						LargeImageURL: rec.Entry.Images.Webp.LargeImageURL,
+					},
 				},
-			},
-		})
+			})
+		}
 	}
 
 	c.recsCache.Add(animeID, animes)
