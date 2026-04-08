@@ -1,6 +1,7 @@
 package templates
 
 import "mal/internal/jikan"
+import "mal/internal/shared/ui"
 import "fmt"
 import "strings"
 
@@ -51,23 +52,13 @@ templ AnimeDetails(anime jikan.Anime, currentStatus string) {
 				<section class="anime-relations">
 					<h3>Related</h3>
 					<div hx-get={ string(templ.URL(fmt.Sprintf("/api/anime/%d/relations", anime.MalID))) } hx-trigger="load">
-						<div class="loading-indicator">
-							<div class="loading-dot"></div>
-							<div class="loading-dot"></div>
-							<div class="loading-dot"></div>
-							<span>Loading relations</span>
-						</div>
+						@ui.LoadingIndicator("Loading relations")
 					</div>
 				</section>
 				<section class="anime-recommendations">
 					<h3>Recommendations</h3>
 					<div hx-get={ string(templ.URL(fmt.Sprintf("/api/anime/%d/recommendations", anime.MalID))) } hx-trigger="load">
-						<div class="loading-indicator">
-							<div class="loading-dot"></div>
-							<div class="loading-dot"></div>
-							<div class="loading-dot"></div>
-							<span>Loading recommendations</span>
-						</div>
+						@ui.LoadingIndicator("Loading recommendations")
 					</div>
 				</section>
 			</div>
