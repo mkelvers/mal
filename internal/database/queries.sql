@@ -77,5 +77,5 @@ SELECT
     a.airing
 FROM watch_list_entry e
 JOIN anime a ON e.anime_id = a.id
-WHERE e.user_id = ? AND e.status = 'watching' AND a.airing = 1
+WHERE e.user_id = ? AND e.status IN ('watching', 'plan_to_watch') AND a.airing = 1
 ORDER BY e.updated_at DESC;
