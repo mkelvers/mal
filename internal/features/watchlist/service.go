@@ -103,17 +103,6 @@ type ExportData struct {
 	Entries    []ExportEntry `json:"entries"`
 }
 
-// displayTitle returns the best available title
-func displayTitle(e database.GetUserWatchListRow) string {
-	if e.TitleEnglish.Valid && e.TitleEnglish.String != "" {
-		return e.TitleEnglish.String
-	}
-	if e.TitleJapanese.Valid && e.TitleJapanese.String != "" {
-		return e.TitleJapanese.String
-	}
-	return e.TitleOriginal
-}
-
 func (s *Service) Export(ctx context.Context, userID string) (ExportData, error) {
 	entries, err := s.GetUserWatchlist(ctx, userID)
 	if err != nil {
@@ -128,7 +117,7 @@ func (s *Service) Export(ctx context.Context, userID string) (ExportData, error)
 	for i, entry := range entries {
 		export.Entries[i] = ExportEntry{
 			AnimeID:   entry.AnimeID,
-			Title:     displayTitle(entry),
+			Title:     database.DisplayTitle(entry.TitleEnglish, entry.TitleJapanese, entry.TitleOriginal),
 			ImageURL:  entry.ImageUrl,
 			Status:    entry.Status,
 			UpdatedAt: entry.UpdatedAt.Format(time.RFC3339),

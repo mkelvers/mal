@@ -106,13 +106,7 @@ templ UpcomingSeasonCard(item database.GetUpcomingSeasonsRow) {
 }
 
 func displaySeasonTitle(entry database.GetUpcomingSeasonsRow) string {
-	if entry.TitleEnglish.Valid && entry.TitleEnglish.String != "" {
-		return entry.TitleEnglish.String
-	}
-	if entry.TitleJapanese.Valid && entry.TitleJapanese.String != "" {
-		return entry.TitleJapanese.String
-	}
-	return entry.TitleOriginal
+	return database.DisplayTitle(entry.TitleEnglish, entry.TitleJapanese, entry.TitleOriginal)
 }
 
 templ NotificationCard(item WatchingAnimeWithDetails) {
@@ -151,13 +145,7 @@ templ NotificationCard(item WatchingAnimeWithDetails) {
 }
 
 func displayTitle(entry database.GetWatchingAnimeRow) string {
-	if entry.TitleEnglish.Valid && entry.TitleEnglish.String != "" {
-		return entry.TitleEnglish.String
-	}
-	if entry.TitleJapanese.Valid && entry.TitleJapanese.String != "" {
-		return entry.TitleJapanese.String
-	}
-	return entry.TitleOriginal
+	return database.DisplayTitle(entry.TitleEnglish, entry.TitleJapanese, entry.TitleOriginal)
 }
 
 func truncate(s string, max int) string {
