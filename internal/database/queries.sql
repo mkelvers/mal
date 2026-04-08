@@ -86,7 +86,10 @@ ON CONFLICT (anime_id, related_anime_id) DO UPDATE SET
     relation_type = excluded.relation_type;
 
 -- name: UpdateAnimeStatus :exec
-UPDATE anime SET status = ?, relations_synced_at = CURRENT_TIMESTAMP WHERE id = ?;
+UPDATE anime SET status = ? WHERE id = ?;
+
+-- name: MarkRelationsSynced :exec
+UPDATE anime SET relations_synced_at = CURRENT_TIMESTAMP WHERE id = ?;
 
 -- name: GetAnimeNeedingRelationSync :many
 WITH RECURSIVE sequel_chain AS (

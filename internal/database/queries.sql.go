@@ -459,8 +459,17 @@ func (q *Queries) GetWatchingAnime(ctx context.Context, userID string) ([]GetWat
 	return items, nil
 }
 
+const markRelationsSynced = `-- name: MarkRelationsSynced :exec
+UPDATE anime SET relations_synced_at = CURRENT_TIMESTAMP WHERE id = ?
+`
+
+func (q *Queries) MarkRelationsSynced(ctx context.Context, id int64) error {
+	_, err := q.db.ExecContext(ctx, markRelationsSynced, id)
+	return err
+}
+
 const updateAnimeStatus = `-- name: UpdateAnimeStatus :exec
-UPDATE anime SET status = ?, relations_synced_at = CURRENT_TIMESTAMP WHERE id = ?
+UPDATE anime SET status = ? WHERE id = ?
 `
 
 type UpdateAnimeStatusParams struct {

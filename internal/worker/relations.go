@@ -51,47 +51,55 @@ func (w *Worker) syncRelations(ctx context.Context) {
 	for _, a := range animes {
 		log.Printf("worker: syncing relations for anime %d (%s)", a.ID, a.TitleOriginal)
 
-		relations, err := w.client.GetRelationsData(int(a.ID))
-		if err != nil {
-			log.Printf("worker: failed to fetch relations for %d: %v", a.ID, err)
-			continue
-		}
+		func() {
+			// Always mark as synced and sleep so the queue advances even on error.
+			defer func() {
+				err := w.db.MarkRelationsSynced(ctx, a.ID)
+				if err != nil {
+					log.Printf("worker: failed to mark relations synced for %d: %v", a.ID, err)
+				}
+				time.Sleep(400 * time.Millisecond)
+			}()
 
-		for _, rel := range relations.Data {
-			for _, entry := range rel.Entry {
-				if entry.Type == "anime" {
-					// We just insert the relation.
-					err := w.db.UpsertAnimeRelation(ctx, database.UpsertAnimeRelationParams{
-						AnimeID:        a.ID,
-						RelatedAnimeID: int64(entry.MalID),
-						RelationType:   rel.Relation,
-					})
-					if err != nil {
-						log.Printf("worker: failed to insert relation %d -> %d: %v", a.ID, entry.MalID, err)
-					}
+			relations, err := w.client.GetRelationsData(int(a.ID))
+			if err != nil {
+				log.Printf("worker: failed to fetch relations for %d: %v", a.ID, err)
+				return
+			}
 
-					// If it's a Sequel, we should also make sure the related anime is tracked
-					if rel.Relation == "Sequel" {
-						w.ensureAnimeExistsAndStatusUpdated(ctx, entry.MalID)
+			for _, rel := range relations.Data {
+				for _, entry := range rel.Entry {
+					if entry.Type == "anime" {
+						// We just insert the relation.
+						err := w.db.UpsertAnimeRelation(ctx, database.UpsertAnimeRelationParams{
+							AnimeID:        a.ID,
+							RelatedAnimeID: int64(entry.MalID),
+							RelationType:   rel.Relation,
+						})
+						if err != nil {
+							log.Printf("worker: failed to insert relation %d -> %d: %v", a.ID, entry.MalID, err)
+						}
+
+						// If it's a Sequel, we should also make sure the related anime is tracked
+						if rel.Relation == "Sequel" {
+							w.ensureAnimeExistsAndStatusUpdated(ctx, entry.MalID)
+						}
 					}
 				}
 			}
-		}
 
-		// Also update the status of the anime itself so we know if it's Not yet aired, etc.
-		animeDetails, err := w.client.GetAnimeByID(int(a.ID))
-		if err == nil {
-			err = w.db.UpdateAnimeStatus(ctx, database.UpdateAnimeStatusParams{
-				Status: sql.NullString{String: animeDetails.Status, Valid: true},
-				ID:     a.ID,
-			})
-			if err != nil {
-				log.Printf("worker: failed to update status for %d: %v", a.ID, err)
+			// Also update the status of the anime itself so we know if it's Not yet aired, etc.
+			animeDetails, err := w.client.GetAnimeByID(int(a.ID))
+			if err == nil {
+				err = w.db.UpdateAnimeStatus(ctx, database.UpdateAnimeStatusParams{
+					Status: sql.NullString{String: animeDetails.Status, Valid: true},
+					ID:     a.ID,
+				})
+				if err != nil {
+					log.Printf("worker: failed to update status for %d: %v", a.ID, err)
+				}
 			}
-		}
-
-		// Sleep briefly to respect Jikan's 3 req/sec rate limit
-		time.Sleep(400 * time.Millisecond)
+		}()
 	}
 }
 
