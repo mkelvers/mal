@@ -79,8 +79,9 @@ func (s *Service) GetWatchingAnime(ctx context.Context, userID string) ([]templa
 	for _, row := range rows {
 		anime, err := s.jikanClient.GetAnimeByID(int(row.AnimeID))
 		if err != nil {
-			// Skip if we can't fetch anime details
-			continue
+			// Instead of skipping, we still append it, but without the extra Jikan details
+			// This prevents anime from vanishing from the watchlist when Jikan rate limits us.
+			anime = jikan.Anime{}
 		}
 		result = append(result, templates.WatchingAnimeWithDetails{
 			Entry: row,

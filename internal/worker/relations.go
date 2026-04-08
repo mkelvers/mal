@@ -71,7 +71,16 @@ func (w *Worker) syncRelations(ctx context.Context) {
 
 	for _, a := range animes {
 		func() {
-			// Always mark as synced and sleep so the queue advances even on error.
+			animeData, err := w.client.GetAnimeByID(int(a.ID))
+			if err != nil {
+				log.Printf("worker: failed to fetch anime details for %d: %v", a.ID, err)
+				// Sleep a bit on error to respect rate limits, but DO NOT mark as synced
+				// so it will be retried on the next worker run.
+				time.Sleep(2 * time.Second)
+				return
+			}
+
+			// If we got here, we successfully fetched the data, so we mark it as synced.
 			defer func() {
 				err := w.db.MarkRelationsSynced(ctx, a.ID)
 				if err != nil {
@@ -79,12 +88,6 @@ func (w *Worker) syncRelations(ctx context.Context) {
 				}
 				time.Sleep(400 * time.Millisecond)
 			}()
-
-			animeData, err := w.client.GetAnimeByID(int(a.ID))
-			if err != nil {
-				log.Printf("worker: failed to fetch anime details for %d: %v", a.ID, err)
-				return
-			}
 
 			for _, rel := range animeData.Relations {
 				for _, entry := range rel.Entry {
