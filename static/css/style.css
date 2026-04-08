@@ -687,7 +687,9 @@ a.htmx-request {
   margin-top: var(--space-lg);
 }
 
-.anime-synopsis {
+.anime-synopsis,
+.anime-relations,
+.anime-recommendations {
   margin-bottom: var(--space-xl);
 }
 
