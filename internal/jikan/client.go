@@ -32,7 +32,9 @@ func (c *Client) waitRateLimit() {
 	defer c.mu.Unlock()
 
 	now := time.Now()
-	nextAllowed := c.lastReqTime.Add(340 * time.Millisecond)
+	// Jikan has a 3 req/sec limit AND a 60 req/min limit.
+	// 400ms base delay keeps us safely under the 3/sec limit.
+	nextAllowed := c.lastReqTime.Add(400 * time.Millisecond)
 	if now.Before(nextAllowed) {
 		time.Sleep(nextAllowed.Sub(now))
 		c.lastReqTime = time.Now()
@@ -72,7 +74,7 @@ func (c *Client) setCache(key string, data interface{}, ttl time.Duration) {
 
 // fetchWithRetry provides robust fetching respecting Jikan's strict 3 req/sec rate limit
 func (c *Client) fetchWithRetry(urlStr string, out interface{}) error {
-	maxRetries := 3
+	maxRetries := 5
 	for i := 0; i < maxRetries; i++ {
 		c.waitRateLimit()
 
@@ -83,7 +85,9 @@ func (c *Client) fetchWithRetry(urlStr string, out interface{}) error {
 
 		if resp.StatusCode == 429 {
 			resp.Body.Close()
-			time.Sleep(800 * time.Millisecond) // Double delay on rate limit
+			// Jikan rate limit is hit (usually the 60 requests/minute limit)
+			// Wait for 2 seconds before retrying to let the bucket refill slightly
+			time.Sleep(2 * time.Second)
 			continue
 		}
 
