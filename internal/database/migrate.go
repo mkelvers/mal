@@ -35,7 +35,7 @@ func RunMigrations(db *sql.DB) error {
 			return err
 		}
 		if exists > 0 {
-			log.Printf("migration %s already applied, skipping", migrationFile)
+			// already applied, skipping silently
 			continue
 		}
 

@@ -44,18 +44,15 @@ func (w *Worker) syncRelations(ctx context.Context) {
 	// Find up to 20 anime that need their relations synced
 	animes, err := w.db.GetAnimeNeedingRelationSync(ctx)
 	if err != nil {
-		log.Printf("worker: failed to get anime needing sync: %v", err)
+		log.Printf("worker error: failed to get anime needing sync: %v", err)
 		return
 	}
 
 	if len(animes) == 0 {
-		log.Println("worker: no new anime relations to sync at this time")
-		return
+		return // silent heartbeat
 	}
 
 	for _, a := range animes {
-		log.Printf("worker: syncing relations for anime %d (%s)", a.ID, a.TitleOriginal)
-
 		func() {
 			// Always mark as synced and sleep so the queue advances even on error.
 			defer func() {
