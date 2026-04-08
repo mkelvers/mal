@@ -34,6 +34,7 @@ func (c *Client) GetSchedule(day string) (ScheduleResult, error) {
 		HasNextPage: result.Pagination.HasNextPage,
 	}
 
+	c.preWarmAnimeCache(result.Data)
 	c.setCache(cacheKey, res, time.Hour*1)
 	return res, nil
 }
@@ -76,6 +77,7 @@ func (c *Client) GetSeasonsNow(page int) (TopAnimeResult, error) {
 		HasNextPage: result.Pagination.HasNextPage,
 	}
 
+	c.preWarmAnimeCache(result.Data)
 	c.setCache(cacheKey, res, time.Hour*1)
 	return res, nil
 }
@@ -102,6 +104,7 @@ func (c *Client) GetSeasonsUpcoming(page int) (TopAnimeResult, error) {
 		HasNextPage: result.Pagination.HasNextPage,
 	}
 
+	c.preWarmAnimeCache(result.Data)
 	c.setCache(cacheKey, res, time.Hour*1)
 	return res, nil
 }

@@ -72,6 +72,21 @@ func (c *Client) setCache(key string, data interface{}, ttl time.Duration) {
 	})
 }
 
+// preWarmAnimeCache extracts individual anime from list responses and caches them
+func (c *Client) preWarmAnimeCache(animes []Anime) {
+	for _, a := range animes {
+		cacheKey := fmt.Sprintf("anime:%d", a.MalID)
+
+		// Smart TTL: Finished shows rarely change, cache for 30 days. Airing/Upcoming shows cache for 24 hours.
+		ttl := time.Hour * 24
+		if a.Status == "Finished Airing" {
+			ttl = time.Hour * 24 * 30
+		}
+
+		c.setCache(cacheKey, a, ttl)
+	}
+}
+
 // fetchWithRetry provides robust fetching respecting Jikan's strict 3 req/sec rate limit
 func (c *Client) fetchWithRetry(urlStr string, out interface{}) error {
 	maxRetries := 5

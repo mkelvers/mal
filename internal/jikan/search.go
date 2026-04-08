@@ -32,6 +32,7 @@ func (c *Client) Search(query string, page int) (SearchResult, error) {
 		HasNextPage: result.Pagination.HasNextPage,
 	}
 
+	c.preWarmAnimeCache(result.Data)
 	c.setCache(cacheKey, res, time.Hour*1)
 	return res, nil
 }
@@ -58,6 +59,7 @@ func (c *Client) GetTopAnime(page int) (TopAnimeResult, error) {
 		HasNextPage: result.Pagination.HasNextPage,
 	}
 
+	c.preWarmAnimeCache(result.Data)
 	c.setCache(cacheKey, res, time.Hour*1)
 	return res, nil
 }

@@ -19,6 +19,11 @@ func (c *Client) GetAnimeByID(id int) (Anime, error) {
 		return Anime{}, err
 	}
 
-	c.setCache(cacheKey, result.Data, time.Hour*24)
+	ttl := time.Hour * 24
+	if result.Data.Status == "Finished Airing" {
+		ttl = time.Hour * 24 * 30
+	}
+
+	c.setCache(cacheKey, result.Data, ttl)
 	return result.Data, nil
 }
