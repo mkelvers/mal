@@ -35,5 +35,5 @@ templ SearchResultsWrapper(query string, animes []jikan.Anime, nextPage int, has
 }
 
 templ SearchItems(query string, animes []jikan.Anime, nextPage int, hasNext bool) {
-	@InfiniteAnimeList(animes, hasNext, string(templ.URL(fmt.Sprintf("/api/search?q=%s&page=%d", url.QueryEscape(query), nextPage))), "results")
+	@ui.InfiniteAnimeList(animes, hasNext, string(templ.URL(fmt.Sprintf("/api/search?q=%s&page=%d", url.QueryEscape(query), nextPage))), "results")
 }
