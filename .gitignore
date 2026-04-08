@@ -44,3 +44,4 @@ tmp/
 server
 *.log
 *.pid
+*_templ.go
