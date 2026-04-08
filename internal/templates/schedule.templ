@@ -7,17 +7,17 @@ import "strings"
 templ Schedule() {
 	@Layout("mal - schedule") {
 		<div class="schedule-page">
-			<h1>weekly schedule</h1>
-			<p class="schedule-subtitle">airing times in JST</p>
+			<h1>Weekly schedule</h1>
+			<p class="schedule-subtitle">Airing times in JST</p>
 			
 			<div class="schedule-tabs">
-				<button class="schedule-tab active" data-day="monday" onclick="loadDay('monday', this)">mon</button>
-				<button class="schedule-tab" data-day="tuesday" onclick="loadDay('tuesday', this)">tue</button>
-				<button class="schedule-tab" data-day="wednesday" onclick="loadDay('wednesday', this)">wed</button>
-				<button class="schedule-tab" data-day="thursday" onclick="loadDay('thursday', this)">thu</button>
-				<button class="schedule-tab" data-day="friday" onclick="loadDay('friday', this)">fri</button>
-				<button class="schedule-tab" data-day="saturday" onclick="loadDay('saturday', this)">sat</button>
-				<button class="schedule-tab" data-day="sunday" onclick="loadDay('sunday', this)">sun</button>
+				<button class="schedule-tab active" data-day="Monday" onclick="loadDay('monday', this)">Mon</button>
+				<button class="schedule-tab" data-day="Tuesday" onclick="loadDay('tuesday', this)">Tue</button>
+				<button class="schedule-tab" data-day="Wednesday" onclick="loadDay('wednesday', this)">Wed</button>
+				<button class="schedule-tab" data-day="Thursday" onclick="loadDay('thursday', this)">Thu</button>
+				<button class="schedule-tab" data-day="Friday" onclick="loadDay('friday', this)">Fri</button>
+				<button class="schedule-tab" data-day="Saturday" onclick="loadDay('saturday', this)">Sat</button>
+				<button class="schedule-tab" data-day="Sunday" onclick="loadDay('sunday', this)">Sun</button>
 			</div>
 
 			<div id="schedule-content" hx-get="/api/schedule?day=monday" hx-trigger="load">
@@ -25,7 +25,7 @@ templ Schedule() {
 					<div class="loading-dot"></div>
 					<div class="loading-dot"></div>
 					<div class="loading-dot"></div>
-					<span>loading schedule</span>
+					<span>Loading schedule</span>
 				</div>
 			</div>
 		</div>
@@ -44,7 +44,7 @@ templ ScheduleDay(day string, animes []jikan.Anime) {
 	<div class="schedule-day">
 		<h2>{ strings.Title(day) }</h2>
 		if len(animes) == 0 {
-			<p class="no-anime">no anime scheduled</p>
+			<p class="no-anime">No anime scheduled.</p>
 		} else {
 			<div class="schedule-grid">
 				for _, anime := range animes {
@@ -61,7 +61,7 @@ templ ScheduleAnimeCard(anime jikan.Anime) {
 			if anime.ImageURL() != "" {
 				<img src={ anime.ImageURL() } alt={ anime.DisplayTitle() } loading="lazy"/>
 			} else {
-				<div class="no-image">no image</div>
+				<div class="no-image">No image</div>
 			}
 		</div>
 		<div class="schedule-card-info">

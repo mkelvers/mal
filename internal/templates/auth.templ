@@ -3,21 +3,21 @@ package templates
 templ Login() {
 	@Layout("Login") {
 		<div class="login-container">
-			<h2>sign in</h2>
-			<p class="login-subtitle">enter your credentials to continue</p>
+			<h2>Sign in</h2>
+			<p class="login-subtitle">Enter your credentials to continue.</p>
 			<form action="/login" method="POST" class="login-form">
 				<div class="form-group">
-					<label for="username">username / email</label>
+					<label for="username">Username / Email</label>
 					<input type="text" id="username" name="username" required placeholder="you@example.com"/>
 				</div>
 				<div class="form-group">
-					<label for="password">password</label>
-					<input type="password" id="password" name="password" required placeholder="your password"/>
+					<label for="password">Password</label>
+					<input type="password" id="password" name="password" required placeholder="Your password"/>
 				</div>
-				<button type="submit" class="login-button">sign in</button>
+				<button type="submit" class="login-button">Sign in</button>
 			</form>
 			<p style="margin-top: 1rem; text-align: center; color: var(--text-muted); font-size: var(--text-sm);">
-				don't have an account? <a href="/register" style="color: var(--primary);">register</a>
+				Don't have an account? <a href="/register" style="color: var(--primary);">Register</a>
 			</p>
 		</div>
 	}
@@ -26,24 +26,24 @@ templ Login() {
 templ Register() {
 	@Layout("Register") {
 		<div class="login-container">
-			<h2>register</h2>
-			<p class="login-subtitle">create a new account to track anime</p>
+			<h2>Register</h2>
+			<p class="login-subtitle">Create a new account to track anime.</p>
 			<form action="/register" method="POST" class="login-form">
 				<div class="form-group">
-					<label for="username">username / email</label>
+					<label for="username">Username / Email</label>
 					<input type="text" id="username" name="username" required placeholder="you@example.com"/>
 				</div>
 				<div class="form-group">
-					<label for="password">password</label>
-					<input type="password" id="password" name="password" required placeholder="minimum 12 chars"/>
+					<label for="password">Password</label>
+					<input type="password" id="password" name="password" required placeholder="Minimum 12 chars"/>
 				</div>
 				<p style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 1rem; line-height: 1.4;">
 					Password must be at least 12 characters and include an uppercase letter, lowercase letter, number, and special character.
 				</p>
-				<button type="submit" class="login-button">create account</button>
+				<button type="submit" class="login-button">Create account</button>
 			</form>
 			<p style="margin-top: 1rem; text-align: center; color: var(--text-muted); font-size: var(--text-sm);">
-				already have an account? <a href="/login" style="color: var(--primary);">sign in</a>
+				Already have an account? <a href="/login" style="color: var(--primary);">Sign in</a>
 			</p>
 		</div>
 	}

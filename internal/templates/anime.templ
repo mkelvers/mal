@@ -13,7 +13,7 @@ templ AnimeDetails(anime jikan.Anime, currentStatus string) {
 						if anime.ImageURL() != "" {
 							<img src={ anime.ImageURL() } alt={ anime.DisplayTitle() }/>
 						} else {
-							<div class="no-image">no image</div>
+							<div class="no-image">No image</div>
 						}
 					</div>
 					<div class="anime-info">
@@ -41,32 +41,32 @@ templ AnimeDetails(anime jikan.Anime, currentStatus string) {
 					</div>
 				</div>
 				<section class="anime-synopsis">
-					<h3>synopsis</h3>
+					<h3>Synopsis</h3>
 					if anime.Synopsis != "" {
 						<p>{ anime.Synopsis }</p>
 					} else {
-						<p class="no-synopsis">no synopsis available.</p>
+						<p class="no-synopsis">No synopsis available.</p>
 					}
 				</section>
 				<section class="anime-relations">
-					<h3>related</h3>
+					<h3>Related</h3>
 					<div hx-get={ string(templ.URL(fmt.Sprintf("/api/anime/%d/relations", anime.MalID))) } hx-trigger="load">
 						<div class="loading-indicator">
 							<div class="loading-dot"></div>
 							<div class="loading-dot"></div>
 							<div class="loading-dot"></div>
-							<span>loading relations</span>
+							<span>Loading relations</span>
 						</div>
 					</div>
 				</section>
 				<section class="anime-recommendations">
-					<h3>recommendations</h3>
+					<h3>Recommendations</h3>
 					<div hx-get={ string(templ.URL(fmt.Sprintf("/api/anime/%d/recommendations", anime.MalID))) } hx-trigger="load">
 						<div class="loading-indicator">
 							<div class="loading-dot"></div>
 							<div class="loading-dot"></div>
 							<div class="loading-dot"></div>
-							<span>loading recommendations</span>
+							<span>Loading recommendations</span>
 						</div>
 					</div>
 				</section>
@@ -225,7 +225,7 @@ templ WatchlistDropdown(animeID int, animeTitle string, animeTitleEnglish string
 					hx-delete={ string(templ.URL(fmt.Sprintf("/api/watchlist/%d", animeID))) }
 					hx-target="#watchlist-dropdown"
 					hx-swap="outerHTML"
-				>remove from list</button>
+				>Remove from list</button>
 			}
 		</div>
 	</div>
@@ -264,15 +264,15 @@ templ statusOption(anime jikan.Anime, status string, currentStatus string) {
 func formatStatus(status string) string {
 	switch status {
 	case "watching":
-		return "watching"
+		return "Watching"
 	case "completed":
-		return "completed"
+		return "Completed"
 	case "on_hold":
-		return "on hold"
+		return "On hold"
 	case "dropped":
-		return "dropped"
+		return "Dropped"
 	case "plan_to_watch":
-		return "plan to watch"
+		return "Plan to watch"
 	default:
 		return status
 	}
@@ -287,7 +287,7 @@ templ AnimeRelationsList(relations []jikan.RelationEntry) {
 						if rel.Anime.ImageURL() != "" {
 							<img src={ rel.Anime.ImageURL() } alt={ rel.Anime.DisplayTitle() } class="relation-thumb"/>
 						} else {
-							<div class="no-image">no image</div>
+							<div class="no-image">No image</div>
 						}
 						<div class="relation-title">{ rel.Anime.DisplayTitle() }</div>
 					</div>
@@ -296,7 +296,7 @@ templ AnimeRelationsList(relations []jikan.RelationEntry) {
 						if rel.Anime.ImageURL() != "" {
 							<img src={ rel.Anime.ImageURL() } alt={ rel.Anime.DisplayTitle() } class="relation-thumb"/>
 						} else {
-							<div class="no-image">no image</div>
+							<div class="no-image">No image</div>
 						}
 						<div class="relation-title">{ rel.Anime.DisplayTitle() }</div>
 					</a>
@@ -316,7 +316,7 @@ templ AnimeRecommendations(recs []jikan.Anime) {
 					if anime.ImageURL() != "" {
 						<img src={ anime.ImageURL() } alt={ anime.DisplayTitle() } class="relation-thumb"/>
 					} else {
-						<div class="no-image">no image</div>
+						<div class="no-image">No image</div>
 					}
 					<div class="relation-title">{ anime.DisplayTitle() }</div>
 				</a>

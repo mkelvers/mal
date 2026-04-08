@@ -103,7 +103,7 @@ func SearchResultsWrapper(query string, animes []jikan.Anime, nextPage int, hasN
 		}
 		ctx = templ.ClearChildren(ctx)
 		if len(animes) == 0 {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<div class=\"empty-state\"><div class=\"empty-state-title\">no results found</div><div class=\"empty-state-text\">try a different search term</div></div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<div class=\"empty-state\"><div class=\"empty-state-title\">No results found.</div><div class=\"empty-state-text\">Try a different search term.</div></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

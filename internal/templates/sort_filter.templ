@@ -10,18 +10,18 @@ type SortFilterOptions struct {
 templ SortFilter(opts SortFilterOptions) {
 	<div class="sort-filter">
 		<div class="sort-filter-group">
-			<label for="sort-select">sort by</label>
+			<label for="sort-select">Sort by</label>
 			<select id="sort-select" class="sort-filter-select" onchange="document.getElementById('sort-input').value = this.value; document.getElementById('sort-form').submit()">
-				<option value="date" selected?={ opts.Sort == "date" }>date added</option>
-				<option value="title" selected?={ opts.Sort == "title" }>title</option>
-				<option value="score" selected?={ opts.Sort == "score" }>score</option>
+				<option value="date" selected?={ opts.Sort == "date" }>Date added</option>
+				<option value="title" selected?={ opts.Sort == "title" }>Title</option>
+				<option value="score" selected?={ opts.Sort == "score" }>Score</option>
 			</select>
 		</div>
 		<div class="sort-filter-group">
-			<label for="order-select">order</label>
+			<label for="order-select">Order</label>
 			<select id="order-select" class="sort-filter-select" onchange="document.getElementById('order-input').value = this.value; document.getElementById('sort-form').submit()">
-				<option value="desc" selected?={ opts.Order == "desc" }>descending</option>
-				<option value="asc" selected?={ opts.Order == "asc" }>ascending</option>
+				<option value="desc" selected?={ opts.Order == "desc" }>Descending</option>
+				<option value="asc" selected?={ opts.Order == "asc" }>Ascending</option>
 			</select>
 		</div>
 	</div>

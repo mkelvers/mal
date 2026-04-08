@@ -36,7 +36,7 @@ func SortFilter(opts SortFilterOptions) templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"sort-filter\"><div class=\"sort-filter-group\"><label for=\"sort-select\">sort by</label> <select id=\"sort-select\" class=\"sort-filter-select\" onchange=\"document.getElementById('sort-input').value = this.value; document.getElementById('sort-form').submit()\"><option value=\"date\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"sort-filter\"><div class=\"sort-filter-group\"><label for=\"sort-select\">Sort by</label> <select id=\"sort-select\" class=\"sort-filter-select\" onchange=\"document.getElementById('sort-input').value = this.value; document.getElementById('sort-form').submit()\"><option value=\"date\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -46,7 +46,7 @@ func SortFilter(opts SortFilterOptions) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, ">date added</option> <option value=\"title\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, ">Date added</option> <option value=\"title\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -56,7 +56,7 @@ func SortFilter(opts SortFilterOptions) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, ">title</option> <option value=\"score\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, ">Title</option> <option value=\"score\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -66,7 +66,7 @@ func SortFilter(opts SortFilterOptions) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, ">score</option></select></div><div class=\"sort-filter-group\"><label for=\"order-select\">order</label> <select id=\"order-select\" class=\"sort-filter-select\" onchange=\"document.getElementById('order-input').value = this.value; document.getElementById('sort-form').submit()\"><option value=\"desc\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, ">Score</option></select></div><div class=\"sort-filter-group\"><label for=\"order-select\">Order</label> <select id=\"order-select\" class=\"sort-filter-select\" onchange=\"document.getElementById('order-input').value = this.value; document.getElementById('sort-form').submit()\"><option value=\"desc\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -76,7 +76,7 @@ func SortFilter(opts SortFilterOptions) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, ">descending</option> <option value=\"asc\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, ">Descending</option> <option value=\"asc\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -86,7 +86,7 @@ func SortFilter(opts SortFilterOptions) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, ">ascending</option></select></div></div><form id=\"sort-form\" method=\"get\" style=\"display: none;\"><input type=\"hidden\" name=\"sort\" id=\"sort-input\" value=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, ">Ascending</option></select></div></div><form id=\"sort-form\" method=\"get\" style=\"display: none;\"><input type=\"hidden\" name=\"sort\" id=\"sort-input\" value=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

@@ -46,7 +46,7 @@ func Watchlist(entries []database.GetUserWatchListRow, layout string, currentSta
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"watchlist-header\"><h2>watchlist</h2><div class=\"watchlist-controls\"><a href=\"/api/watchlist/export\" class=\"text-link\">export</a> <button class=\"text-link\" onclick=\"document.getElementById('import-file').click()\">import</button><form id=\"import-form\" hx-post=\"/api/watchlist/import\" hx-encoding=\"multipart/form-data\" style=\"display: none;\"><input type=\"file\" id=\"import-file\" name=\"file\" accept=\".json\" onchange=\"htmx.trigger('#import-form', 'submit')\"></form><div class=\"view-toggle\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"watchlist-header\"><h2>Watchlist</h2><div class=\"watchlist-controls\"><a href=\"/api/watchlist/export\" class=\"text-link\">export</a> <button class=\"text-link\" onclick=\"document.getElementById('import-file').click()\">Import</button><form id=\"import-form\" hx-post=\"/api/watchlist/import\" hx-encoding=\"multipart/form-data\" style=\"display: none;\"><input type=\"file\" id=\"import-file\" name=\"file\" accept=\".json\" onchange=\"htmx.trigger('#import-form', 'submit')\"></form><div class=\"view-toggle\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -186,7 +186,7 @@ func Watchlist(entries []database.GetUserWatchListRow, layout string, currentSta
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "\">watching</a> ")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "\">Watching</a> ")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -256,7 +256,7 @@ func Watchlist(entries []database.GetUserWatchListRow, layout string, currentSta
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, "\">on hold</a> ")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, "\">On hold</a> ")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -291,7 +291,7 @@ func Watchlist(entries []database.GetUserWatchListRow, layout string, currentSta
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 22, "\">plan to watch</a> ")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 22, "\">Plan to watch</a> ")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -326,7 +326,7 @@ func Watchlist(entries []database.GetUserWatchListRow, layout string, currentSta
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 25, "\">dropped</a> ")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 25, "\">Dropped</a> ")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -361,7 +361,7 @@ func Watchlist(entries []database.GetUserWatchListRow, layout string, currentSta
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 28, "\">completed</a></div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 28, "\">Completed</a></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -467,7 +467,7 @@ func Watchlist(entries []database.GetUserWatchListRow, layout string, currentSta
 								return templ_7745c5c3_Err
 							}
 						} else {
-							templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 42, "<div class=\"no-image\">no image</div>")
+							templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 42, "<div class=\"no-image\">No image</div>")
 							if templ_7745c5c3_Err != nil {
 								return templ_7745c5c3_Err
 							}
@@ -521,7 +521,7 @@ func Watchlist(entries []database.GetUserWatchListRow, layout string, currentSta
 						return templ_7745c5c3_Err
 					}
 				} else {
-					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 48, "<table class=\"watchlist-table\"><thead><tr><th></th><th>title</th><th></th></tr></thead> <tbody>")
+					templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 48, "<table class=\"watchlist-table\"><thead><tr><th></th><th>Title</th><th></th></tr></thead> <tbody>")
 					if templ_7745c5c3_Err != nil {
 						return templ_7745c5c3_Err
 					}

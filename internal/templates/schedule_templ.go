@@ -45,7 +45,7 @@ func Schedule() templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"schedule-page\"><h1>weekly schedule</h1><p class=\"schedule-subtitle\">airing times in JST</p><div class=\"schedule-tabs\"><button class=\"schedule-tab active\" data-day=\"monday\" onclick=\"loadDay('monday', this)\">mon</button> <button class=\"schedule-tab\" data-day=\"tuesday\" onclick=\"loadDay('tuesday', this)\">tue</button> <button class=\"schedule-tab\" data-day=\"wednesday\" onclick=\"loadDay('wednesday', this)\">wed</button> <button class=\"schedule-tab\" data-day=\"thursday\" onclick=\"loadDay('thursday', this)\">thu</button> <button class=\"schedule-tab\" data-day=\"friday\" onclick=\"loadDay('friday', this)\">fri</button> <button class=\"schedule-tab\" data-day=\"saturday\" onclick=\"loadDay('saturday', this)\">sat</button> <button class=\"schedule-tab\" data-day=\"sunday\" onclick=\"loadDay('sunday', this)\">sun</button></div><div id=\"schedule-content\" hx-get=\"/api/schedule?day=monday\" hx-trigger=\"load\"><div class=\"loading-indicator\"><div class=\"loading-dot\"></div><div class=\"loading-dot\"></div><div class=\"loading-dot\"></div><span>loading schedule</span></div></div></div><script>\n\t\t\tfunction loadDay(day, btn) {\n\t\t\t\tdocument.querySelectorAll('.schedule-tab').forEach(t => t.classList.remove('active'));\n\t\t\t\tbtn.classList.add('active');\n\t\t\t\thtmx.ajax('GET', '/api/schedule?day=' + day, '#schedule-content');\n\t\t\t}\n\t\t</script>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"schedule-page\"><h1>Weekly schedule</h1><p class=\"schedule-subtitle\">Airing times in JST</p><div class=\"schedule-tabs\"><button class=\"schedule-tab active\" data-day=\"Monday\" onclick=\"loadDay('monday', this)\">Mon</button> <button class=\"schedule-tab\" data-day=\"Tuesday\" onclick=\"loadDay('tuesday', this)\">Tue</button> <button class=\"schedule-tab\" data-day=\"Wednesday\" onclick=\"loadDay('wednesday', this)\">Wed</button> <button class=\"schedule-tab\" data-day=\"Thursday\" onclick=\"loadDay('thursday', this)\">Thu</button> <button class=\"schedule-tab\" data-day=\"Friday\" onclick=\"loadDay('friday', this)\">Fri</button> <button class=\"schedule-tab\" data-day=\"Saturday\" onclick=\"loadDay('saturday', this)\">Sat</button> <button class=\"schedule-tab\" data-day=\"Sunday\" onclick=\"loadDay('sunday', this)\">Sun</button></div><div id=\"schedule-content\" hx-get=\"/api/schedule?day=monday\" hx-trigger=\"load\"><div class=\"loading-indicator\"><div class=\"loading-dot\"></div><div class=\"loading-dot\"></div><div class=\"loading-dot\"></div><span>Loading schedule</span></div></div></div><script>\n\t\t\tfunction loadDay(day, btn) {\n\t\t\t\tdocument.querySelectorAll('.schedule-tab').forEach(t => t.classList.remove('active'));\n\t\t\t\tbtn.classList.add('active');\n\t\t\t\thtmx.ajax('GET', '/api/schedule?day=' + day, '#schedule-content');\n\t\t\t}\n\t\t</script>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -98,7 +98,7 @@ func ScheduleDay(day string, animes []jikan.Anime) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		if len(animes) == 0 {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<p class=\"no-anime\">no anime scheduled</p>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<p class=\"no-anime\">No anime scheduled.</p>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -196,7 +196,7 @@ func ScheduleAnimeCard(anime jikan.Anime) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		} else {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "<div class=\"no-image\">no image</div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "<div class=\"no-image\">No image</div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

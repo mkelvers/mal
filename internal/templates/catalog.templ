@@ -11,7 +11,7 @@ templ Catalog() {
 					<div class="loading-dot"></div>
 					<div class="loading-dot"></div>
 					<div class="loading-dot"></div>
-					<span>loading catalog</span>
+					<span>Loading catalog</span>
 				</div>
 			</div>
 		</div>
@@ -50,7 +50,7 @@ templ CatalogItem(anime jikan.Anime) {
 		if anime.ImageURL() != "" {
 			<img src={ anime.ImageURL() } alt={ anime.DisplayTitle() } class="catalog-thumb" loading="lazy"/>
 		} else {
-			<div class="no-image">no image</div>
+			<div class="no-image">No image</div>
 		}
 	</a>
 	<div class="catalog-title">

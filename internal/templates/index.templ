@@ -28,8 +28,8 @@ templ Search(q string) {
 templ SearchResultsWrapper(query string, animes []jikan.Anime, nextPage int, hasNext bool) {
 	if len(animes) == 0 {
 		<div class="empty-state">
-			<div class="empty-state-title">no results found</div>
-			<div class="empty-state-text">try a different search term</div>
+			<div class="empty-state-title">No results found.</div>
+			<div class="empty-state-text">Try a different search term.</div>
 		</div>
 	} else {
 		<div class="catalog-grid">

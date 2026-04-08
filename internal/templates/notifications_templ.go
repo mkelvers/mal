@@ -50,12 +50,12 @@ func Notifications(watching []WatchingAnimeWithDetails) templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"notifications-page\"><h1>airing shows (tracking)</h1><p class=\"notifications-subtitle\">shows you're currently watching or planning to watch</p>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"notifications-page\"><h1>Airing shows (tracking)</h1><p class=\"notifications-subtitle\">Shows you're currently watching or planning to watch.</p>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			if len(watching) == 0 {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<div class=\"no-notifications\"><p>no airing anime in your watching list</p><p class=\"hint\">add currently airing shows to your watching list to see upcoming episodes here</p></div>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<div class=\"no-notifications\"><p>No airing anime in your watching list.</p><p class=\"hint\">Add currently airing shows to your watching list to see upcoming episodes here.</p></div>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -75,7 +75,7 @@ func Notifications(watching []WatchingAnimeWithDetails) templ.Component {
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<h1 style=\"margin-top: var(--space-2xl);\">discovered sequels</h1><p class=\"notifications-subtitle\">because you've watched prequels</p><div hx-get=\"/notifications/upcoming\" hx-trigger=\"load, every 15s\" hx-swap=\"innerHTML\"><div class=\"loading-indicator\"><div class=\"loading-dot\"></div><div class=\"loading-dot\"></div><div class=\"loading-dot\"></div><span>syncing sequel graphs...</span></div></div></div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<h1 style=\"margin-top: var(--space-2xl);\">discovered sequels</h1><p class=\"notifications-subtitle\">Because you've watched prequels.</p><div hx-get=\"/notifications/upcoming\" hx-trigger=\"load, every 15s\" hx-swap=\"innerHTML\"><div class=\"loading-indicator\"><div class=\"loading-dot\"></div><div class=\"loading-dot\"></div><div class=\"loading-dot\"></div><span>Syncing sequel graphs...</span></div></div></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -122,7 +122,7 @@ func UpcomingSeasonsList(upcomingSeasons []database.GetUpcomingSeasonsRow) templ
 		}
 		ctx = templ.ClearChildren(ctx)
 		if len(upcomingSeasons) == 0 {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "<div class=\"no-notifications\"><p>no upcoming seasons for anime you've watched</p><p class=\"hint\">as you watch more shows, new seasons will appear here</p></div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "<div class=\"no-notifications\"><p>No upcoming seasons for anime you've watched.</p><p class=\"hint\">As you watch more shows, new seasons will appear here.</p></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -269,7 +269,7 @@ func UpcomingSeasonCard(item database.GetUpcomingSeasonsRow) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		} else {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, "<div class=\"no-image\">no image</div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, "<div class=\"no-image\">No image</div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -287,7 +287,7 @@ func UpcomingSeasonCard(item database.GetUpcomingSeasonsRow) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, "</div><div class=\"notification-meta\"><span class=\"notification-broadcast\" style=\"color: var(--text-muted) !important;\">because you watched ")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, "</div><div class=\"notification-meta\"><span class=\"notification-broadcast\" style=\"color: var(--text-muted) !important;\">Because you watched ")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -388,7 +388,7 @@ func NotificationCard(item WatchingAnimeWithDetails) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		} else {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 26, "<div class=\"no-image\">no image</div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 26, "<div class=\"no-image\">No image</div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
