@@ -48,6 +48,11 @@ func (w *Worker) syncRelations(ctx context.Context) {
 		return
 	}
 
+	if len(animes) == 0 {
+		log.Println("worker: no new anime relations to sync at this time")
+		return
+	}
+
 	for _, a := range animes {
 		log.Printf("worker: syncing relations for anime %d (%s)", a.ID, a.TitleOriginal)
 
