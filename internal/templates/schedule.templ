@@ -52,14 +52,13 @@ templ ScheduleDay(day string, animes []jikan.Anime) {
 }
 
 templ ScheduleAnimeCard(anime jikan.Anime) {
-	<a href={ templ.URL(fmt.Sprintf("/anime/%d", anime.MalID)) } class="schedule-card">
-		<div class="schedule-card-image">
-			if anime.ImageURL() != "" {
-				<img src={ anime.ImageURL() } alt={ anime.DisplayTitle() } loading="lazy"/>
-			} else {
-				<div class="no-image">No image</div>
-			}
-		</div>
+	@ui.AnimeCard(ui.AnimeCardProps{
+		ID:       anime.MalID,
+		Title:    anime.DisplayTitle(),
+		ImageURL: anime.ImageURL(),
+		Class:    "schedule-card",
+		ImgClass: "schedule-card-image",
+	}) {
 		<div class="schedule-card-info">
 			<div class="schedule-card-title">{ anime.DisplayTitle() }</div>
 			<div class="schedule-card-meta">
@@ -77,5 +76,5 @@ templ ScheduleAnimeCard(anime jikan.Anime) {
 				<div class="schedule-card-score">★ { fmt.Sprintf("%.1f", anime.Score) }</div>
 			}
 		</div>
-	</a>
+	}
 }

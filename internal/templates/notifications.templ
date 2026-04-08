@@ -2,6 +2,7 @@ package templates
 
 import "mal/internal/jikan"
 import "mal/internal/database"
+import "mal/internal/shared/ui"
 import "fmt"
 
 type WatchingAnimeWithDetails struct {
@@ -32,10 +33,7 @@ templ Notifications(watching []WatchingAnimeWithDetails) {
 			<p class="notifications-subtitle">Because you've watched prequels.</p>
 			
 			<div hx-get="/notifications/upcoming" hx-trigger="load, every 15s" hx-swap="innerHTML">
-				<div class="loading-indicator">
-					<div class="loading-dot"></div><div class="loading-dot"></div><div class="loading-dot"></div>
-					<span>Syncing sequel graphs...</span>
-				</div>
+				@ui.LoadingIndicator("Syncing sequel graphs...")
 			</div>
 		</div>
 	}
@@ -86,14 +84,13 @@ templ renderSplitSeasons(upcomingSeasons []database.GetUpcomingSeasonsRow) {
 }
 
 templ UpcomingSeasonCard(item database.GetUpcomingSeasonsRow) {
-	<a href={ templ.URL(fmt.Sprintf("/anime/%d", item.ID)) } class="notification-card">
-		<div class="notification-image">
-			if item.ImageUrl != "" {
-				<img src={ item.ImageUrl } alt={ displaySeasonTitle(item) } loading="lazy"/>
-			} else {
-				<div class="no-image">No image</div>
-			}
-		</div>
+	@ui.AnimeCard(ui.AnimeCardProps{
+		ID:       int(item.ID),
+		Title:    displaySeasonTitle(item),
+		ImageURL: item.ImageUrl,
+		Class:    "notification-card",
+		ImgClass: "notification-image",
+	}) {
 		<div class="notification-content">
 			<div class="notification-title">
 				{ displaySeasonTitle(item) }
@@ -102,7 +99,7 @@ templ UpcomingSeasonCard(item database.GetUpcomingSeasonsRow) {
 				<span class="notification-broadcast" style="color: var(--text-muted) !important;">Because you watched { item.PrequelTitle }</span>
 			</div>
 		</div>
-	</a>
+	}
 }
 
 func displaySeasonTitle(entry database.GetUpcomingSeasonsRow) string {
@@ -110,14 +107,13 @@ func displaySeasonTitle(entry database.GetUpcomingSeasonsRow) string {
 }
 
 templ NotificationCard(item WatchingAnimeWithDetails) {
-	<a href={ templ.URL(fmt.Sprintf("/anime/%d", item.Entry.AnimeID)) } class="notification-card">
-		<div class="notification-image">
-			if item.Entry.ImageUrl != "" {
-				<img src={ item.Entry.ImageUrl } alt={ displayTitle(item.Entry) } loading="lazy"/>
-			} else {
-				<div class="no-image">No image</div>
-			}
-		</div>
+	@ui.AnimeCard(ui.AnimeCardProps{
+		ID:       int(item.Entry.AnimeID),
+		Title:    displayTitle(item.Entry),
+		ImageURL: item.Entry.ImageUrl,
+		Class:    "notification-card",
+		ImgClass: "notification-image",
+	}) {
 		<div class="notification-content">
 			<div class="notification-title">
 				{ displayTitle(item.Entry) }
@@ -141,7 +137,7 @@ templ NotificationCard(item WatchingAnimeWithDetails) {
 				}
 			</div>
 		</div>
-	</a>
+	}
 }
 
 func displayTitle(entry database.GetWatchingAnimeRow) string {

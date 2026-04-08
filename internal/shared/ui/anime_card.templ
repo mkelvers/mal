@@ -6,17 +6,57 @@ type AnimeCardProps struct {
 	ID       int
 	Title    string
 	ImageURL string
+	// Options to customize the card behavior
+	Class       string // override default wrapper class
+	ImgClass    string // override default image class
+	TitleClass  string // override default title class
+	CurrentNode bool   // if true, renders a div instead of an anchor tag (useful for graph nodes)
 }
 
 templ AnimeCard(props AnimeCardProps) {
-	<a href={ templ.URL(fmt.Sprintf("/anime/%d", props.ID)) }>
-		if props.ImageURL != "" {
-			<img src={ props.ImageURL } alt={ props.Title } class="catalog-thumb" loading="lazy"/>
-		} else {
-			<div class="no-image">No image</div>
-		}
-	</a>
-	<div class="catalog-title">
-		{ props.Title }
-	</div>
+	if props.CurrentNode {
+		<div class={ defaultString(props.Class, "catalog-item") }>
+			if props.ImageURL != "" {
+				<img src={ props.ImageURL } alt={ props.Title } class={ defaultString(props.ImgClass, "catalog-thumb") } loading="lazy"/>
+			} else {
+				<div class="no-image">No image</div>
+			}
+			<div class={ defaultString(props.TitleClass, "catalog-title") }>
+				{ props.Title }
+			</div>
+			{ children... }
+		</div>
+	} else {
+		<a href={ templ.URL(fmt.Sprintf("/anime/%d", props.ID)) } class={ props.Class }>
+			if props.Class == "notification-card" || props.Class == "schedule-card" {
+				<div class={ defaultString(props.ImgClass, "schedule-card-image") }>
+					if props.ImageURL != "" {
+						<img src={ props.ImageURL } alt={ props.Title } loading="lazy"/>
+					} else {
+						<div class="no-image">No image</div>
+					}
+				</div>
+			} else {
+				if props.ImageURL != "" {
+					<img src={ props.ImageURL } alt={ props.Title } class={ defaultString(props.ImgClass, "catalog-thumb") } loading="lazy"/>
+				} else {
+					<div class="no-image">No image</div>
+				}
+			}
+			
+			if props.Class != "notification-card" && props.Class != "schedule-card" {
+				<div class={ defaultString(props.TitleClass, "catalog-title") }>
+					{ props.Title }
+				</div>
+			}
+			{ children... }
+		</a>
+	}
+}
+
+func defaultString(val, fallback string) string {
+	if val == "" {
+		return fallback
+	}
+	return val
 }

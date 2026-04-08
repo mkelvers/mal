@@ -282,25 +282,15 @@ templ AnimeRelationsList(relations []jikan.RelationEntry) {
 	if len(relations) > 1 {
 		<div class="relations-grid">
 			for _, rel := range relations {
-				if rel.IsCurrent {
-					<div class="relation-card current">
-						if rel.Anime.ImageURL() != "" {
-							<img src={ rel.Anime.ImageURL() } alt={ rel.Anime.DisplayTitle() } class="relation-thumb"/>
-						} else {
-							<div class="no-image">No image</div>
-						}
-						<div class="relation-title">{ rel.Anime.DisplayTitle() }</div>
-					</div>
-				} else {
-					<a href={ templ.URL(fmt.Sprintf("/anime/%d", rel.Anime.MalID)) } class="relation-card">
-						if rel.Anime.ImageURL() != "" {
-							<img src={ rel.Anime.ImageURL() } alt={ rel.Anime.DisplayTitle() } class="relation-thumb"/>
-						} else {
-							<div class="no-image">No image</div>
-						}
-						<div class="relation-title">{ rel.Anime.DisplayTitle() }</div>
-					</a>
-				}
+				@ui.AnimeCard(ui.AnimeCardProps{
+					ID:          rel.Anime.MalID,
+					Title:       rel.Anime.DisplayTitle(),
+					ImageURL:    rel.Anime.ImageURL(),
+					Class:       "relation-card" + func() string { if rel.IsCurrent { return " current" }; return "" }(),
+					ImgClass:    "relation-thumb",
+					TitleClass:  "relation-title",
+					CurrentNode: rel.IsCurrent,
+				})
 			}
 		</div>
 	} else {
@@ -312,14 +302,14 @@ templ AnimeRecommendations(recs []jikan.Anime) {
 	if len(recs) > 0 {
 		<div class="relations-grid">
 			for _, anime := range recs {
-				<a href={ templ.URL(fmt.Sprintf("/anime/%d", anime.MalID)) } class="relation-card">
-					if anime.ImageURL() != "" {
-						<img src={ anime.ImageURL() } alt={ anime.DisplayTitle() } class="relation-thumb"/>
-					} else {
-						<div class="no-image">No image</div>
-					}
-					<div class="relation-title">{ anime.DisplayTitle() }</div>
-				</a>
+				@ui.AnimeCard(ui.AnimeCardProps{
+					ID:         anime.MalID,
+					Title:      anime.DisplayTitle(),
+					ImageURL:   anime.ImageURL(),
+					Class:      "relation-card",
+					ImgClass:   "relation-thumb",
+					TitleClass: "relation-title",
+				})
 			}
 		</div>
 	} else {
