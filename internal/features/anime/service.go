@@ -96,5 +96,17 @@ func (s *Service) GetUpcomingSeasons(ctx context.Context, userID string) ([]data
 	if err != nil {
 		return nil, fmt.Errorf("failed to get upcoming seasons: %w", err)
 	}
-	return rows, nil
+
+	// Deduplicate by related anime ID
+	// Because of the recursive query, multiple prequels can point to the same upcoming season
+	seen := make(map[int64]bool)
+	var deduped []database.GetUpcomingSeasonsRow
+	for _, row := range rows {
+		if !seen[row.ID] {
+			seen[row.ID] = true
+			deduped = append(deduped, row)
+		}
+	}
+
+	return deduped, nil
 }
