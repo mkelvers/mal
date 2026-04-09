@@ -18,7 +18,7 @@ templ Notifications(watching []WatchingAnimeWithDetails) {
 			
 			if len(watching) == 0 {
 				@ui.EmptyState("No airing anime in your watching list.") {
-					<span style="font-size: var(--text-sm); margin-top: var(--space-sm); display: block;">Add currently airing shows to your watching list to see upcoming episodes here.</span>
+					<span class="empty-state-hint">Add currently airing shows to your watching list to see upcoming episodes here.</span>
 				}
 			} else {
 				<div class="notifications-list">
@@ -28,7 +28,7 @@ templ Notifications(watching []WatchingAnimeWithDetails) {
 				</div>
 			}
 
-			<h1 style="margin-top: var(--space-2xl);">Discovered sequels</h1>
+			<h1 class="notifications-section-title">Discovered sequels</h1>
 			<p class="notifications-subtitle">Because you've watched prequels.</p>
 			
 			<div hx-get="/notifications/upcoming" hx-trigger="load, every 15s" hx-swap="innerHTML">
@@ -52,7 +52,7 @@ func splitUpcomingSeasons(items []database.GetUpcomingSeasonsRow) (airing []data
 templ UpcomingSeasonsList(upcomingSeasons []database.GetUpcomingSeasonsRow) {
 	if len(upcomingSeasons) == 0 {
 		@ui.EmptyState("No upcoming seasons for anime you've watched.") {
-			<span style="font-size: var(--text-sm); margin-top: var(--space-sm); display: block;">As you watch more shows, new seasons will appear here.</span>
+			<span class="empty-state-hint">As you watch more shows, new seasons will appear here.</span>
 		}
 	} else {
 		@renderSplitSeasons(upcomingSeasons)
@@ -62,8 +62,8 @@ templ UpcomingSeasonsList(upcomingSeasons []database.GetUpcomingSeasonsRow) {
 templ renderSplitSeasons(upcomingSeasons []database.GetUpcomingSeasonsRow) {
 	if airing, upcoming := splitUpcomingSeasons(upcomingSeasons); true {
 		if len(airing) > 0 {
-			<h2 style="font-size: var(--text-md); margin-bottom: var(--space-md); color: var(--text-muted);">Airing now (not tracked)</h2>
-			<div class="notifications-list" style="margin-bottom: var(--space-xl);">
+			<h2 class="notifications-group-title">Airing now (not tracked)</h2>
+			<div class="notifications-list notifications-list-spaced">
 				for _, item := range airing {
 					@UpcomingSeasonCard(item)
 				}
@@ -71,7 +71,7 @@ templ renderSplitSeasons(upcomingSeasons []database.GetUpcomingSeasonsRow) {
 		}
 
 		if len(upcoming) > 0 {
-			<h2 style="font-size: var(--text-md); margin-bottom: var(--space-md); color: var(--text-muted);">Announced & upcoming</h2>
+			<h2 class="notifications-group-title">Announced & upcoming</h2>
 			<div class="notifications-list">
 				for _, item := range upcoming {
 					@UpcomingSeasonCard(item)
@@ -94,7 +94,7 @@ templ UpcomingSeasonCard(item database.GetUpcomingSeasonsRow) {
 				{ displaySeasonTitle(item) }
 			</div>
 			<div class="notification-meta">
-				<span class="notification-broadcast" style="color: var(--text-muted) !important;">Because you watched { item.PrequelTitle }</span>
+				<span class="notification-broadcast notification-muted">Because you watched { item.PrequelTitle }</span>
 			</div>
 		</div>
 	}

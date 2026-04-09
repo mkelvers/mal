@@ -7,28 +7,34 @@ import "fmt"
 templ Discover() {
 	@Layout("mal - discover") {
 		<div class="discover-container">
-			<div class="tabs">
+			<div class="discover-header">
+				<h1>Discover</h1>
+				<p class="discover-subtitle">Browse what's airing now and what is coming soon.</p>
+			</div>
+			<div class="tabs discover-tabs" data-tab-group="discover">
 				<button
 					class="tab active"
+					type="button"
 					hx-get="/api/discover/airing?page=1"
 					hx-target="#discover-content"
 					hx-trigger="click"
-					onclick="document.querySelectorAll('.tab').forEach(t => t.classList.remove('active')); this.classList.add('active');"
+					data-tab-trigger
 				>
 					airing now
 				</button>
 				<button
 					class="tab"
+					type="button"
 					hx-get="/api/discover/upcoming?page=1"
 					hx-target="#discover-content"
 					hx-trigger="click"
-					onclick="document.querySelectorAll('.tab').forEach(t => t.classList.remove('active')); this.classList.add('active');"
+					data-tab-trigger
 				>
 					upcoming
 				</button>
 			</div>
 			<div class="catalog-grid" id="discover-content" hx-get="/api/discover/airing?page=1" hx-trigger="load">
-				<div style="grid-column: 1 / -1;">
+				<div class="grid-full-width">
 					@ui.LoadingIndicator("Loading discover")
 				</div>
 			</div>

@@ -81,8 +81,11 @@
 
 body {
   background-color: var(--bg);
+  background-image:
+    radial-gradient(1100px 500px at 8% -10%, #1a1b22 0%, transparent 55%),
+    radial-gradient(900px 420px at 92% 0%, #171a1e 0%, transparent 60%);
   color: var(--text);
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: "Avenir Next", "Trebuchet MS", "Gill Sans", sans-serif;
   font-size: var(--text-lg);
   line-height: 1.5;
   margin: 0;
@@ -303,8 +306,32 @@ header {
 /* Main */
 main {
   padding: var(--space-lg);
-  max-width: 1400px;
+  max-width: 1280px;
   margin: 0 auto;
+}
+
+.is-hidden {
+  display: none;
+}
+
+.grid-full-width {
+  grid-column: 1 / -1;
+}
+
+.full-span-trigger {
+  grid-column: 1 / -1;
+  height: 20px;
+}
+
+.empty-inline-note {
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+
+.empty-state-hint {
+  font-size: var(--text-sm);
+  margin-top: var(--space-sm);
+  display: block;
 }
 
 a {
@@ -559,8 +586,9 @@ a.htmx-request {
 .watchlist-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   margin-bottom: var(--space-lg);
+  gap: var(--space-lg);
 }
 
 .watchlist-header h2 {
@@ -569,11 +597,24 @@ a.htmx-request {
   margin: 0;
 }
 
+.watchlist-heading {
+  display: grid;
+  gap: var(--space-xs);
+}
+
+.watchlist-subtitle {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+
 .watchlist-controls {
   display: flex;
   align-items: center;
   gap: var(--space-lg);
   font-size: var(--text-md);
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
 .text-link {
@@ -619,19 +660,19 @@ a.htmx-request {
 
 .status-tabs {
   display: flex;
-  gap: 0;
+  gap: var(--space-xs);
   margin-bottom: var(--space-lg);
-  border-bottom: 1px solid var(--border);
+  border-bottom: none;
   overflow-x: auto;
 }
 
 .status-tabs a {
-  padding: var(--space-md) var(--space-lg);
-  font-size: var(--text-base);
+  padding: var(--space-sm) var(--space-md);
+  font-size: var(--text-sm);
   color: var(--link);
   white-space: nowrap;
-  border-bottom: 2px solid transparent;
-  margin-bottom: -1px;
+  border: 1px solid var(--border);
+  background: var(--surface);
   text-decoration: none;
 }
 
@@ -640,7 +681,8 @@ a.htmx-request {
 }
 
 .status-tabs a.active {
-  border-bottom-color: var(--link);
+  border-color: var(--text-muted);
+  background: var(--surface-hover);
   font-weight: 600;
 }
 
@@ -743,22 +785,37 @@ a.htmx-request {
   text-decoration: underline;
 }
 
+.watchlist-table .actions-cell {
+  width: 100px;
+}
+
 /* Anime Page */
 .anime-page {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--sidebar-width);
   gap: var(--space-2xl);
-  max-width: 1200px;
+  align-items: start;
 }
 
 .anime-main {
-  flex: 1;
+  display: grid;
+  gap: var(--space-lg);
   min-width: 0;
 }
 
 .anime-hero {
   display: flex;
   gap: var(--space-xl);
-  margin-bottom: var(--space-2xl);
+}
+
+.anime-surface {
+  background: linear-gradient(180deg, #121215 0%, #101012 100%);
+  border: 1px solid #1f1f24;
+  padding: var(--space-lg);
+}
+
+.anime-section {
+  margin-bottom: 0;
 }
 
 .anime-poster {
@@ -808,13 +865,13 @@ a.htmx-request {
 }
 
 .anime-actions {
-  margin-top: var(--space-lg);
+  margin-top: var(--space-md);
 }
 
 .anime-synopsis,
 .anime-relations,
 .anime-recommendations {
-  margin-bottom: var(--space-xl);
+  margin-bottom: 0;
 }
 
 .anime-synopsis h3,
@@ -830,8 +887,8 @@ a.htmx-request {
 
 .anime-synopsis p {
   font-size: var(--text-md);
-  line-height: 1.8;
-  max-width: 65ch;
+  line-height: 1.65;
+  max-width: 75ch;
   color: var(--text);
   margin: 0;
 }
@@ -843,7 +900,7 @@ a.htmx-request {
 /* Relations Grid */
 .relations-grid {
   display: grid;
-  grid-template-columns: repeat(6, 1fr);
+  grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
   gap: var(--space-lg);
 }
 
@@ -895,22 +952,18 @@ a.htmx-request {
 
 /* Anime Sidebar */
 .anime-sidebar {
-  flex-shrink: 0;
   width: var(--sidebar-width);
-  columns: 2;
-  column-gap: var(--space-md);
-  padding: var(--space-lg);
-  background: var(--surface);
-  border: none;
-  height: fit-content;
+  position: sticky;
+  top: 78px;
+  display: grid;
+  gap: var(--space-lg);
 }
 
 .sidebar-row {
   display: flex;
   flex-direction: column;
   gap: var(--space-xs);
-  margin-bottom: var(--space-md);
-  break-inside: avoid;
+  margin-bottom: 0;
 }
 
 .sidebar-label {
@@ -918,6 +971,30 @@ a.htmx-request {
   font-weight: 600;
   color: var(--text);
   text-transform: uppercase;
+}
+
+.anime-side-section {
+  display: grid;
+  gap: var(--space-md);
+}
+
+.anime-side-section h3 {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.side-details-more summary {
+  cursor: pointer;
+  color: var(--text);
+  font-size: var(--text-sm);
+  user-select: none;
+}
+
+.side-details-more[open] {
+  gap: var(--space-sm);
 }
 
 .sidebar-value {
@@ -1040,11 +1117,12 @@ a.htmx-request {
 /* Sort Filter */
 .sort-filter {
   display: flex;
-  gap: var(--space-lg);
+  gap: var(--space-md);
   margin-bottom: var(--space-lg);
-  padding: var(--space-lg);
+  padding: var(--space-md);
   background: var(--surface);
   border: none;
+  flex-wrap: wrap;
 }
 
 .sort-filter-group {
@@ -1074,16 +1152,46 @@ a.htmx-request {
   background: var(--surface-hover);
 }
 
+.density-group {
+  margin-left: auto;
+}
+
+.density-label {
+  font-size: var(--text-base);
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.density-toggle {
+  background: var(--surface-hover);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: var(--space-xs) var(--space-sm);
+  font-size: var(--text-sm);
+  cursor: pointer;
+}
+
+body.density-compact .catalog-grid,
+body.density-compact .schedule-grid,
+body.density-compact .notifications-list {
+  gap: var(--space-md);
+}
+
+body.density-compact .notification-content,
+body.density-compact .schedule-card-info {
+  padding: var(--space-sm);
+}
+
 /* Responsive */
 @media (max-width: 900px) {
   .anime-page {
-    flex-direction: column;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .anime-sidebar {
     width: 100%;
     order: 2;
-    grid-template-columns: repeat(3, 1fr);
+    position: static;
   }
 
   .anime-sidebar .sidebar-row {
@@ -1150,8 +1258,26 @@ a.htmx-request {
   }
 
   .relations-grid {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(2, 1fr);
     gap: var(--space-md);
+  }
+
+  .watchlist-header {
+    flex-direction: column;
+  }
+
+  .watchlist-controls {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .sort-filter {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .density-group {
+    margin-left: 0;
   }
 }
 
@@ -1161,18 +1287,20 @@ a.htmx-request {
   gap: var(--space-lg);
   margin-bottom: var(--space-xl);
   border-bottom: 1px solid var(--border);
-  padding-bottom: var(--space-md);
+  padding-bottom: var(--space-sm);
+  overflow-x: auto;
 }
 
 .tab {
   background: none;
   border: none;
   color: var(--text-muted);
-  font-size: var(--text-xl);
+  font-size: var(--text-md);
   cursor: pointer;
-  padding: var(--space-md) var(--space-lg);
+  padding: var(--space-sm) var(--space-md);
   transition: color 0.2s;
   text-transform: lowercase;
+  white-space: nowrap;
 }
 
 .tab:hover {
@@ -1181,14 +1309,39 @@ a.htmx-request {
 
 .tab.active {
   color: var(--link);
-  font-weight: bold;
+  font-weight: 600;
+}
+
+.discover-container {
+  display: grid;
+  gap: var(--space-lg);
+}
+
+.discover-header {
+  display: grid;
+  gap: var(--space-xs);
+}
+
+.discover-header h1 {
+  margin: 0;
+  font-size: var(--text-2xl);
+}
+
+.discover-subtitle {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
+
+.discover-tabs {
+  margin-bottom: 0;
 }
 
 /* Schedule Page */
 .schedule-page {
   max-width: 1400px;
   margin: 0 auto;
-  padding: var(--space-2xl) var(--space-xl);
+  padding: var(--space-lg) 0;
 }
 
 .schedule-page h1 {
@@ -1209,6 +1362,7 @@ a.htmx-request {
   margin-bottom: var(--space-xl);
   border-bottom: 1px solid var(--border);
   padding-bottom: var(--space-sm);
+  overflow-x: auto;
 }
 
 .schedule-tab {
@@ -1240,7 +1394,7 @@ a.htmx-request {
 
 .schedule-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(clamp(140px, 12vw + 80px, 200px), 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
   gap: var(--space-2xl) var(--space-lg);
 }
 
@@ -1339,7 +1493,7 @@ a.htmx-request {
 .notifications-page {
   max-width: 1400px;
   margin: 0 auto;
-  padding: var(--space-2xl) var(--space-xl);
+  padding: var(--space-lg) 0;
 }
 
 .notifications-page h1 {
@@ -1367,8 +1521,22 @@ a.htmx-request {
 
 .notifications-list {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(clamp(140px, 12vw + 80px, 200px), 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
   gap: var(--space-lg);
+}
+
+.notifications-section-title {
+  margin-top: var(--space-2xl);
+}
+
+.notifications-group-title {
+  font-size: var(--text-md);
+  margin-bottom: var(--space-md);
+  color: var(--text-muted);
+}
+
+.notifications-list-spaced {
+  margin-bottom: var(--space-xl);
 }
 
 .notification-card {
@@ -1400,17 +1568,7 @@ a.htmx-request {
   opacity: 0.5;
 }
 
-.notification-card:hover {
-  transform: translateY(-2px);
-  text-decoration: none;
-  color: var(--text);
-}
-
 .notification-image img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -1458,6 +1616,10 @@ a.htmx-request {
 .notification-broadcast {
   color: var(--link) !important;
   font-weight: 600;
+}
+
+.notification-muted {
+  color: var(--text-muted) !important;
 }
 
 .notification-synopsis {

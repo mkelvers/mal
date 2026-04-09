@@ -11,28 +11,20 @@ templ Schedule() {
 			<h1>Weekly schedule</h1>
 			<p class="schedule-subtitle">Airing times in JST</p>
 			
-			<div class="schedule-tabs">
-				<button class="schedule-tab active" data-day="Monday" onclick="loadDay('monday', this)">Mon</button>
-				<button class="schedule-tab" data-day="Tuesday" onclick="loadDay('tuesday', this)">Tue</button>
-				<button class="schedule-tab" data-day="Wednesday" onclick="loadDay('wednesday', this)">Wed</button>
-				<button class="schedule-tab" data-day="Thursday" onclick="loadDay('thursday', this)">Thu</button>
-				<button class="schedule-tab" data-day="Friday" onclick="loadDay('friday', this)">Fri</button>
-				<button class="schedule-tab" data-day="Saturday" onclick="loadDay('saturday', this)">Sat</button>
-				<button class="schedule-tab" data-day="Sunday" onclick="loadDay('sunday', this)">Sun</button>
+			<div class="schedule-tabs" data-tab-group="schedule">
+				<button class="schedule-tab active" type="button" data-day="monday" data-schedule-tab>Mon</button>
+				<button class="schedule-tab" type="button" data-day="tuesday" data-schedule-tab>Tue</button>
+				<button class="schedule-tab" type="button" data-day="wednesday" data-schedule-tab>Wed</button>
+				<button class="schedule-tab" type="button" data-day="thursday" data-schedule-tab>Thu</button>
+				<button class="schedule-tab" type="button" data-day="friday" data-schedule-tab>Fri</button>
+				<button class="schedule-tab" type="button" data-day="saturday" data-schedule-tab>Sat</button>
+				<button class="schedule-tab" type="button" data-day="sunday" data-schedule-tab>Sun</button>
 			</div>
 
 			<div id="schedule-content" hx-get="/api/schedule?day=monday" hx-trigger="load">
 				@ui.LoadingIndicator("Loading schedule")
 			</div>
 		</div>
-
-		<script>
-			function loadDay(day, btn) {
-				document.querySelectorAll('.schedule-tab').forEach(t => t.classList.remove('active'));
-				btn.classList.add('active');
-				htmx.ajax('GET', '/api/schedule?day=' + day, '#schedule-content');
-			}
-		</script>
 	}
 }
 
