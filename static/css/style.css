@@ -654,8 +654,8 @@ a.htmx-request {
 }
 
 .view-toggle a.active {
-  background: var(--link);
-  color: white;
+  background: var(--text);
+  color: var(--bg);
 }
 
 .status-tabs {
