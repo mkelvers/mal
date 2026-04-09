@@ -160,17 +160,18 @@ header {
 
 .search-input {
   background: var(--surface);
-  border: 1px solid var(--border);
+  border: none;
   color: var(--text);
-  padding: var(--space-sm) var(--space-md);
+  padding: var(--space-md) var(--space-xl);
   font-size: var(--text-md);
   width: clamp(200px, 25vw + 80px, 400px);
   font-family: inherit;
+  border-radius: 0;
 }
 
 .search-input:focus {
   outline: none;
-  border-color: var(--text-muted);
+  background: var(--surface-hover);
 }
 
 .search-input:focus+.search-dropdown {
@@ -206,14 +207,14 @@ header {
   font-weight: 600;
   color: var(--text-muted);
   text-transform: uppercase;
-  border-bottom: 1px solid var(--border);
+  border-bottom: none;
 }
 
 .search-result-item {
   display: flex;
   gap: var(--space-md);
   padding: var(--space-md) var(--space-lg);
-  border-bottom: 1px solid var(--border);
+  border-bottom: none;
   text-decoration: none;
   color: inherit;
   transition: background 0.15s;
@@ -230,6 +231,8 @@ header {
   object-fit: cover;
   flex-shrink: 0;
   transition: opacity 0.2s ease;
+  background: var(--surface);
+  animation: pulse-bg 2s ease-in-out infinite;
 }
 
 .search-result-item:hover .search-result-thumb {
@@ -244,7 +247,7 @@ header {
   justify-content: center;
   background-color: var(--surface-hover);
   background-image: repeating-linear-gradient(45deg, var(--border) 0, var(--border) 1px, transparent 1px, transparent 6px);
-  border: 1px solid var(--border);
+  border: none;
   font-size: 0;
   color: transparent;
   flex-shrink: 0;
@@ -286,13 +289,15 @@ header {
   text-align: center;
   color: var(--link);
   font-size: var(--text-base);
-  border-top: 1px solid var(--border);
+  border-top: none;
   text-decoration: none;
+  background: var(--surface-hover);
 }
 
 .search-result-view-all:hover {
-  background: var(--surface-hover);
-  text-decoration: underline;
+  background: var(--surface);
+  text-decoration: none;
+  color: var(--text);
 }
 
 /* Main */
@@ -379,7 +384,7 @@ a:visited {
   font-size: 0;
   background-color: var(--surface);
   background-image: repeating-linear-gradient(45deg, var(--border) 0, var(--border) 1px, transparent 1px, transparent 8px);
-  border: 1px solid var(--border);
+  border: none;
   user-select: none;
 }
 
@@ -484,8 +489,8 @@ a.htmx-request {
 .login-container {
   max-width: clamp(260px, 20vw + 180px, 360px);
   margin: var(--space-2xl) auto;
-  border: 1px solid var(--border);
-  padding: var(--space-lg);
+  border: none;
+  padding: var(--space-2xl);
   background: var(--surface);
 }
 
@@ -520,9 +525,9 @@ a.htmx-request {
 }
 
 .form-group input {
-  padding: var(--space-sm) var(--space-md);
-  background: var(--surface);
-  border: 1px solid var(--border);
+  padding: var(--space-md) var(--space-lg);
+  background: var(--bg);
+  border: none;
   color: var(--text);
   font-size: var(--text-md);
   font-family: inherit;
@@ -530,7 +535,7 @@ a.htmx-request {
 
 .form-group input:focus {
   outline: none;
-  border-color: var(--link);
+  background: var(--surface-hover);
 }
 
 .login-button {
@@ -588,14 +593,14 @@ a.htmx-request {
 
 .view-toggle {
   display: flex;
-  border: 1px solid var(--border);
+  border: none;
 }
 
 .view-toggle a {
   padding: var(--space-xs) var(--space-md);
   font-size: var(--text-base);
   color: var(--link);
-  border-right: 1px solid var(--border);
+  border-right: none;
   text-decoration: none;
 }
 
@@ -653,7 +658,7 @@ a.htmx-request {
   align-items: center;
   justify-content: center;
   background: var(--surface);
-  border: 1px solid var(--border);
+  border: none;
   color: var(--text-muted);
   cursor: pointer;
   font-size: var(--text-base);
@@ -678,22 +683,25 @@ a.htmx-request {
 .watchlist-table {
   width: 100%;
   border-collapse: collapse;
-  border: 1px solid var(--border);
+  border: none;
 }
 
 .watchlist-table th {
   text-align: left;
   padding: var(--space-md) var(--space-lg);
-  font-size: var(--text-base);
+  font-size: var(--text-xs);
   font-weight: 600;
-  color: var(--text);
-  border-bottom: 1px solid var(--border);
-  background: var(--surface-hover);
+  color: var(--text-muted);
+  border-bottom: none;
+  background: var(--surface);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-family: var(--font-mono);
 }
 
 .watchlist-table td {
   padding: var(--space-md) var(--space-lg);
-  border-bottom: 1px solid var(--border);
+  border-bottom: 2px solid var(--bg);
   vertical-align: middle;
   font-size: var(--text-md);
 }
@@ -706,7 +714,9 @@ a.htmx-request {
   width: var(--table-thumb);
   aspect-ratio: 2/3;
   object-fit: cover;
-  border: 1px solid var(--border);
+  border: none;
+  background: var(--surface);
+  animation: pulse-bg 2s ease-in-out infinite;
 }
 
 .watchlist-table .title-cell {
@@ -758,7 +768,9 @@ a.htmx-request {
 
 .anime-poster img {
   width: 100%;
-  border: 1px solid var(--border);
+  border: none;
+  background: var(--surface);
+  animation: pulse-bg 2s ease-in-out infinite;
 }
 
 .anime-info {
@@ -858,6 +870,8 @@ a.htmx-request {
   aspect-ratio: 2/3;
   object-fit: cover;
   transition: opacity 0.2s ease;
+  background: var(--surface);
+  animation: pulse-bg 2s ease-in-out infinite;
 }
 
 .relation-card:hover .relation-thumb {
@@ -887,7 +901,7 @@ a.htmx-request {
   column-gap: var(--space-md);
   padding: var(--space-lg);
   background: var(--surface);
-  border: 1px solid var(--border);
+  border: none;
   height: fit-content;
 }
 
@@ -969,10 +983,10 @@ a.htmx-request {
   right: 0;
   min-width: clamp(140px, 12vw + 80px, 200px);
   background: var(--surface);
-  border: 1px solid var(--border);
+  border: none;
   display: none;
   z-index: 50;
-  margin-top: -1px;
+  margin-top: 0;
 }
 
 .dropdown.open .dropdown-menu {
@@ -1030,7 +1044,7 @@ a.htmx-request {
   margin-bottom: var(--space-lg);
   padding: var(--space-lg);
   background: var(--surface);
-  border: 1px solid var(--border);
+  border: none;
 }
 
 .sort-filter-group {
@@ -1047,7 +1061,7 @@ a.htmx-request {
 
 .sort-filter-select {
   background: var(--surface);
-  border: 1px solid var(--border);
+  border: none;
   color: var(--text);
   padding: var(--space-sm) var(--space-md);
   font-size: var(--text-base);
@@ -1057,7 +1071,7 @@ a.htmx-request {
 
 .sort-filter-select:focus {
   outline: none;
-  border-color: var(--link);
+  background: var(--surface-hover);
 }
 
 /* Responsive */
@@ -1248,9 +1262,10 @@ a.htmx-request {
 
 .schedule-card-image {
   aspect-ratio: 2/3;
-  background: var(--bg);
+  background: var(--surface);
   overflow: hidden;
   transition: opacity 0.2s ease;
+  animation: pulse-bg 2s ease-in-out infinite;
 }
 
 .schedule-card:hover .schedule-card-image {
@@ -1374,10 +1389,11 @@ a.htmx-request {
 
 .notification-image {
   aspect-ratio: 2/3;
-  background: var(--bg);
+  background: var(--surface);
   overflow: hidden;
   display: block;
   transition: opacity 0.2s ease;
+  animation: pulse-bg 2s ease-in-out infinite;
 }
 
 .notification-card:hover .notification-image {
@@ -1385,20 +1401,16 @@ a.htmx-request {
 }
 
 .notification-card:hover {
-  border-color: var(--link);
   transform: translateY(-2px);
   text-decoration: none;
   color: var(--text);
 }
 
-.notification-image {
-  aspect-ratio: 2/3;
-  background: var(--bg);
-  overflow: hidden;
-  display: block;
-}
-
 .notification-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
   width: 100%;
   height: 100%;
   object-fit: cover;
