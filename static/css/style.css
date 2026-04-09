@@ -51,10 +51,36 @@
   box-sizing: border-box;
 }
 
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+:focus-visible {
+  outline: 1px solid var(--text);
+  outline-offset: 2px;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
 body {
   background-color: var(--bg);
   color: var(--text);
-  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
   font-size: var(--text-lg);
   line-height: 1.5;
   margin: 0;
@@ -209,13 +235,13 @@ header {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--surface-hover);
+  background-color: var(--surface-hover);
+  background-image: repeating-linear-gradient(45deg, var(--border) 0, var(--border) 1px, transparent 1px, transparent 6px);
   border: 1px solid var(--border);
-  font-size: var(--text-xs);
-  color: var(--text-muted);
+  font-size: 0;
+  color: transparent;
   flex-shrink: 0;
-  text-align: center;
-  padding: var(--space-xs);
+  user-select: none;
 }
 
 .search-result-info {
@@ -328,10 +354,12 @@ a:visited {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--text-muted);
-  font-size: var(--text-base);
-  background: var(--surface);
+  color: transparent;
+  font-size: 0;
+  background-color: var(--surface);
+  background-image: repeating-linear-gradient(45deg, var(--border) 0, var(--border) 1px, transparent 1px, transparent 8px);
   border: 1px solid var(--border);
+  user-select: none;
 }
 
 .catalog-title {
