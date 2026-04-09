@@ -8,6 +8,8 @@
   --link: #ffffff;
   --link-hover: #dddddd;
   --link-active: #aaaaaa;
+  
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 
   /* fluid typography scale */
   --text-xs: clamp(0.625rem, 0.55rem + 0.25vw, 0.75rem);
@@ -225,8 +227,12 @@ header {
   width: var(--search-thumb);
   aspect-ratio: 2/3;
   object-fit: cover;
-  border: 1px solid var(--border);
   flex-shrink: 0;
+  transition: opacity 0.2s ease;
+}
+
+.search-result-item:hover .search-result-thumb {
+  opacity: 0.5;
 }
 
 .search-result-no-image {
@@ -266,8 +272,11 @@ header {
 }
 
 .search-result-type {
-  font-size: var(--text-sm);
+  font-size: var(--text-xs);
   color: var(--text-muted);
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .search-result-view-all {
@@ -341,11 +350,12 @@ a:visited {
   aspect-ratio: 2/3;
   object-fit: cover;
   background: var(--surface);
-  border: 1px solid var(--border);
+  transition: opacity 0.2s ease;
 }
 
-.catalog-thumb:hover {
-  border-color: var(--link);
+.catalog-item:hover .catalog-thumb,
+.catalog-item a:hover .catalog-thumb {
+  opacity: 0.5;
 }
 
 .no-image {
@@ -364,6 +374,7 @@ a:visited {
 
 .catalog-title {
   font-size: var(--text-base);
+  font-weight: 600;
   color: var(--text);
   display: -webkit-box;
   line-clamp: 2;
@@ -766,8 +777,10 @@ a.htmx-request {
 .info-tag {
   padding: var(--space-xs) var(--space-sm);
   background: var(--surface-hover);
-  border: 1px solid var(--border);
-  font-size: var(--text-sm);
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: var(--text-xs);
   color: var(--text-muted);
 }
 
@@ -825,17 +838,18 @@ a.htmx-request {
 
 .relation-card.current .relation-thumb {
   border: 2px solid var(--link);
+  opacity: 1;
 }
 
 .relation-thumb {
   width: 100%;
   aspect-ratio: 2/3;
   object-fit: cover;
-  border: 1px solid var(--border);
+  transition: opacity 0.2s ease;
 }
 
 .relation-card:hover .relation-thumb {
-  border-color: var(--link);
+  opacity: 0.5;
 }
 
 .relation-title {
@@ -899,8 +913,10 @@ a.htmx-request {
 .sidebar-tag {
   padding: var(--space-xs) var(--space-sm);
   background: var(--surface-hover);
-  border: 1px solid var(--border);
-  font-size: var(--text-sm);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
   color: var(--text);
 }
 
@@ -1203,9 +1219,8 @@ a.htmx-request {
 
 .schedule-card {
   background: var(--surface);
-  border: 1px solid var(--border);
   overflow: hidden;
-  transition: border-color 0.15s, transform 0.15s;
+  transition: transform 0.15s;
   text-decoration: none;
   color: var(--text);
   display: flex;
@@ -1213,7 +1228,6 @@ a.htmx-request {
 }
 
 .schedule-card:hover {
-  border-color: var(--link);
   transform: translateY(-2px);
   text-decoration: none;
   color: var(--text);
@@ -1223,6 +1237,11 @@ a.htmx-request {
   aspect-ratio: 2/3;
   background: var(--bg);
   overflow: hidden;
+  transition: opacity 0.2s ease;
+}
+
+.schedule-card:hover .schedule-card-image {
+  opacity: 0.5;
 }
 
 .schedule-card-image img {
@@ -1257,6 +1276,9 @@ a.htmx-request {
   font-size: var(--text-xs);
   color: var(--text-muted);
   margin-top: auto;
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .schedule-card-meta span {
@@ -1274,6 +1296,7 @@ a.htmx-request {
   color: var(--link);
   font-weight: 600;
   margin-top: var(--space-xs);
+  font-family: var(--font-mono);
 }
 
 .no-anime {
@@ -1322,13 +1345,30 @@ a.htmx-request {
 
 .notification-card {
   background: var(--surface);
-  border: 1px solid var(--border);
   overflow: hidden;
-  transition: border-color 0.15s, transform 0.15s;
+  transition: transform 0.15s;
   display: flex;
   flex-direction: column;
   text-decoration: none;
   color: var(--text);
+}
+
+.notification-card:hover {
+  transform: translateY(-2px);
+  text-decoration: none;
+  color: var(--text);
+}
+
+.notification-image {
+  aspect-ratio: 2/3;
+  background: var(--bg);
+  overflow: hidden;
+  display: block;
+  transition: opacity 0.2s ease;
+}
+
+.notification-card:hover .notification-image {
+  opacity: 0.5;
 }
 
 .notification-card:hover {
