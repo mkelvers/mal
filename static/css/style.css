@@ -85,7 +85,7 @@ body {
     radial-gradient(1100px 500px at 8% -10%, #1a1b22 0%, transparent 55%),
     radial-gradient(900px 420px at 92% 0%, #171a1e 0%, transparent 60%);
   color: var(--text);
-  font-family: "Avenir Next", "Trebuchet MS", "Gill Sans", sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
   font-size: var(--text-lg);
   line-height: 1.5;
   margin: 0;
@@ -967,15 +967,15 @@ a.htmx-request {
 }
 
 .sidebar-label {
-  font-size: var(--text-sm);
+  font-size: var(--text-base);
   font-weight: 600;
   color: var(--text);
-  text-transform: uppercase;
+  text-transform: none;
 }
 
 .anime-side-section {
   display: grid;
-  gap: var(--space-md);
+  gap: var(--space-sm);
 }
 
 .anime-side-section h3 {
@@ -994,13 +994,13 @@ a.htmx-request {
 }
 
 .side-details-more[open] {
-  gap: var(--space-sm);
+  gap: var(--space-md);
 }
 
 .sidebar-value {
-  font-size: var(--text-base);
+  font-size: var(--text-md);
   color: var(--text-muted);
-  line-height: 1.4;
+  line-height: 1.5;
 }
 
 .sidebar-row-wrap {
@@ -1010,16 +1010,16 @@ a.htmx-request {
 .sidebar-tags {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-xs);
+  gap: var(--space-sm);
 }
 
 .sidebar-tag {
-  padding: var(--space-xs) var(--space-sm);
+  padding: var(--space-xs) var(--space-md);
   background: var(--surface-hover);
-  font-family: var(--font-mono);
-  font-size: var(--text-xs);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  font-family: inherit;
+  font-size: var(--text-sm);
+  text-transform: none;
+  letter-spacing: normal;
   color: var(--text);
 }
 

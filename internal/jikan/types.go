@@ -1,6 +1,9 @@
 package jikan
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 type SearchResult struct {
 	Animes      []Anime
@@ -108,9 +111,27 @@ func (a Anime) ShortDuration() string {
 
 func (a Anime) Premiered() string {
 	if a.Season != "" && a.Year > 0 {
-		return fmt.Sprintf("%s %d", a.Season, a.Year)
+		return fmt.Sprintf("%s %d", seasonLabel(a.Season), a.Year)
 	}
 	return ""
+}
+
+func seasonLabel(season string) string {
+	switch strings.ToLower(season) {
+	case "winter":
+		return "Winter"
+	case "spring":
+		return "Spring"
+	case "summer":
+		return "Summer"
+	case "fall", "autumn":
+		return "Fall"
+	default:
+		if season == "" {
+			return ""
+		}
+		return strings.ToUpper(season[:1]) + strings.ToLower(season[1:])
+	}
 }
 
 type AnimeResponse struct {
