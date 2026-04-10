@@ -24,10 +24,6 @@ templ SortFilter(opts SortFilterOptions) {
 				<option value="asc" selected?={ opts.Order == "asc" }>Ascending</option>
 			</select>
 		</div>
-		<div class="sort-filter-group density-group" aria-hidden="true">
-			<span class="density-label">Density</span>
-			<button type="button" class="density-toggle" id="density-toggle" onclick="document.body.classList.toggle('density-compact')">Compact</button>
-		</div>
 	</div>
 	<form id="sort-form" method="get" class="is-hidden">
 		<input type="hidden" name="sort" id="sort-input" value={ opts.Sort }/>

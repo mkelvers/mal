@@ -16,8 +16,8 @@ templ Login() {
 				</div>
 				<button type="submit" class="login-button">Sign in</button>
 			</form>
-			<p style="margin-top: 1rem; text-align: center; color: var(--text-muted); font-size: var(--text-sm);">
-				Don't have an account? <a href="/register" style="color: var(--primary);">Register</a>
+			<p class="auth-switch-row">
+				Don't have an account? <a href="/register">Register</a>
 			</p>
 		</div>
 	}
@@ -37,13 +37,13 @@ templ Register() {
 					<label for="password">Password</label>
 					<input type="password" id="password" name="password" required placeholder="Minimum 12 chars"/>
 				</div>
-				<p style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 1rem; line-height: 1.4;">
+				<p class="auth-password-note">
 					Password must be at least 12 characters and include an uppercase letter, lowercase letter, number, and special character.
 				</p>
 				<button type="submit" class="login-button">Create account</button>
 			</form>
-			<p style="margin-top: 1rem; text-align: center; color: var(--text-muted); font-size: var(--text-sm);">
-				Already have an account? <a href="/login" style="color: var(--primary);">Sign in</a>
+			<p class="auth-switch-row">
+				Already have an account? <a href="/login">Sign in</a>
 			</p>
 		</div>
 	}
