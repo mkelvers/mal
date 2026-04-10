@@ -73,7 +73,8 @@ func NewRouter(cfg Config) http.Handler {
 	mux.HandleFunc("/api/watchlist/", watchlistHandler.HandleDeleteWatchlist)
 	mux.HandleFunc("/watchlist", watchlistHandler.HandleGetWatchlist)
 
-	// Wrap mux with global auth checking, THEN auth context parsing
-	protectedHandler := middleware.RequireGlobalAuth(mux)
+	// Wrap mux with global CSRF origin verification and auth checking,
+	// THEN auth context parsing.
+	protectedHandler := middleware.RequireGlobalAuth(middleware.VerifyOrigin(mux))
 	return middleware.Auth(cfg.AuthService)(protectedHandler)
 }
