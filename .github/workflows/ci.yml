@@ -23,6 +23,9 @@ jobs:
       - name: verify dependencies
         run: go mod download
 
+      - name: generate templ files
+        run: go run github.com/a-h/templ/cmd/templ@v0.3.1001 generate
+
       - name: vet
         run: go vet ./...
 
