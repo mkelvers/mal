@@ -124,7 +124,7 @@ templ NotificationCard(item WatchingAnimeWithDetails) {
 			</div>
 			<div class="notification-meta">
 				if item.Anime.Broadcast.String != "" {
-					<span class="notification-broadcast">{ item.Anime.Broadcast.String }</span>
+					<span class="notification-broadcast" data-jst-text={ item.Anime.Broadcast.String }>{ item.Anime.Broadcast.String }</span>
 				}
 				if item.Anime.Episodes > 0 {
 					<span class="notification-progress">
