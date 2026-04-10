@@ -3,7 +3,6 @@ package templates
 import "mal/internal/jikan"
 import "mal/internal/shared/ui"
 import "fmt"
-import "strings"
 
 templ Schedule() {
 	@Layout("mal - schedule") {
@@ -30,7 +29,7 @@ templ Schedule() {
 
 templ ScheduleDay(day string, animes []jikan.Anime) {
 	<div class="schedule-day">
-		<h2>{ strings.Title(day) }</h2>
+		<h2>{ dayTitle(day) }</h2>
 		if len(animes) == 0 {
 			<p class="no-anime">No anime scheduled.</p>
 		} else {
@@ -68,5 +67,26 @@ templ ScheduleAnimeCard(anime jikan.Anime) {
 				<div class="schedule-card-score">★ { fmt.Sprintf("%.1f", anime.Score) }</div>
 			}
 		</div>
+	}
+}
+
+func dayTitle(day string) string {
+	switch day {
+	case "monday":
+		return "Monday"
+	case "tuesday":
+		return "Tuesday"
+	case "wednesday":
+		return "Wednesday"
+	case "thursday":
+		return "Thursday"
+	case "friday":
+		return "Friday"
+	case "saturday":
+		return "Saturday"
+	case "sunday":
+		return "Sunday"
+	default:
+		return day
 	}
 }
