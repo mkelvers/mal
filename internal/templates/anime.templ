@@ -39,16 +39,15 @@ templ AnimeDetails(anime jikan.Anime, currentStatus string) {
 						<div class="anime-actions">
 							@WatchlistDropdown(anime.MalID, anime.Title, anime.TitleEnglish, anime.TitleJapanese, anime.ImageURL(), currentStatus, anime.Airing)
 						</div>
+						<section class="anime-synopsis anime-section">
+							if anime.Synopsis != "" {
+								<p>{ anime.Synopsis }</p>
+							} else {
+								<p class="no-synopsis">No synopsis available.</p>
+							}
+						</section>
 					</div>
 				</div>
-				<section class="anime-synopsis anime-surface anime-section">
-					<h3>Synopsis</h3>
-					if anime.Synopsis != "" {
-						<p>{ anime.Synopsis }</p>
-					} else {
-						<p class="no-synopsis">No synopsis available.</p>
-					}
-				</section>
 				<section class="anime-relations anime-surface anime-section">
 					<h3>Related</h3>
 					<div hx-get={ string(templ.URL(fmt.Sprintf("/api/anime/%d/relations", anime.MalID))) } hx-trigger="load">
@@ -95,17 +94,13 @@ templ AnimeDetails(anime jikan.Anime, currentStatus string) {
 							<span class="sidebar-value">{ anime.Duration }</span>
 						</div>
 					}
-				</div>
-				if len(anime.Genres) > 0 {
-					<div class="anime-side-section">
-						<h3>Genres</h3>
-						<div class="sidebar-tags">
-							for _, g := range anime.Genres {
-								<span class="sidebar-tag">{ g.Name }</span>
-							}
+					if len(anime.Genres) > 0 {
+						<div class="sidebar-row">
+							<span class="sidebar-label">Genres</span>
+							<span class="sidebar-value">{ joinNames(anime.Genres) }</span>
 						</div>
-					</div>
-				}
+					}
+				</div>
 				if hasExtraSidebarDetails(anime) {
 					<details class="anime-side-section side-details-more">
 						<summary>More metadata</summary>
@@ -140,23 +135,15 @@ templ AnimeDetails(anime jikan.Anime, currentStatus string) {
 					</div>
 						}
 						if len(anime.Demographics) > 0 {
-					<div class="sidebar-row sidebar-row-wrap">
+					<div class="sidebar-row">
 						<span class="sidebar-label">Demographics</span>
-						<div class="sidebar-tags">
-							for _, d := range anime.Demographics {
-								<span class="sidebar-tag">{ d.Name }</span>
-							}
-						</div>
+						<span class="sidebar-value">{ joinNames(anime.Demographics) }</span>
 					</div>
 						}
 						if len(anime.Themes) > 0 {
-					<div class="sidebar-row sidebar-row-wrap">
+					<div class="sidebar-row">
 						<span class="sidebar-label">Themes</span>
-						<div class="sidebar-tags">
-							for _, t := range anime.Themes {
-								<span class="sidebar-tag">{ t.Name }</span>
-							}
-						</div>
+						<span class="sidebar-value">{ joinNames(anime.Themes) }</span>
 					</div>
 						}
 						if anime.Broadcast.String != "" {
@@ -168,11 +155,7 @@ templ AnimeDetails(anime jikan.Anime, currentStatus string) {
 						if len(anime.Streaming) > 0 {
 					<div class="sidebar-row">
 						<span class="sidebar-label">Streaming</span>
-						<div class="sidebar-value">
-							for _, s := range anime.Streaming {
-								<div><a href={ templ.URL(s.URL) } target="_blank">{ s.Name }</a></div>
-							}
-						</div>
+						<span class="sidebar-value">{ joinStreamingNames(anime) }</span>
 					</div>
 						}
 					</details>
@@ -190,13 +173,21 @@ func joinNames(entities []jikan.NamedEntity) string {
 	return strings.Join(names, ", ")
 }
 
+func joinStreamingNames(anime jikan.Anime) string {
+	names := make([]string, len(anime.Streaming))
+	for i, s := range anime.Streaming {
+		names[i] = s.Name
+	}
+	return strings.Join(names, ", ")
+}
+
 templ WatchlistDropdown(animeID int, animeTitle string, animeTitleEnglish string, animeTitleJapanese string, animeImage string, currentStatus string, airing bool) {
 	<div class="dropdown" id="watchlist-dropdown">
 		<button class="dropdown-trigger" onclick="toggleDropdown()">
 			if currentStatus != "" {
 				{ formatStatus(currentStatus) }
 			} else {
-				add to watchlist
+				Add to watchlist
 			}
 			<span class="dropdown-arrow">▾</span>
 		</button>
@@ -212,7 +203,7 @@ templ WatchlistDropdown(animeID int, animeTitle string, animeTitleEnglish string
 					class="dropdown-item remove"
 					hx-delete={ string(templ.URL(fmt.Sprintf("/api/watchlist/%d", animeID))) }
 					hx-target="#watchlist-dropdown"
-					hx-swap="outerHTML"
+					hx-swap="outerHTML swap:150ms"
 				>Remove from list</button>
 			}
 		</div>
@@ -225,12 +216,9 @@ templ dropdownStatusOption(animeID int, animeTitle string, animeTitleEnglish str
 		hx-post="/api/watchlist"
 		hx-vals={ fmt.Sprintf(`{"anime_id": "%d", "anime_title": "%s", "anime_title_english": "%s", "anime_title_japanese": "%s", "anime_image": "%s", "status": "%s", "airing": "%v"}`, animeID, animeTitle, animeTitleEnglish, animeTitleJapanese, animeImage, status, airing) }
 		hx-target="#watchlist-dropdown"
-		hx-swap="outerHTML"
+		hx-swap="outerHTML swap:150ms"
 	>
 		{ formatStatus(status) }
-		if status == currentStatus {
-			<span class="check">✓</span>
-		}
 	</button>
 }
 
@@ -240,12 +228,9 @@ templ statusOption(anime jikan.Anime, status string, currentStatus string) {
 		hx-post="/api/watchlist"
 		hx-vals={ fmt.Sprintf(`{"anime_id": "%d", "anime_title": "%s", "anime_title_english": "%s", "anime_title_japanese": "%s", "anime_image": "%s", "status": "%s"}`, anime.MalID, anime.Title, anime.TitleEnglish, anime.TitleJapanese, anime.ImageURL(), status) }
 		hx-target="#watchlist-dropdown"
-		hx-swap="outerHTML"
+		hx-swap="outerHTML swap:150ms"
 	>
 		{ formatStatus(status) }
-		if status == currentStatus {
-			<span class="check">✓</span>
-		}
 	</button>
 }
 
