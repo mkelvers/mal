@@ -61,10 +61,6 @@ func (s *Service) GetRelations(ctx context.Context, id int) ([]jikan.RelationEnt
 	return s.jikanClient.GetFullRelations(ctx, id)
 }
 
-func (s *Service) GetSchedule(ctx context.Context, day string) (jikan.ScheduleResult, error) {
-	return s.jikanClient.GetSchedule(ctx, day)
-}
-
 func (s *Service) GetRecommendations(ctx context.Context, animeID int, limit int) ([]jikan.Anime, error) {
 	return s.jikanClient.GetRecommendations(ctx, animeID, limit)
 }

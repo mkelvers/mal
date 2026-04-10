@@ -296,28 +296,6 @@ func (h *Handler) HandleAPIDiscoverUpcoming(w http.ResponseWriter, r *http.Reque
 	templates.DiscoverItems(res.Animes, "upcoming", page+1, res.HasNextPage).Render(r.Context(), w)
 }
 
-func (h *Handler) HandleSchedule(w http.ResponseWriter, r *http.Request) {
-	templates.Schedule().Render(r.Context(), w)
-}
-
-func (h *Handler) HandleAPISchedule(w http.ResponseWriter, r *http.Request) {
-	day := r.URL.Query().Get("day")
-	if day == "" {
-		day = "monday"
-	}
-
-	res, err := h.svc.GetSchedule(r.Context(), day)
-	if err != nil {
-		log.Printf("schedule error for %s: %v", day, err)
-		http.Error(w, "Failed to fetch schedule", http.StatusInternalServerError)
-		return
-	}
-
-	res.Animes = deduplicateAnimes(res.Animes)
-
-	templates.ScheduleDay(day, res.Animes).Render(r.Context(), w)
-}
-
 func (h *Handler) HandleNotifications(w http.ResponseWriter, r *http.Request) {
 	userID := userIDFromRequest(r)
 
@@ -326,14 +304,23 @@ func (h *Handler) HandleNotifications(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	watching, err := h.svc.GetWatchingAnime(r.Context(), userID)
-	if err != nil {
-		log.Printf("watching anime error: %v", err)
-		http.Error(w, "Failed to fetch watching anime", http.StatusInternalServerError)
-		return
+	tab := r.URL.Query().Get("tab")
+	if tab != "sequels" {
+		tab = "tracking"
 	}
 
-	templates.Notifications(watching).Render(r.Context(), w)
+	var watching []templates.WatchingAnimeWithDetails
+	if tab == "tracking" {
+		var err error
+		watching, err = h.svc.GetWatchingAnime(r.Context(), userID)
+		if err != nil {
+			log.Printf("watching anime error: %v", err)
+			http.Error(w, "Failed to fetch watching anime", http.StatusInternalServerError)
+			return
+		}
+	}
+
+	templates.Notifications(watching, tab).Render(r.Context(), w)
 }
 
 func (h *Handler) HandleNotificationsUpcoming(w http.ResponseWriter, r *http.Request) {

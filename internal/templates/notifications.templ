@@ -10,30 +10,33 @@ type WatchingAnimeWithDetails struct {
 	Anime jikan.Anime
 }
 
-templ Notifications(watching []WatchingAnimeWithDetails) {
+templ Notifications(watching []WatchingAnimeWithDetails, activeTab string) {
 	@Layout("mal - notifications") {
 		<div class="notifications-page">
-			<h1>Airing shows (tracking)</h1>
-			<p class="notifications-subtitle">Shows you're currently watching or planning to watch.</p>
-			
-			if len(watching) == 0 {
-				@ui.EmptyState("No airing anime in your watching list.") {
-					<span class="empty-state-hint">Add currently airing shows to your watching list to see upcoming episodes here.</span>
-				}
-			} else {
-				<div class="notifications-list">
-					for _, item := range watching {
-						@NotificationCard(item)
-					}
-				</div>
-			}
-
-			<h1 class="notifications-section-title">Discovered sequels</h1>
-			<p class="notifications-subtitle">Because you've watched prequels.</p>
-			
-			<div hx-get="/notifications/upcoming" hx-trigger="load, every 15s" hx-swap="innerHTML">
-				@ui.LoadingIndicator("Syncing sequel graphs...")
+			<h1>Notifications</h1>
+			<div class="status-tabs">
+				<a href="/notifications?tab=tracking" class={ tabClass(activeTab == "tracking") }>Tracking</a>
+				<a href="/notifications?tab=sequels" class={ tabClass(activeTab == "sequels") }>Sequels</a>
 			</div>
+
+			if activeTab == "sequels" {
+				<div hx-get="/notifications/upcoming" hx-trigger="load, every 15s" hx-swap="innerHTML">
+					@ui.LoadingIndicator("Syncing sequel graphs...")
+				</div>
+			} else {
+				<p class="notifications-subtitle">Shows you're currently watching or planning to watch.</p>
+				if len(watching) == 0 {
+					@ui.EmptyState("No airing anime in your watching list.") {
+						<span class="empty-state-hint">Add currently airing shows to your watching list to see upcoming episodes here.</span>
+					}
+				} else {
+					<div class="notifications-list">
+						for _, item := range watching {
+							@NotificationCard(item)
+						}
+					</div>
+				}
+			}
 		</div>
 	}
 }
@@ -62,21 +65,27 @@ templ UpcomingSeasonsList(upcomingSeasons []database.GetUpcomingSeasonsRow) {
 templ renderSplitSeasons(upcomingSeasons []database.GetUpcomingSeasonsRow) {
 	if airing, upcoming := splitUpcomingSeasons(upcomingSeasons); true {
 		if len(airing) > 0 {
-			<h2 class="notifications-group-title">Airing now (not tracked)</h2>
-			<div class="notifications-list notifications-list-spaced">
-				for _, item := range airing {
-					@UpcomingSeasonCard(item)
-				}
-			</div>
+			<section class="notifications-group notifications-list-spaced">
+				<h2 class="notifications-group-title">Airing now</h2>
+				<p class="notifications-group-note">These are the currently airing anime, but you're not tracking any of these.</p>
+				<div class="notifications-list">
+					for _, item := range airing {
+						@UpcomingSeasonCard(item)
+					}
+				</div>
+			</section>
 		}
 
 		if len(upcoming) > 0 {
-			<h2 class="notifications-group-title">Announced & upcoming</h2>
-			<div class="notifications-list">
-				for _, item := range upcoming {
-					@UpcomingSeasonCard(item)
-				}
-			</div>
+			<section class="notifications-group">
+				<h2 class="notifications-group-title">Announced & upcoming</h2>
+				<p class="notifications-group-note">Newly announced or upcoming seasons related to anime you've watched.</p>
+				<div class="notifications-list">
+					for _, item := range upcoming {
+						@UpcomingSeasonCard(item)
+					}
+				</div>
+			</section>
 		}
 	}
 }
@@ -92,9 +101,6 @@ templ UpcomingSeasonCard(item database.GetUpcomingSeasonsRow) {
 		<div class="notification-content">
 			<div class="notification-title">
 				{ displaySeasonTitle(item) }
-			</div>
-			<div class="notification-meta">
-				<span class="notification-broadcast notification-muted">Because you watched { item.PrequelTitle }</span>
 			</div>
 		</div>
 	}

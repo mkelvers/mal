@@ -8,12 +8,11 @@ templ Layout(title string) {
 		<head>
 			<meta charset="UTF-8"/>
 			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-			<title>mal</title>
+			<title>{ title }</title>
 			<link rel="icon" type="image/svg+xml" href="/static/favicon.svg"/>
 			<link rel="stylesheet" href="/static/css/style.css"/>
 			<script src="https://unpkg.com/htmx.org@1.9.11"></script>
 			<script src="/static/js/discover.js" defer></script>
-			<script src="/static/js/schedule.js" defer></script>
 			<script src="/static/js/anime.js" defer></script>
 		</head>
 		<body>
@@ -26,7 +25,6 @@ templ Layout(title string) {
 						<div class="nav">
 							<a href="/">Catalog</a>
 							<a href="/discover">Discover</a>
-							<a href="/schedule">Schedule</a>
 							<a href="/notifications">Notifications</a>
 							<a href="/watchlist">Watchlist</a>
 						</div>
