@@ -1,14 +1,17 @@
 package main
 
 import (
+	"context"
 	"database/sql"
 	"log"
 	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	_ "github.com/mattn/go-sqlite3"
 
-	"context"
 	"mal/internal/database"
 	"mal/internal/features/auth"
 	"mal/internal/jikan"
@@ -40,7 +43,11 @@ func main() {
 
 	// Start background workers
 	relationsWorker := worker.New(queries, jikanClient)
-	go relationsWorker.Start(context.Background())
+
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+
+	go relationsWorker.Start(ctx)
 
 	app := server.Config{
 		DB:          queries,
@@ -55,8 +62,27 @@ func main() {
 		port = "3000"
 	}
 
+	httpServer := &http.Server{
+		Addr:              ":" + port,
+		Handler:           handler,
+		ReadHeaderTimeout: 5 * time.Second,
+		ReadTimeout:       10 * time.Second,
+		WriteTimeout:      30 * time.Second,
+		IdleTimeout:       120 * time.Second,
+	}
+
+	go func() {
+		<-ctx.Done()
+		shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+
+		if err := httpServer.Shutdown(shutdownCtx); err != nil {
+			log.Printf("server shutdown failed: %v", err)
+		}
+	}()
+
 	log.Printf("Server starting on http://localhost:%s", port)
-	if err := http.ListenAndServe(":"+port, handler); err != nil {
+	if err := httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 		log.Fatalf("Server failed to start: %v", err)
 	}
 }
