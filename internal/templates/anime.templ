@@ -253,22 +253,41 @@ func formatStatus(status string) string {
 
 templ AnimeRelationsList(relations []jikan.RelationEntry) {
 	if len(relations) > 1 {
-		<div class="relations-grid">
+		<div class="relations-controls">
+			<button type="button" class="tab active" id="relations-main-tab" onclick="toggleRelationExtras(false)">Main timeline</button>
+			<button type="button" class="tab" id="relations-extra-tab" onclick="toggleRelationExtras(true)">Show extras</button>
+		</div>
+		<div class="relations-grid" id="relations-grid">
 			for _, rel := range relations {
 				@ui.AnimeCard(ui.AnimeCardProps{
 					ID:          rel.Anime.MalID,
 					Title:       rel.Anime.DisplayTitle(),
 					ImageURL:    rel.Anime.ImageURL(),
-					Class:       "relation-card" + func() string { if rel.IsCurrent { return " current" }; return "" }(),
+					Class:       relationCardClass(rel),
 					ImgClass:    "relation-thumb",
 					TitleClass:  "relation-title",
 					CurrentNode: rel.IsCurrent,
-				})
+				}) {
+					if rel.Relation != "" && rel.Relation != "Current" {
+						<div class="relation-type">{ rel.Relation }</div>
+					}
+				}
 			}
 		</div>
 	} else {
 		<p class="empty-inline-note">No related anime found.</p>
 	}
+}
+
+func relationCardClass(rel jikan.RelationEntry) string {
+	base := "relation-card"
+	if rel.IsCurrent {
+		base += " current"
+	}
+	if rel.IsExtra {
+		base += " relation-extra is-hidden"
+	}
+	return base
 }
 
 templ AnimeRecommendations(recs []jikan.Anime) {

@@ -170,7 +170,9 @@ type JikanRelationsResponse struct {
 
 type RelationEntry struct {
 	Anime     Anime
+	Relation  string
 	IsCurrent bool
+	IsExtra   bool
 }
 
 func (a Anime) DisplayTitle() string {
