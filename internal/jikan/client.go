@@ -27,7 +27,7 @@ func NewClient(db database.Querier) *Client {
 	}
 }
 
-func (c *Client) waitRateLimit() {
+func (c *Client) waitRateLimit(ctx context.Context) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
@@ -36,15 +36,24 @@ func (c *Client) waitRateLimit() {
 	// 400ms base delay keeps us safely under the 3/sec limit.
 	nextAllowed := c.lastReqTime.Add(400 * time.Millisecond)
 	if now.Before(nextAllowed) {
-		time.Sleep(nextAllowed.Sub(now))
+		timer := time.NewTimer(nextAllowed.Sub(now))
+		defer timer.Stop()
+
+		select {
+		case <-timer.C:
+		case <-ctx.Done():
+			return fmt.Errorf("request canceled while waiting for rate limit: %w", ctx.Err())
+		}
 		c.lastReqTime = time.Now()
 	} else {
 		c.lastReqTime = now
 	}
+
+	return nil
 }
 
-func (c *Client) getCache(key string, out any) bool {
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+func (c *Client) getCache(parentCtx context.Context, key string, out any) bool {
+	ctx, cancel := context.WithTimeout(parentCtx, 2*time.Second)
 	defer cancel()
 
 	data, err := c.db.GetJikanCache(ctx, key)
@@ -56,8 +65,8 @@ func (c *Client) getCache(key string, out any) bool {
 	return err == nil
 }
 
-func (c *Client) setCache(key string, data any, ttl time.Duration) {
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+func (c *Client) setCache(parentCtx context.Context, key string, data any, ttl time.Duration) {
+	ctx, cancel := context.WithTimeout(parentCtx, 2*time.Second)
 	defer cancel()
 
 	bytes, err := json.Marshal(data)
@@ -72,12 +81,19 @@ func (c *Client) setCache(key string, data any, ttl time.Duration) {
 	})
 }
 
-func (c *Client) fetchWithRetry(urlStr string, out any) error {
+func (c *Client) fetchWithRetry(ctx context.Context, urlStr string, out any) error {
 	maxRetries := 5
 	for range maxRetries {
-		c.waitRateLimit()
+		if err := c.waitRateLimit(ctx); err != nil {
+			return err
+		}
 
-		resp, err := c.httpClient.Get(urlStr)
+		req, err := http.NewRequestWithContext(ctx, http.MethodGet, urlStr, nil)
+		if err != nil {
+			return fmt.Errorf("failed to create jikan request: %w", err)
+		}
+
+		resp, err := c.httpClient.Do(req)
 		if err != nil {
 			return fmt.Errorf("jikan api error: %w", err)
 		}
@@ -86,7 +102,13 @@ func (c *Client) fetchWithRetry(urlStr string, out any) error {
 			resp.Body.Close()
 			// Jikan rate limit is hit (usually the 60 requests/minute limit)
 			// Wait for 2 seconds before retrying to let the bucket refill slightly
-			time.Sleep(2 * time.Second)
+			timer := time.NewTimer(2 * time.Second)
+			select {
+			case <-timer.C:
+			case <-ctx.Done():
+				timer.Stop()
+				return fmt.Errorf("request canceled while retrying jikan request: %w", ctx.Err())
+			}
 			continue
 		}
 

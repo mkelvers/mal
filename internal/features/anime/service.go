@@ -21,24 +21,24 @@ func NewService(jikanClient *jikan.Client, db database.Querier) *Service {
 	}
 }
 
-func (s *Service) Search(query string, page int) (jikan.SearchResult, error) {
-	return s.jikanClient.Search(query, page)
+func (s *Service) Search(ctx context.Context, query string, page int) (jikan.SearchResult, error) {
+	return s.jikanClient.Search(ctx, query, page)
 }
 
-func (s *Service) GetTopAnime(page int) (jikan.TopAnimeResult, error) {
-	return s.jikanClient.GetTopAnime(page)
+func (s *Service) GetTopAnime(ctx context.Context, page int) (jikan.TopAnimeResult, error) {
+	return s.jikanClient.GetTopAnime(ctx, page)
 }
 
-func (s *Service) GetAiringAnime(page int) (jikan.TopAnimeResult, error) {
-	return s.jikanClient.GetSeasonsNow(page)
+func (s *Service) GetAiringAnime(ctx context.Context, page int) (jikan.TopAnimeResult, error) {
+	return s.jikanClient.GetSeasonsNow(ctx, page)
 }
 
-func (s *Service) GetUpcomingAnime(page int) (jikan.TopAnimeResult, error) {
-	return s.jikanClient.GetSeasonsUpcoming(page)
+func (s *Service) GetUpcomingAnime(ctx context.Context, page int) (jikan.TopAnimeResult, error) {
+	return s.jikanClient.GetSeasonsUpcoming(ctx, page)
 }
 
 func (s *Service) GetAnimeDetails(ctx context.Context, id int, userID string) (jikan.Anime, string, error) {
-	anime, err := s.jikanClient.GetAnimeByID(id)
+	anime, err := s.jikanClient.GetAnimeByID(ctx, id)
 	if err != nil {
 		return jikan.Anime{}, "", fmt.Errorf("failed to fetch anime details: %w", err)
 	}
@@ -57,16 +57,16 @@ func (s *Service) GetAnimeDetails(ctx context.Context, id int, userID string) (j
 	return anime, currentStatus, nil
 }
 
-func (s *Service) GetRelations(id int) ([]jikan.RelationEntry, error) {
-	return s.jikanClient.GetFullRelations(id)
+func (s *Service) GetRelations(ctx context.Context, id int) ([]jikan.RelationEntry, error) {
+	return s.jikanClient.GetFullRelations(ctx, id)
 }
 
-func (s *Service) GetSchedule(day string) (jikan.ScheduleResult, error) {
-	return s.jikanClient.GetSchedule(day)
+func (s *Service) GetSchedule(ctx context.Context, day string) (jikan.ScheduleResult, error) {
+	return s.jikanClient.GetSchedule(ctx, day)
 }
 
-func (s *Service) GetRecommendations(animeID int, limit int) ([]jikan.Anime, error) {
-	return s.jikanClient.GetRecommendations(animeID, limit)
+func (s *Service) GetRecommendations(ctx context.Context, animeID int, limit int) ([]jikan.Anime, error) {
+	return s.jikanClient.GetRecommendations(ctx, animeID, limit)
 }
 
 func (s *Service) GetWatchingAnime(ctx context.Context, userID string) ([]templates.WatchingAnimeWithDetails, error) {
@@ -77,7 +77,7 @@ func (s *Service) GetWatchingAnime(ctx context.Context, userID string) ([]templa
 
 	var result []templates.WatchingAnimeWithDetails
 	for _, row := range rows {
-		anime, err := s.jikanClient.GetAnimeByID(int(row.AnimeID))
+		anime, err := s.jikanClient.GetAnimeByID(ctx, int(row.AnimeID))
 		if err != nil {
 			// Instead of skipping, we still append it, but without the extra Jikan details
 			// This prevents anime from vanishing from the watchlist when Jikan rate limits us.

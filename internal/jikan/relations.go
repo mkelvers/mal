@@ -1,6 +1,9 @@
 package jikan
 
-import "maps"
+import (
+	"context"
+	"maps"
+)
 
 func findFirstAnimeRelation(groups []JikanRelationGroup, relType string) *int {
 	for _, group := range groups {
@@ -16,8 +19,8 @@ func findFirstAnimeRelation(groups []JikanRelationGroup, relType string) *int {
 	return nil
 }
 
-func (c *Client) fetchChain(startID int, direction string, visited map[int]bool) ([]RelationEntry, error) {
-	anime, err := c.GetAnimeByID(startID)
+func (c *Client) fetchChain(ctx context.Context, startID int, direction string, visited map[int]bool) ([]RelationEntry, error) {
+	anime, err := c.GetAnimeByID(ctx, startID)
 	if err != nil {
 		return nil, err
 	}
@@ -33,13 +36,13 @@ func (c *Client) fetchChain(startID int, direction string, visited map[int]bool)
 	}
 	visited[nextID] = true
 
-	nextAnime, err := c.GetAnimeByID(nextID)
+	nextAnime, err := c.GetAnimeByID(ctx, nextID)
 	if err != nil {
 		return nil, err
 	}
 
 	entry := RelationEntry{Anime: nextAnime, IsCurrent: false}
-	rest, err := c.fetchChain(nextID, direction, visited)
+	rest, err := c.fetchChain(ctx, nextID, direction, visited)
 	if err != nil {
 		return nil, err
 	}
@@ -50,20 +53,20 @@ func (c *Client) fetchChain(startID int, direction string, visited map[int]bool)
 	return append([]RelationEntry{entry}, rest...), nil
 }
 
-func (c *Client) GetFullRelations(id int) ([]RelationEntry, error) {
-	currentAnime, err := c.GetAnimeByID(id)
+func (c *Client) GetFullRelations(ctx context.Context, id int) ([]RelationEntry, error) {
+	currentAnime, err := c.GetAnimeByID(ctx, id)
 	if err != nil {
 		return nil, err
 	}
 
 	visited := map[int]bool{id: true}
 
-	prequels, err1 := c.fetchChain(id, "Prequel", visited)
+	prequels, err1 := c.fetchChain(ctx, id, "Prequel", visited)
 
 	visitedSeq := make(map[int]bool)
 	maps.Copy(visitedSeq, visited)
 
-	sequels, err2 := c.fetchChain(id, "Sequel", visitedSeq)
+	sequels, err2 := c.fetchChain(ctx, id, "Sequel", visitedSeq)
 
 	var result []RelationEntry
 	result = append(result, prequels...)

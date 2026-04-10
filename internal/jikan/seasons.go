@@ -1,6 +1,7 @@
 package jikan
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"time"
@@ -11,18 +12,18 @@ type ScheduleResult struct {
 	HasNextPage bool
 }
 
-func (c *Client) GetSchedule(day string) (ScheduleResult, error) {
+func (c *Client) GetSchedule(ctx context.Context, day string) (ScheduleResult, error) {
 	day = strings.ToLower(day)
 	cacheKey := fmt.Sprintf("schedule_limit24_%s", day)
 
 	var cached ScheduleResult
-	if c.getCache(cacheKey, &cached) {
+	if c.getCache(ctx, cacheKey, &cached) {
 		return cached, nil
 	}
 
 	var result TopAnimeResponse
 	reqURL := fmt.Sprintf("%s/schedules?filter=%s&sfw=true&limit=24", c.baseURL, day)
-	if err := c.fetchWithRetry(reqURL, &result); err != nil {
+	if err := c.fetchWithRetry(ctx, reqURL, &result); err != nil {
 		return ScheduleResult{}, err
 	}
 
@@ -31,16 +32,16 @@ func (c *Client) GetSchedule(day string) (ScheduleResult, error) {
 		HasNextPage: result.Pagination.HasNextPage,
 	}
 
-	c.setCache(cacheKey, res, time.Hour*1)
+	c.setCache(ctx, cacheKey, res, time.Hour*1)
 	return res, nil
 }
 
-func (c *Client) GetFullSchedule() (map[string][]Anime, error) {
+func (c *Client) GetFullSchedule(ctx context.Context) (map[string][]Anime, error) {
 	days := []string{"monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"}
 	schedule := make(map[string][]Anime)
 
 	for _, day := range days {
-		res, err := c.GetSchedule(day)
+		res, err := c.GetSchedule(ctx, day)
 		if err != nil {
 			return nil, fmt.Errorf("failed to fetch %s schedule: %w", day, err)
 		}
@@ -50,19 +51,19 @@ func (c *Client) GetFullSchedule() (map[string][]Anime, error) {
 	return schedule, nil
 }
 
-func (c *Client) GetSeasonsNow(page int) (TopAnimeResult, error) {
+func (c *Client) GetSeasonsNow(ctx context.Context, page int) (TopAnimeResult, error) {
 	if page < 1 {
 		page = 1
 	}
 	cacheKey := fmt.Sprintf("seasons_now_limit24:%d", page)
 	var cached TopAnimeResult
-	if c.getCache(cacheKey, &cached) {
+	if c.getCache(ctx, cacheKey, &cached) {
 		return cached, nil
 	}
 
 	var result TopAnimeResponse
 	reqURL := fmt.Sprintf("%s/seasons/now?limit=24&page=%d", c.baseURL, page)
-	if err := c.fetchWithRetry(reqURL, &result); err != nil {
+	if err := c.fetchWithRetry(ctx, reqURL, &result); err != nil {
 		return TopAnimeResult{}, err
 	}
 
@@ -71,23 +72,23 @@ func (c *Client) GetSeasonsNow(page int) (TopAnimeResult, error) {
 		HasNextPage: result.Pagination.HasNextPage,
 	}
 
-	c.setCache(cacheKey, res, time.Hour*1)
+	c.setCache(ctx, cacheKey, res, time.Hour*1)
 	return res, nil
 }
 
-func (c *Client) GetSeasonsUpcoming(page int) (TopAnimeResult, error) {
+func (c *Client) GetSeasonsUpcoming(ctx context.Context, page int) (TopAnimeResult, error) {
 	if page < 1 {
 		page = 1
 	}
 	cacheKey := fmt.Sprintf("seasons_upcoming_limit24:%d", page)
 	var cached TopAnimeResult
-	if c.getCache(cacheKey, &cached) {
+	if c.getCache(ctx, cacheKey, &cached) {
 		return cached, nil
 	}
 
 	var result TopAnimeResponse
 	reqURL := fmt.Sprintf("%s/seasons/upcoming?limit=24&page=%d", c.baseURL, page)
-	if err := c.fetchWithRetry(reqURL, &result); err != nil {
+	if err := c.fetchWithRetry(ctx, reqURL, &result); err != nil {
 		return TopAnimeResult{}, err
 	}
 
@@ -96,6 +97,6 @@ func (c *Client) GetSeasonsUpcoming(page int) (TopAnimeResult, error) {
 		HasNextPage: result.Pagination.HasNextPage,
 	}
 
-	c.setCache(cacheKey, res, time.Hour*1)
+	c.setCache(ctx, cacheKey, res, time.Hour*1)
 	return res, nil
 }

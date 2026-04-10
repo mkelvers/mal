@@ -28,6 +28,24 @@ type Handler struct {
 	svc *Service
 }
 
+func parsePageParam(r *http.Request) int {
+	page, _ := strconv.Atoi(r.URL.Query().Get("page"))
+	if page < 1 {
+		return 1
+	}
+
+	return page
+}
+
+func userIDFromRequest(r *http.Request) string {
+	user, ok := r.Context().Value(middleware.UserContextKey).(*database.User)
+	if !ok || user == nil {
+		return ""
+	}
+
+	return user.ID
+}
+
 func NewHandler(svc *Service) *Handler {
 	return &Handler{svc: svc}
 }
@@ -50,7 +68,7 @@ func (h *Handler) HandleSearch(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if r.Header.Get("HX-Request") == "true" {
-		res, err := h.svc.Search(query, 1)
+		res, err := h.svc.Search(r.Context(), query, 1)
 		if err != nil {
 			log.Printf("search error: %v", err)
 			http.Error(w, "Failed to search anime", http.StatusInternalServerError)
@@ -65,13 +83,9 @@ func (h *Handler) HandleSearch(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) HandleAPISearch(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Query().Get("q")
-	pageStr := r.URL.Query().Get("page")
-	page, _ := strconv.Atoi(pageStr)
-	if page < 1 {
-		page = 1
-	}
+	page := parsePageParam(r)
 
-	res, err := h.svc.Search(query, page)
+	res, err := h.svc.Search(r.Context(), query, page)
 	if err != nil {
 		log.Printf("search pagination error: %v", err)
 		http.Error(w, "Failed to fetch search page", http.StatusInternalServerError)
@@ -84,13 +98,9 @@ func (h *Handler) HandleAPISearch(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) HandleAPICatalog(w http.ResponseWriter, r *http.Request) {
-	pageStr := r.URL.Query().Get("page")
-	page, _ := strconv.Atoi(pageStr)
-	if page < 1 {
-		page = 1
-	}
+	page := parsePageParam(r)
 
-	res, err := h.svc.GetTopAnime(page)
+	res, err := h.svc.GetTopAnime(r.Context(), page)
 	if err != nil {
 		log.Printf("top anime error: %v", err)
 		http.Error(w, "Failed to fetch top anime", http.StatusInternalServerError)
@@ -110,10 +120,7 @@ func (h *Handler) HandleAnimeDetails(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userID := ""
-	if user, ok := r.Context().Value(middleware.UserContextKey).(*database.User); ok && user != nil {
-		userID = user.ID
-	}
+	userID := userIDFromRequest(r)
 
 	anime, currentStatus, err := h.svc.GetAnimeDetails(r.Context(), id, userID)
 	if err != nil {
@@ -141,7 +148,7 @@ func (h *Handler) HandleAPIAnimeRelations(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	relations, err := h.svc.GetRelations(id)
+	relations, err := h.svc.GetRelations(r.Context(), id)
 	if err != nil {
 		log.Printf("failed to get relations for anime %d: %v", id, err)
 		http.Error(w, "Failed to load relations", http.StatusInternalServerError)
@@ -169,7 +176,7 @@ func (h *Handler) HandleAPIAnime(w http.ResponseWriter, r *http.Request) {
 
 	switch parts[1] {
 	case "relations":
-		relations, err := h.svc.GetRelations(id)
+		relations, err := h.svc.GetRelations(r.Context(), id)
 		if err != nil {
 			log.Printf("relations error for %d: %v", id, err)
 			w.Header().Set("Content-Type", "text/html")
@@ -178,7 +185,7 @@ func (h *Handler) HandleAPIAnime(w http.ResponseWriter, r *http.Request) {
 		}
 		templates.AnimeRelationsList(relations).Render(r.Context(), w)
 	case "recommendations":
-		recs, err := h.svc.GetRecommendations(id, 12)
+		recs, err := h.svc.GetRecommendations(r.Context(), id, 12)
 		if err != nil {
 			log.Printf("recommendations error for %d: %v", id, err)
 			w.Header().Set("Content-Type", "text/html")
@@ -219,7 +226,7 @@ func (h *Handler) HandleQuickSearch(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res, err := h.svc.Search(query, 1)
+	res, err := h.svc.Search(r.Context(), query, 1)
 	if err != nil {
 		log.Printf("quick search error: %v", err)
 		w.Header().Set("Content-Type", "application/json")
@@ -260,13 +267,9 @@ func (h *Handler) HandleDiscover(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) HandleAPIDiscoverAiring(w http.ResponseWriter, r *http.Request) {
-	pageStr := r.URL.Query().Get("page")
-	page, _ := strconv.Atoi(pageStr)
-	if page < 1 {
-		page = 1
-	}
+	page := parsePageParam(r)
 
-	res, err := h.svc.GetAiringAnime(page)
+	res, err := h.svc.GetAiringAnime(r.Context(), page)
 	if err != nil {
 		log.Printf("airing anime error: %v", err)
 		http.Error(w, "Failed to fetch airing anime", http.StatusInternalServerError)
@@ -279,13 +282,9 @@ func (h *Handler) HandleAPIDiscoverAiring(w http.ResponseWriter, r *http.Request
 }
 
 func (h *Handler) HandleAPIDiscoverUpcoming(w http.ResponseWriter, r *http.Request) {
-	pageStr := r.URL.Query().Get("page")
-	page, _ := strconv.Atoi(pageStr)
-	if page < 1 {
-		page = 1
-	}
+	page := parsePageParam(r)
 
-	res, err := h.svc.GetUpcomingAnime(page)
+	res, err := h.svc.GetUpcomingAnime(r.Context(), page)
 	if err != nil {
 		log.Printf("upcoming anime error: %v", err)
 		http.Error(w, "Failed to fetch upcoming anime", http.StatusInternalServerError)
@@ -307,7 +306,7 @@ func (h *Handler) HandleAPISchedule(w http.ResponseWriter, r *http.Request) {
 		day = "monday"
 	}
 
-	res, err := h.svc.GetSchedule(day)
+	res, err := h.svc.GetSchedule(r.Context(), day)
 	if err != nil {
 		log.Printf("schedule error for %s: %v", day, err)
 		http.Error(w, "Failed to fetch schedule", http.StatusInternalServerError)
@@ -320,10 +319,7 @@ func (h *Handler) HandleAPISchedule(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) HandleNotifications(w http.ResponseWriter, r *http.Request) {
-	userID := ""
-	if user, ok := r.Context().Value(middleware.UserContextKey).(*database.User); ok && user != nil {
-		userID = user.ID
-	}
+	userID := userIDFromRequest(r)
 
 	if userID == "" {
 		http.Redirect(w, r, "/login", http.StatusSeeOther)
@@ -341,10 +337,7 @@ func (h *Handler) HandleNotifications(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) HandleNotificationsUpcoming(w http.ResponseWriter, r *http.Request) {
-	userID := ""
-	if user, ok := r.Context().Value(middleware.UserContextKey).(*database.User); ok && user != nil {
-		userID = user.ID
-	}
+	userID := userIDFromRequest(r)
 
 	if userID == "" {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)

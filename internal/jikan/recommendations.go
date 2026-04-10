@@ -1,6 +1,7 @@
 package jikan
 
 import (
+	"context"
 	"fmt"
 	"time"
 )
@@ -23,10 +24,10 @@ type RecommendationsResponse struct {
 	Data []RecommendationEntry `json:"data"`
 }
 
-func (c *Client) GetRecommendations(animeID int, limit int) ([]Anime, error) {
+func (c *Client) GetRecommendations(ctx context.Context, animeID int, limit int) ([]Anime, error) {
 	cacheKey := fmt.Sprintf("recs:%d", animeID)
 	var cached []Anime
-	if c.getCache(cacheKey, &cached) {
+	if c.getCache(ctx, cacheKey, &cached) {
 		if limit > 0 && len(cached) > limit {
 			return cached[:limit], nil
 		}
@@ -35,7 +36,7 @@ func (c *Client) GetRecommendations(animeID int, limit int) ([]Anime, error) {
 
 	var result RecommendationsResponse
 	reqURL := fmt.Sprintf("%s/anime/%d/recommendations", c.baseURL, animeID)
-	if err := c.fetchWithRetry(reqURL, &result); err != nil {
+	if err := c.fetchWithRetry(ctx, reqURL, &result); err != nil {
 		return nil, err
 	}
 
@@ -53,7 +54,7 @@ func (c *Client) GetRecommendations(animeID int, limit int) ([]Anime, error) {
 		var fullAnime Anime
 		animeCacheKey := fmt.Sprintf("anime:%d", rec.Entry.MalID)
 
-		if c.getCache(animeCacheKey, &fullAnime) {
+		if c.getCache(ctx, animeCacheKey, &fullAnime) {
 			animes = append(animes, fullAnime)
 		} else {
 			// Otherwise, map the basic recommendation data directly into an Anime struct.
@@ -79,6 +80,6 @@ func (c *Client) GetRecommendations(animeID int, limit int) ([]Anime, error) {
 		}
 	}
 
-	c.setCache(cacheKey, animes, time.Hour*24)
+	c.setCache(ctx, cacheKey, animes, time.Hour*24)
 	return animes, nil
 }

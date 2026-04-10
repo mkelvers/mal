@@ -71,7 +71,7 @@ func (w *Worker) syncRelations(ctx context.Context) {
 
 	for _, a := range animes {
 		func() {
-			animeData, err := w.client.GetAnimeByID(int(a.ID))
+			animeData, err := w.client.GetAnimeByID(ctx, int(a.ID))
 			if err != nil {
 				log.Printf("worker: failed to fetch anime details for %d: %v", a.ID, err)
 				// Sleep a bit on error to respect rate limits, but DO NOT mark as synced
@@ -111,7 +111,7 @@ func (w *Worker) syncRelations(ctx context.Context) {
 			}
 
 			// Also update the status of the anime itself so we know if it's Not yet aired, etc.
-			animeDetails, err := w.client.GetAnimeByID(int(a.ID))
+			animeDetails, err := w.client.GetAnimeByID(ctx, int(a.ID))
 			if err == nil {
 				err = w.db.UpdateAnimeStatus(ctx, database.UpdateAnimeStatusParams{
 					Status: sql.NullString{String: animeDetails.Status, Valid: true},
@@ -130,7 +130,7 @@ func (w *Worker) ensureAnimeExistsAndStatusUpdated(ctx context.Context, malID in
 	_, err := w.db.GetAnime(ctx, int64(malID))
 	if err != nil {
 		// we don't have it, let's fetch it
-		animeDetails, err := w.client.GetAnimeByID(malID)
+		animeDetails, err := w.client.GetAnimeByID(ctx, malID)
 		if err != nil {
 			log.Printf("worker: failed to fetch related anime %d: %v", malID, err)
 			return
@@ -163,7 +163,7 @@ func (w *Worker) ensureAnimeExistsAndStatusUpdated(ctx context.Context, malID in
 		// but since it's a Sequel to something they watched, we could fetch it.
 		// For now, let's just let the worker naturally pick it up if it gets added to watchlist,
 		// OR we can explicitly fetch its details to keep sequels up to date.
-		animeDetails, err := w.client.GetAnimeByID(malID)
+		animeDetails, err := w.client.GetAnimeByID(ctx, malID)
 		if err == nil {
 			w.db.UpdateAnimeStatus(ctx, database.UpdateAnimeStatusParams{
 				Status: sql.NullString{String: animeDetails.Status, Valid: true},
