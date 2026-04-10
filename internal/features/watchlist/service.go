@@ -3,6 +3,7 @@ package watchlist
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"time"
 
@@ -13,6 +14,19 @@ import (
 
 type Service struct {
 	db database.Querier
+}
+
+var (
+	ErrInvalidAnimeID = errors.New("invalid anime ID")
+	ErrInvalidStatus  = errors.New("invalid watchlist status")
+)
+
+var validStatuses = map[string]struct{}{
+	"watching":      {},
+	"completed":     {},
+	"on_hold":       {},
+	"dropped":       {},
+	"plan_to_watch": {},
 }
 
 func NewService(db database.Querier) *Service {
@@ -30,8 +44,12 @@ type AddRequest struct {
 }
 
 func (s *Service) AddEntry(ctx context.Context, userID string, req AddRequest) error {
-	if req.AnimeID == 0 {
-		return fmt.Errorf("invalid anime ID")
+	if req.AnimeID <= 0 {
+		return ErrInvalidAnimeID
+	}
+
+	if _, ok := validStatuses[req.Status]; !ok {
+		return ErrInvalidStatus
 	}
 
 	_, err := s.db.UpsertAnime(ctx, database.UpsertAnimeParams{
@@ -62,8 +80,8 @@ func (s *Service) AddEntry(ctx context.Context, userID string, req AddRequest) e
 }
 
 func (s *Service) RemoveEntry(ctx context.Context, userID string, animeID int64) (database.Anime, error) {
-	if animeID == 0 {
-		return database.Anime{}, fmt.Errorf("invalid anime ID")
+	if animeID <= 0 {
+		return database.Anime{}, ErrInvalidAnimeID
 	}
 
 	anime, err := s.db.GetAnime(ctx, animeID)

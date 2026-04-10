@@ -2,7 +2,7 @@ package watchlist
 
 import (
 	"encoding/json"
-	"fmt"
+	"errors"
 	"log"
 	"net/http"
 	"strconv"
@@ -50,7 +50,7 @@ func (h *Handler) HandleUpdateWatchlist(w http.ResponseWriter, r *http.Request) 
 	log.Printf("watchlist add: user_id=%s, anime_id=%s, title=%s", user.ID, animeIDStr, animeTitle)
 
 	animeID, err := strconv.ParseInt(animeIDStr, 10, 64)
-	if err != nil {
+	if err != nil || animeID <= 0 {
 		http.Error(w, "invalid anime ID", http.StatusBadRequest)
 		return
 	}
@@ -66,7 +66,12 @@ func (h *Handler) HandleUpdateWatchlist(w http.ResponseWriter, r *http.Request) 
 	}
 
 	if err := h.svc.AddEntry(r.Context(), user.ID, req); err != nil {
-		http.Error(w, fmt.Sprintf("failed to update watchlist: %v", err), http.StatusInternalServerError)
+		if errors.Is(err, ErrInvalidAnimeID) || errors.Is(err, ErrInvalidStatus) {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		log.Printf("watchlist add failed: user_id=%s anime_id=%d err=%v", user.ID, animeID, err)
+		http.Error(w, "failed to update watchlist", http.StatusInternalServerError)
 		return
 	}
 
@@ -88,14 +93,19 @@ func (h *Handler) HandleDeleteWatchlist(w http.ResponseWriter, r *http.Request) 
 
 	path := r.URL.Path[len("/api/watchlist/"):]
 	animeID, err := strconv.ParseInt(path, 10, 64)
-	if err != nil {
+	if err != nil || animeID <= 0 {
 		http.Error(w, "invalid anime ID", http.StatusBadRequest)
 		return
 	}
 
 	anime, err := h.svc.RemoveEntry(r.Context(), user.ID, animeID)
 	if err != nil {
-		http.Error(w, fmt.Sprintf("failed to delete from watchlist: %v", err), http.StatusInternalServerError)
+		if errors.Is(err, ErrInvalidAnimeID) {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		log.Printf("watchlist delete failed: user_id=%s anime_id=%d err=%v", user.ID, animeID, err)
+		http.Error(w, "failed to delete from watchlist", http.StatusInternalServerError)
 		return
 	}
 
@@ -150,7 +160,8 @@ func (h *Handler) HandleGetWatchlist(w http.ResponseWriter, r *http.Request) {
 
 	entries, err := h.svc.GetUserWatchlist(r.Context(), user.ID)
 	if err != nil {
-		http.Error(w, fmt.Sprintf("failed to fetch watchlist: %v", err), http.StatusInternalServerError)
+		log.Printf("watchlist fetch failed: user_id=%s err=%v", user.ID, err)
+		http.Error(w, "failed to fetch watchlist", http.StatusInternalServerError)
 		return
 	}
 
@@ -193,7 +204,8 @@ func (h *Handler) HandleExportWatchlist(w http.ResponseWriter, r *http.Request) 
 
 	export, err := h.svc.Export(r.Context(), user.ID)
 	if err != nil {
-		http.Error(w, fmt.Sprintf("failed to export: %v", err), http.StatusInternalServerError)
+		log.Printf("watchlist export failed: user_id=%s err=%v", user.ID, err)
+		http.Error(w, "failed to export", http.StatusInternalServerError)
 		return
 	}
 
