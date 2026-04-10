@@ -12,7 +12,7 @@
       const query = e.target.value.trim()
 
       if (query.length < 2) {
-        searchDropdown.innerHTML = ''
+        searchDropdown.replaceChildren()
         return
       }
 
@@ -21,26 +21,60 @@
           .then(res => res.json())
           .then(results => {
             if (!results || results.length === 0) {
-              searchDropdown.innerHTML = ''
+              searchDropdown.replaceChildren()
               return
             }
 
-            let html = '<div class="search-results">'
-            html += '<div class="search-results-title">Anime</div>'
+            const searchResults = document.createElement('div')
+            searchResults.className = 'search-results'
+
+            const title = document.createElement('div')
+            title.className = 'search-results-title'
+            title.textContent = 'Anime'
+            searchResults.appendChild(title)
+
             results.forEach(r => {
-              html += `
-                <a href="/anime/${r.id}" class="search-result-item">
-                  ${r.image ? `<img src="${r.image}" alt="${r.title}" class="search-result-thumb" />` : '<div class="search-result-no-image">no image</div>'}
-                  <div class="search-result-info">
-                    <div class="search-result-title">${escapeHtml(r.title)}</div>
-                    <div class="search-result-type">${r.type}</div>
-                  </div>
-                </a>
-              `
+              const item = document.createElement('a')
+              item.className = 'search-result-item'
+              item.setAttribute('href', '/anime/' + encodeURIComponent(String(r.id || '')))
+
+              if (isSafeImageUrl(r.image)) {
+                const img = document.createElement('img')
+                img.className = 'search-result-thumb'
+                img.setAttribute('src', r.image)
+                img.setAttribute('alt', String(r.title || ''))
+                item.appendChild(img)
+              } else {
+                const noImage = document.createElement('div')
+                noImage.className = 'search-result-no-image'
+                noImage.textContent = 'no image'
+                item.appendChild(noImage)
+              }
+
+              const info = document.createElement('div')
+              info.className = 'search-result-info'
+
+              const itemTitle = document.createElement('div')
+              itemTitle.className = 'search-result-title'
+              itemTitle.textContent = String(r.title || '')
+              info.appendChild(itemTitle)
+
+              const itemType = document.createElement('div')
+              itemType.className = 'search-result-type'
+              itemType.textContent = String(r.type || '')
+              info.appendChild(itemType)
+
+              item.appendChild(info)
+              searchResults.appendChild(item)
             })
-            html += `<a href="/search?q=${encodeURIComponent(query)}" class="search-result-view-all">View all results for ${escapeHtml(query)}</a>`
-            html += '</div>'
-            searchDropdown.innerHTML = html
+
+            const viewAll = document.createElement('a')
+            viewAll.className = 'search-result-view-all'
+            viewAll.setAttribute('href', '/search?q=' + encodeURIComponent(query))
+            viewAll.textContent = 'View all results for ' + query
+            searchResults.appendChild(viewAll)
+
+            searchDropdown.replaceChildren(searchResults)
           })
           .catch(err => console.error('Search error:', err))
       }, 300)
@@ -48,20 +82,27 @@
 
     searchInput.addEventListener('blur', () => {
       setTimeout(() => {
-        searchDropdown.innerHTML = ''
+        searchDropdown.replaceChildren()
       }, 200)
     })
 
     document.addEventListener('click', (e) => {
       if (!e.target.closest('.header-search-wrapper')) {
-        searchDropdown.innerHTML = ''
+        searchDropdown.replaceChildren()
       }
     })
   }
 
-  function escapeHtml(text) {
-    const div = document.createElement('div')
-    div.textContent = text
-    return div.innerHTML
+  function isSafeImageUrl(rawUrl) {
+    if (!rawUrl || typeof rawUrl !== 'string') {
+      return false
+    }
+
+    try {
+      const parsed = new URL(rawUrl, window.location.origin)
+      return parsed.protocol === 'https:' || parsed.protocol === 'http:'
+    } catch {
+      return false
+    }
   }
 })()
