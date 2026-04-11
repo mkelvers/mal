@@ -747,6 +747,7 @@ main {
 .view-toggle a,
 .status-tabs a,
 .tab {
+  flex: 0 0 auto;
   border: none;
   background: var(--panel-soft);
   color: var(--text-muted);
@@ -755,6 +756,7 @@ main {
   font-family: var(--font);
   cursor: pointer;
   text-decoration: none;
+  white-space: nowrap;
 }
 
 .view-toggle a:hover,
@@ -1235,7 +1237,15 @@ main {
   .view-toggle {
     flex-wrap: nowrap;
     overflow-x: auto;
-    padding-bottom: 2px;
+    gap: var(--space-2);
+    padding-bottom: var(--space-1);
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .status-tabs a,
+  .tabs .tab,
+  .view-toggle a {
+    padding: 0.34rem 0.62rem;
   }
 
   .watchlist-table {
