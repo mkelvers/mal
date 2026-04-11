@@ -253,10 +253,6 @@ func formatStatus(status string) string {
 
 templ AnimeRelationsList(relations []jikan.RelationEntry) {
 	if len(relations) > 1 {
-		<div class="relations-controls">
-			<button type="button" class="tab active" id="relations-main-tab" onclick="toggleRelationExtras(false)">Main timeline</button>
-			<button type="button" class="tab" id="relations-extra-tab" onclick="toggleRelationExtras(true)">Show extras</button>
-		</div>
 		<div class="relations-grid" id="relations-grid">
 			for _, rel := range relations {
 				@ui.AnimeCard(ui.AnimeCardProps{
@@ -283,9 +279,6 @@ func relationCardClass(rel jikan.RelationEntry) string {
 	base := "relation-card"
 	if rel.IsCurrent {
 		base += " current"
-	}
-	if rel.IsExtra {
-		base += " relation-extra is-hidden"
 	}
 	return base
 }
