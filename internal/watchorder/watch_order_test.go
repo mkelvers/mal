@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 )
@@ -123,5 +124,37 @@ func TestFetchWatchOrder_MissingMarkupReturnsError(t *testing.T) {
 	_, err := FetchWatchOrder(context.Background(), &http.Client{Timeout: time.Second}, url)
 	if !errors.Is(err, ErrWatchOrderMarkupNotFound) {
 		t.Fatalf("expected ErrWatchOrderMarkupNotFound, got %v", err)
+	}
+}
+
+func TestFetchWatchOrder_HTTPStatusErrorIncludesContext(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Server", "cloudflare")
+		w.Header().Set("CF-Ray", "abc123")
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		w.WriteHeader(http.StatusForbidden)
+		_, _ = w.Write([]byte("<html><body>access denied</body></html>"))
+	}))
+	defer server.Close()
+
+	url := server.URL + "/?/tools/watch_order/id/1"
+	_, err := FetchWatchOrder(context.Background(), &http.Client{Timeout: time.Second}, url)
+	if err == nil {
+		t.Fatalf("expected error, got nil")
+	}
+
+	var statusError *HTTPStatusError
+	if !errors.As(err, &statusError) {
+		t.Fatalf("expected HTTPStatusError, got %T", err)
+	}
+
+	if statusError.StatusCode != http.StatusForbidden {
+		t.Fatalf("expected 403, got %d", statusError.StatusCode)
+	}
+	if statusError.CFRay != "abc123" {
+		t.Fatalf("expected cf-ray abc123, got %q", statusError.CFRay)
+	}
+	if !strings.Contains(statusError.BodyPreview, "access denied") {
+		t.Fatalf("expected body preview to include access denied, got %q", statusError.BodyPreview)
 	}
 }

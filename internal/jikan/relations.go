@@ -50,8 +50,21 @@ func (c *Client) getWatchOrder(ctx context.Context, id int) (watchorder.WatchOrd
 
 	result, err := watchorder.FetchWatchOrder(requestCtx, c.httpClient, watchOrderURL)
 	if err != nil {
+		var statusError *watchorder.HTTPStatusError
 		if errors.Is(err, watchorder.ErrWatchOrderMarkupNotFound) {
 			log.Printf("relations: watch-order markup missing for %d (%s): %v", id, watchOrderURL, err)
+		} else if errors.As(err, &statusError) {
+			log.Printf(
+				"relations: watch-order http error for %d (%s): status=%d server=%q cf_ray=%q location=%q content_type=%q body=%q",
+				id,
+				watchOrderURL,
+				statusError.StatusCode,
+				statusError.Server,
+				statusError.CFRay,
+				statusError.Location,
+				statusError.ContentType,
+				statusError.BodyPreview,
+			)
 		} else {
 			log.Printf("relations: watch-order fetch failed for %d (%s): %v", id, watchOrderURL, err)
 		}

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"regexp"
 	"strconv"
@@ -18,6 +19,29 @@ var idPattern = regexp.MustCompile(`/id/(\d+)`)
 
 var ErrInvalidWatchOrderURL = errors.New("invalid watch order url")
 var ErrWatchOrderMarkupNotFound = errors.New("watch order markup not found")
+
+type HTTPStatusError struct {
+	StatusCode  int
+	URL         string
+	Server      string
+	CFRay       string
+	Location    string
+	ContentType string
+	BodyPreview string
+}
+
+func (e *HTTPStatusError) Error() string {
+	return fmt.Sprintf(
+		"unexpected status code: %d (url=%s server=%s cf_ray=%s location=%s content_type=%s body=%q)",
+		e.StatusCode,
+		e.URL,
+		e.Server,
+		e.CFRay,
+		e.Location,
+		e.ContentType,
+		e.BodyPreview,
+	)
+}
 
 type WatchOrderEntry struct {
 	ID       int    `json:"id"`
@@ -76,7 +100,16 @@ func fetchDocument(ctx context.Context, httpClient *http.Client, url string) (*g
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("unexpected status code: %d", response.StatusCode)
+		body, _ := io.ReadAll(io.LimitReader(response.Body, 512))
+		return nil, &HTTPStatusError{
+			StatusCode:  response.StatusCode,
+			URL:         url,
+			Server:      strings.TrimSpace(response.Header.Get("Server")),
+			CFRay:       strings.TrimSpace(response.Header.Get("CF-Ray")),
+			Location:    strings.TrimSpace(response.Header.Get("Location")),
+			ContentType: strings.TrimSpace(response.Header.Get("Content-Type")),
+			BodyPreview: strings.Join(strings.Fields(strings.TrimSpace(string(body))), " "),
+		}
 	}
 
 	document, err := goquery.NewDocumentFromReader(response.Body)
