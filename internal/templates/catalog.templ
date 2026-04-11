@@ -5,7 +5,7 @@ import "mal/internal/shared/ui"
 import "fmt"
 
 templ Catalog() {
-	@Layout("mal - catalog") {
+	@Layout("mal - catalog", true) {
 		<div class="catalog-grid" id="catalog-content">
 			<div class="grid-full-width" hx-get="/api/catalog?page=1" hx-trigger="load" hx-swap="outerHTML">
 				@ui.LoadingIndicator("Loading catalog")

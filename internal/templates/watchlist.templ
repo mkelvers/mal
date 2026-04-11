@@ -7,7 +7,7 @@ import (
 )
 
 templ Watchlist(entries []database.GetUserWatchListRow, layout string, currentStatus string, sortBy string, sortOrder string) {
-	@Layout("My Watchlist") {
+	@Layout("My Watchlist", true) {
 		<div class="watchlist-header">
 			<div class="watchlist-heading">
 				<h2>Watchlist</h2>

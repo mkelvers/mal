@@ -2,7 +2,7 @@ package templates
 
 import "mal/internal/shared/ui/icons"
 
-templ Layout(title string) {
+templ Layout(title string, showHeader bool) {
 	<!DOCTYPE html>
 	<html lang="en">
 		<head>
@@ -15,30 +15,34 @@ templ Layout(title string) {
 			<script src="/static/js/discover.js" defer></script>
 			<script src="/static/js/anime.js" defer></script>
 			<script src="/static/js/timezone.js" defer></script>
+			<script src="/static/js/auth.js" defer></script>
 		</head>
 		<body>
-			<header>
-				<div class="header-top">
-					<div class="header-left">
-						<a href="/" class="logo" aria-label="mal logo">
-							@icons.LogoIcon("logo-svg")
-						</a>
-						<div class="nav">
-							<a href="/">Catalog</a>
-							<a href="/discover">Discover</a>
-							<a href="/notifications">Notifications</a>
-							<a href="/watchlist">Watchlist</a>
+			if showHeader {
+				<header>
+					<div class="header-top">
+						<div class="header-left">
+							<a href="/" class="logo" aria-label="mal logo">
+								@icons.LogoIcon("logo-svg")
+							</a>
+							<div class="nav">
+								<a href="/">Catalog</a>
+								<a href="/discover">Discover</a>
+								<a href="/notifications">Notifications</a>
+								<a href="/watchlist">Watchlist</a>
+								<a href="/account">Account</a>
+							</div>
+						</div>
+						<div class="header-search-wrapper">
+							<form action="/search" method="GET" class="header-search" id="search-form">
+								<input type="text" id="search-input" name="q" class="search-input" placeholder="Search anime..." autocomplete="off"/>
+								<div id="search-dropdown" class="search-dropdown"></div>
+							</form>
 						</div>
 					</div>
-					<div class="header-search-wrapper">
-						<form action="/search" method="GET" class="header-search" id="search-form">
-							<input type="text" id="search-input" name="q" class="search-input" placeholder="Search anime..." autocomplete="off"/>
-							<div id="search-dropdown" class="search-dropdown"></div>
-						</form>
-					</div>
-				</div>
-			</header>
-			<main>
+				</header>
+			}
+			<main class={ "main-content", templ.KV("auth-main", !showHeader) }>
 				{ children... }
 			</main>
 			<script src="/static/js/search.js"></script>

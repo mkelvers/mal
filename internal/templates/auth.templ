@@ -1,50 +1,212 @@
 package templates
 
-templ Login() {
-	@Layout("Login") {
-		<div class="login-container">
-			<h2>Sign in</h2>
-			<p class="login-subtitle">Enter your credentials to continue.</p>
-			<form action="/login" method="POST" class="login-form">
-				<div class="form-group">
-					<label for="username">Username / Email</label>
-					<input type="text" id="username" name="username" required placeholder="you@example.com"/>
-				</div>
-				<div class="form-group">
-					<label for="password">Password</label>
-					<input type="password" id="password" name="password" required placeholder="Your password"/>
-				</div>
-				<button type="submit" class="login-button">Sign in</button>
-			</form>
-			<p class="auth-switch-row">
-				Don't have an account? <a href="/register">Register</a>
-			</p>
+templ Login(formError string, username string) {
+	@Layout("Login", false) {
+		<div class="auth-shell">
+			<div class="login-container">
+				<h2>Sign in</h2>
+				<p class="login-subtitle">Enter your credentials to continue.</p>
+				<form action="/login" method="POST" class="login-form">
+					<div class="form-group">
+						<label for="username">Username / Email</label>
+						<input type="text" id="username" name="username" required placeholder="you@example.com" value={ username }/>
+					</div>
+					<div class="form-group">
+						<label for="password">Password</label>
+						<input type="password" id="password" name="password" required placeholder="Your password"/>
+					</div>
+					<button type="submit" class="login-button">Sign in</button>
+					if formError != "" {
+						<p class="auth-form-error" role="alert" aria-live="polite">{ formError }</p>
+					}
+				</form>
+				<p class="auth-switch-row">
+					Don't have an account? <a href="/register">Register</a>
+				</p>
+				<p class="auth-switch-row">
+					Lost access? <a href="/recover">Recover account</a>
+				</p>
+			</div>
 		</div>
 	}
 }
 
-templ Register() {
-	@Layout("Register") {
-		<div class="login-container">
-			<h2>Register</h2>
-			<p class="login-subtitle">Create a new account to track anime.</p>
-			<form action="/register" method="POST" class="login-form">
-				<div class="form-group">
-					<label for="username">Username / Email</label>
-					<input type="text" id="username" name="username" required placeholder="you@example.com"/>
-				</div>
-				<div class="form-group">
-					<label for="password">Password</label>
-					<input type="password" id="password" name="password" required placeholder="Minimum 12 chars"/>
-				</div>
-				<p class="auth-password-note">
-					Password must be at least 12 characters and include an uppercase letter, lowercase letter, number, and special character.
+templ Register(formError string, username string) {
+	@Layout("Register", false) {
+		<div class="auth-shell">
+			<div class="login-container">
+				<h2>Register</h2>
+				<p class="login-subtitle">Create a new account to track anime.</p>
+				<form action="/register" method="POST" class="login-form">
+					<div class="form-group">
+						<label for="username">Username / Email</label>
+						<input type="text" id="username" name="username" required placeholder="you@example.com" value={ username }/>
+					</div>
+					<div class="form-group">
+						<label for="password">Password</label>
+						<input type="password" id="password" name="password" required placeholder="Minimum 12 chars"/>
+					</div>
+					<p class="auth-password-note">
+						Password must be at least 12 characters and include an uppercase letter, lowercase letter, number, and special character.
+					</p>
+					<button type="submit" class="login-button">Create account</button>
+					if formError != "" {
+						<p class="auth-form-error" role="alert" aria-live="polite">{ formError }</p>
+					}
+				</form>
+				<p class="auth-switch-row">
+					Already have an account? <a href="/login">Sign in</a>
 				</p>
-				<button type="submit" class="login-button">Create account</button>
-			</form>
-			<p class="auth-switch-row">
-				Already have an account? <a href="/login">Sign in</a>
-			</p>
+			</div>
+		</div>
+	}
+}
+
+templ RegistrationRecoveryKey(recoveryKey string) {
+	@Layout("Save recovery key", false) {
+		<div class="auth-shell">
+			<div class="login-container">
+				<h2>Save your recovery key</h2>
+				<p class="login-subtitle">Store this key somewhere safe. It is shown only once.</p>
+				<div class="recovery-key-row">
+					<p class="recovery-key-box" id="registration-recovery-key">{ recoveryKey }</p>
+					<button type="button" class="recovery-copy-btn" onclick="copyRecoveryKey('registration-recovery-key', 'registration-copy-feedback')">Copy key</button>
+				</div>
+				<p class="auth-password-note recovery-copy-feedback" id="registration-copy-feedback" aria-live="polite"></p>
+				<p class="auth-password-note">If you lose your password, this key is the only way to recover your account without email.</p>
+				<p class="auth-switch-row">
+					<a href="/" class="auth-primary-link">I saved it, continue</a>
+				</p>
+			</div>
+		</div>
+	}
+}
+
+templ Recover(formError string, username string, recoveryKey string) {
+	@Layout("Recover account", false) {
+		<div class="auth-shell">
+			<div class="login-container">
+				<h2>Recover account</h2>
+				<p class="login-subtitle">Enter your username, recovery key, and a new password.</p>
+				<form action="/recover" method="POST" class="login-form">
+					<div class="form-group">
+						<label for="username">Username / Email</label>
+						<input type="text" id="username" name="username" required placeholder="you@example.com" value={ username }/>
+					</div>
+					<div class="form-group">
+						<label for="recovery_key">Recovery key</label>
+						<input type="text" id="recovery_key" name="recovery_key" required value={ recoveryKey }/>
+					</div>
+					<div class="form-group">
+						<label for="new_password">New password</label>
+						<input type="password" id="new_password" name="new_password" required placeholder="Minimum 12 chars"/>
+					</div>
+					<button type="submit" class="login-button">Reset password</button>
+					if formError != "" {
+						<p class="auth-form-error" role="alert" aria-live="polite">{ formError }</p>
+					}
+				</form>
+				<p class="auth-switch-row">
+					Remembered your password? <a href="/login">Sign in</a>
+				</p>
+			</div>
+		</div>
+	}
+}
+
+templ RecoveryComplete(newRecoveryKey string) {
+	@Layout("Recovery complete", false) {
+		<div class="auth-shell">
+			<div class="login-container">
+				<h2>Account recovered</h2>
+				<p class="login-subtitle">Your password was reset and your recovery key was rotated.</p>
+				<div class="recovery-key-row">
+					<p class="recovery-key-box" id="recovery-complete-key">{ newRecoveryKey }</p>
+					<button type="button" class="recovery-copy-btn" onclick="copyRecoveryKey('recovery-complete-key', 'recovery-complete-feedback')">Copy key</button>
+				</div>
+				<p class="auth-password-note recovery-copy-feedback" id="recovery-complete-feedback" aria-live="polite"></p>
+				<p class="auth-password-note">Replace your old recovery key with this one.</p>
+				<p class="auth-switch-row">
+					<a href="/login" class="auth-primary-link">Go to login</a>
+				</p>
+			</div>
+		</div>
+	}
+}
+
+templ Account(username string, createdAt string, passwordError string, passwordSuccess string, recoveryError string, recoverySuccess string, recoveryKey string) {
+	@Layout("Account", true) {
+		<div class="account-page">
+			<section class="account-card">
+				<h2>Account</h2>
+				<div class="account-meta">
+					<div class="account-meta-row">
+						<span class="account-meta-label">Email / Username</span>
+						<span class="account-meta-value">{ username }</span>
+					</div>
+					<div class="account-meta-row">
+						<span class="account-meta-label">Created</span>
+						<span class="account-meta-value">{ createdAt }</span>
+					</div>
+				</div>
+			</section>
+
+			<section class="account-card">
+				<h3>Change password</h3>
+				<form action="/account/password" method="POST" class="account-form" onsubmit="return confirmDangerAction('Change your password now?')">
+					<div class="form-group">
+						<label for="current_password">Current password</label>
+						<input type="password" id="current_password" name="current_password" required/>
+					</div>
+					<div class="form-group">
+						<label for="new_password">New password</label>
+						<input type="password" id="new_password" name="new_password" required placeholder="Minimum 12 chars"/>
+					</div>
+					<div class="form-group">
+						<label for="confirm_new_password">Confirm new password</label>
+						<input type="password" id="confirm_new_password" name="confirm_new_password" required/>
+					</div>
+					<button type="submit" class="account-submit-btn">Update password</button>
+					if passwordError != "" {
+						<p class="auth-form-error" role="alert" aria-live="polite">{ passwordError }</p>
+					}
+					if passwordSuccess != "" {
+						<p class="account-success" role="status" aria-live="polite">{ passwordSuccess }</p>
+					}
+				</form>
+			</section>
+
+			<section class="account-card">
+				<h3>Recovery key</h3>
+				<p class="auth-password-note">To view a new recovery key, confirm your current password. This rotates your old key.</p>
+				<form action="/account/recovery-key" method="POST" class="account-form" onsubmit="return confirmDangerAction('Rotate recovery key now? Your old key will stop working.')">
+					<div class="form-group">
+						<label for="recovery_password">Current password</label>
+						<input type="password" id="recovery_password" name="password" required/>
+					</div>
+					<button type="submit" class="account-submit-btn">Show new recovery key</button>
+					if recoveryError != "" {
+						<p class="auth-form-error" role="alert" aria-live="polite">{ recoveryError }</p>
+					}
+					if recoverySuccess != "" {
+						<p class="account-success" role="status" aria-live="polite">{ recoverySuccess }</p>
+					}
+				</form>
+				if recoveryKey != "" {
+					<div class="recovery-key-row">
+						<p class="recovery-key-box" id="account-recovery-key">{ recoveryKey }</p>
+						<button type="button" class="recovery-copy-btn" onclick="copyRecoveryKey('account-recovery-key', 'account-copy-feedback')">Copy key</button>
+					</div>
+					<p class="auth-password-note recovery-copy-feedback" id="account-copy-feedback" aria-live="polite"></p>
+				}
+			</section>
+
+			<section class="account-card">
+				<h3>Danger zone</h3>
+				<form action="/logout" method="POST" class="account-form-inline" onsubmit="return confirmDangerAction('Log out of this account now?')">
+					<button type="submit" class="account-logout-btn">Log out</button>
+				</form>
+			</section>
 		</div>
 	}
 }

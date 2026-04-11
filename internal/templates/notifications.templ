@@ -11,7 +11,7 @@ type WatchingAnimeWithDetails struct {
 }
 
 templ Notifications(watching []WatchingAnimeWithDetails, activeTab string) {
-	@Layout("mal - notifications") {
+	@Layout("mal - notifications", true) {
 		<div class="notifications-page">
 			<h1>Notifications</h1>
 			<div class="status-tabs">

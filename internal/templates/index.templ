@@ -8,7 +8,7 @@ import (
 )
 
 templ Search(q string) {
-	@Layout("mal - search") {
+	@Layout("mal - search", true) {
 		if q != "" {
 			<div id="loading" class="htmx-indicator">
 				@ui.LoadingIndicator("Searching...")
