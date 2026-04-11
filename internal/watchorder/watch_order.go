@@ -12,7 +12,7 @@ import (
 	"github.com/PuerkitoBio/goquery"
 )
 
-const defaultUserAgent = "anime-relations-scraper/1.0 (+https://github.com/mkelvers/anime-relations)"
+const defaultUserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36"
 
 var idPattern = regexp.MustCompile(`/id/(\d+)`)
 
@@ -64,6 +64,10 @@ func fetchDocument(ctx context.Context, httpClient *http.Client, url string) (*g
 	}
 
 	request.Header.Set("User-Agent", defaultUserAgent)
+	request.Header.Set("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8")
+	request.Header.Set("Accept-Language", "en-US,en;q=0.9")
+	request.Header.Set("Referer", "https://chiaki.site/")
+	request.Header.Set("Cache-Control", "no-cache")
 
 	response, err := client.Do(request)
 	if err != nil {

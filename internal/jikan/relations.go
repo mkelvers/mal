@@ -2,6 +2,7 @@ package jikan
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"strings"
@@ -49,7 +50,11 @@ func (c *Client) getWatchOrder(ctx context.Context, id int) (watchorder.WatchOrd
 
 	result, err := watchorder.FetchWatchOrder(requestCtx, c.httpClient, watchOrderURL)
 	if err != nil {
-		log.Printf("relations: watch-order fetch failed for %d (%s): %v", id, watchOrderURL, err)
+		if errors.Is(err, watchorder.ErrWatchOrderMarkupNotFound) {
+			log.Printf("relations: watch-order markup missing for %d (%s): %v", id, watchOrderURL, err)
+		} else {
+			log.Printf("relations: watch-order fetch failed for %d (%s): %v", id, watchOrderURL, err)
+		}
 		return watchorder.WatchOrderResult{}, err
 	}
 
