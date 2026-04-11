@@ -32,6 +32,7 @@ RUN mkdir -p /app/data
 COPY --from=builder /app/main_server .
 COPY --from=builder /app/static ./static
 COPY --from=builder /app/migrations ./migrations
+COPY --from=builder /app/data ./data
 
 # Expose the application port
 EXPOSE 3000
