@@ -16,6 +16,7 @@ import (
 	"mal/internal/features/auth"
 	"mal/internal/jikan"
 	"mal/internal/server"
+	"mal/internal/watchorder"
 	"mal/internal/worker"
 )
 
@@ -39,7 +40,22 @@ func main() {
 
 	queries := database.New(db)
 	authService := auth.NewService(queries)
-	jikanClient := jikan.NewClient(queries)
+
+	watchOrderFile := os.Getenv("WATCH_ORDER_FILE")
+	if watchOrderFile == "" {
+		watchOrderFile = "./data/watch_order.json"
+	}
+
+	watchOrderStore := watchorder.EmptyStore()
+	loadedStore, err := watchorder.LoadFromFile(watchOrderFile)
+	if err != nil {
+		log.Printf("watch-order: failed to load %s: %v", watchOrderFile, err)
+	} else {
+		watchOrderStore = loadedStore
+		log.Printf("watch-order: loaded %d entries from %s", watchOrderStore.Len(), watchOrderFile)
+	}
+
+	jikanClient := jikan.NewClient(queries, watchOrderStore)
 
 	// Start background workers
 	relationsWorker := worker.New(queries, jikanClient)

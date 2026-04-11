@@ -9,21 +9,28 @@ import (
 	"time"
 
 	"mal/internal/database"
+	"mal/internal/watchorder"
 )
 
 type Client struct {
 	httpClient  *http.Client
 	baseURL     string
 	db          database.Querier
+	watchOrders *watchorder.Store
 	mu          sync.Mutex
 	lastReqTime time.Time
 }
 
-func NewClient(db database.Querier) *Client {
+func NewClient(db database.Querier, watchOrders *watchorder.Store) *Client {
+	if watchOrders == nil {
+		watchOrders = watchorder.EmptyStore()
+	}
+
 	return &Client{
-		httpClient: &http.Client{Timeout: 10 * time.Second},
-		baseURL:    "https://api.jikan.moe/v4",
-		db:         db,
+		httpClient:  &http.Client{Timeout: 10 * time.Second},
+		baseURL:     "https://api.jikan.moe/v4",
+		db:          db,
+		watchOrders: watchOrders,
 	}
 }
 

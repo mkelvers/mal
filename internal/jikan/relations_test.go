@@ -46,3 +46,24 @@ func TestWatchOrderTypeLabel(t *testing.T) {
 		})
 	}
 }
+
+func TestAllowedWatchOrderTypeFromDataset(t *testing.T) {
+	tests := []struct {
+		name  string
+		input string
+		want  bool
+	}{
+		{name: "label tv", input: "TV", want: true},
+		{name: "label movie", input: "Movie", want: true},
+		{name: "label special", input: "Special", want: false},
+	}
+
+	for _, testCase := range tests {
+		t.Run(testCase.name, func(t *testing.T) {
+			got := isAllowedWatchOrderType(testCase.input)
+			if got != testCase.want {
+				t.Fatalf("expected %v, got %v", testCase.want, got)
+			}
+		})
+	}
+}
