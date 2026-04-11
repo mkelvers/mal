@@ -2,245 +2,129 @@ package jikan
 
 import (
 	"context"
-	"slices"
-	"sort"
+	"fmt"
 	"strings"
 	"time"
+
+	"mal/internal/watchorder"
 )
 
-var canonicalRelationOrder = []string{
-	"prequel",
-	"sequel",
-	"parent story",
-	"full story",
-	"alternative version",
-	"alternative setting",
-}
+const chiakiWatchOrderURL = "https://chiaki.site/?/tools/watch_order/id/%d"
+const watchOrderCacheTTL = time.Hour * 24
+const maxWatchOrderEntries = 120
 
-var extraRelationOrder = []string{
-	"side story",
-	"spin-off",
-	"summary",
-	"other",
-}
-
-var relationPriorityOrder = append(
-	append([]string{}, canonicalRelationOrder...),
-	extraRelationOrder...,
-)
-
-func relationKey(rel string) string {
-	key := strings.ToLower(strings.TrimSpace(rel))
-	key = strings.ReplaceAll(key, "_", " ")
-	key = strings.Join(strings.Fields(key), " ")
-
-	switch key {
-	case "prequels":
-		return "prequel"
-	case "sequels":
-		return "sequel"
-	case "side stories":
-		return "side story"
-	case "spin off", "spinoff":
-		return "spin-off"
+func watchOrderTypeLabel(value string) string {
+	normalized := strings.ToLower(strings.TrimSpace(value))
+	switch normalized {
+	case "tv":
+		return "TV"
+	case "movie":
+		return "Movie"
 	default:
-		return key
+		return strings.TrimSpace(value)
 	}
 }
 
-func relationLabel(rel string) string {
-	key := relationKey(rel)
-	switch key {
-	case "prequel":
-		return "Prequels"
-	case "sequel":
-		return "Sequels"
-	case "parent story":
-		return "Parent story"
-	case "full story":
-		return "Full story"
-	case "alternative version":
-		return "Alternative version"
-	case "alternative setting":
-		return "Alternative setting"
-	case "side story":
-		return "Side story"
-	case "spin-off":
-		return "Spin-off"
-	case "summary":
-		return "Summary"
-	case "other":
-		return "Other"
-	default:
-		return strings.TrimSpace(rel)
-	}
+func isAllowedWatchOrderType(value string) bool {
+	normalized := strings.ToLower(strings.TrimSpace(value))
+	return normalized == "tv" || normalized == "movie"
 }
 
-func isCanonicalRelation(rel string) bool {
-	return slices.Contains(canonicalRelationOrder, relationKey(rel))
+func relationCacheKey(id int) string {
+	return fmt.Sprintf("relations:watch-order:%d", id)
 }
 
-func isExtraRelation(rel string) bool {
-	return slices.Contains(extraRelationOrder, relationKey(rel))
-}
+func (c *Client) getWatchOrder(ctx context.Context, id int) (watchorder.WatchOrderResult, error) {
+	cacheKey := relationCacheKey(id)
 
-func isFranchiseRelation(rel string) bool {
-	return isCanonicalRelation(rel) || isExtraRelation(rel)
-}
-
-func relationOrder(rel string) int {
-	key := relationKey(rel)
-	for i, allowed := range relationPriorityOrder {
-		if key == allowed {
-			return i
-		}
-	}
-	return len(relationPriorityOrder) + 1
-}
-
-func relationAiredAt(anime Anime) (time.Time, bool) {
-	from := strings.TrimSpace(anime.Aired.From)
-	if from != "" {
-		if parsed, err := time.Parse(time.RFC3339, from); err == nil {
-			return parsed, true
-		}
-		if parsed, err := time.Parse("2006-01-02", from); err == nil {
-			return parsed, true
-		}
+	var cached watchorder.WatchOrderResult
+	if c.getCache(ctx, cacheKey, &cached) {
+		return cached, nil
 	}
 
-	if anime.Year > 0 {
-		return time.Date(anime.Year, time.January, 1, 0, 0, 0, 0, time.UTC), true
+	watchOrderURL := fmt.Sprintf(chiakiWatchOrderURL, id)
+	requestCtx, cancel := context.WithTimeout(ctx, 8*time.Second)
+	defer cancel()
+
+	result, err := watchorder.FetchWatchOrder(requestCtx, c.httpClient, watchOrderURL)
+	if err != nil {
+		return watchorder.WatchOrderResult{}, err
 	}
 
-	return time.Time{}, false
+	c.setCache(ctx, cacheKey, result, watchOrderCacheTTL)
+	return result, nil
 }
 
-func sortRelationEntriesChronological(entries []RelationEntry) {
-	sort.SliceStable(entries, func(i int, j int) bool {
-		left := entries[i]
-		right := entries[j]
-
-		leftAiredAt, leftHasAiredAt := relationAiredAt(left.Anime)
-		rightAiredAt, rightHasAiredAt := relationAiredAt(right.Anime)
-
-		if leftHasAiredAt != rightHasAiredAt {
-			return leftHasAiredAt
-		}
-
-		if leftHasAiredAt && !leftAiredAt.Equal(rightAiredAt) {
-			return leftAiredAt.Before(rightAiredAt)
-		}
-
-		leftRelationOrder := relationOrder(left.Relation)
-		rightRelationOrder := relationOrder(right.Relation)
-		if leftRelationOrder != rightRelationOrder {
-			return leftRelationOrder < rightRelationOrder
-		}
-
-		leftTitle := strings.ToLower(left.Anime.DisplayTitle())
-		rightTitle := strings.ToLower(right.Anime.DisplayTitle())
-		if leftTitle != rightTitle {
-			return leftTitle < rightTitle
-		}
-
-		return left.Anime.MalID < right.Anime.MalID
-	})
-}
-
-func relationEntries(ctx context.Context, c *Client, anime Anime) ([]RelationEntry, error) {
-	entries := make([]RelationEntry, 0)
-
-	for _, group := range anime.Relations {
-		if !isFranchiseRelation(group.Relation) {
-			continue
-		}
-
-		for _, entry := range group.Entry {
-			if entry.Type != "anime" {
-				continue
-			}
-
-			relAnime, err := c.GetAnimeByID(ctx, entry.MalID)
-			if err != nil {
-				return nil, err
-			}
-
-			entries = append(entries, RelationEntry{
-				Anime:     relAnime,
-				Relation:  relationLabel(group.Relation),
-				IsCurrent: false,
-				IsExtra:   !isCanonicalRelation(group.Relation),
-			})
-		}
-	}
-
-	return entries, nil
-}
-
-func relationMap(ctx context.Context, c *Client, id int) (map[int]RelationEntry, error) {
+func (c *Client) currentOnlyRelation(ctx context.Context, id int) ([]RelationEntry, error) {
 	currentAnime, err := c.GetAnimeByID(ctx, id)
 	if err != nil {
 		return nil, err
 	}
 
-	result := map[int]RelationEntry{
-		currentAnime.MalID: {
-			Anime:     currentAnime,
-			Relation:  "Current",
-			IsCurrent: true,
-			IsExtra:   false,
-		},
+	return []RelationEntry{{
+		Anime:     currentAnime,
+		Relation:  "Current",
+		IsCurrent: true,
+		IsExtra:   false,
+	}}, nil
+}
+
+func (c *Client) GetFullRelations(ctx context.Context, id int) ([]RelationEntry, error) {
+	result, err := c.getWatchOrder(ctx, id)
+	if err != nil {
+		return c.currentOnlyRelation(ctx, id)
 	}
 
-	queue := []Anime{currentAnime}
-	visited := map[int]bool{currentAnime.MalID: true}
+	seen := make(map[int]bool)
+	relations := make([]RelationEntry, 0, len(result.WatchOrder)+1)
 
-	for len(queue) > 0 {
-		anime := queue[0]
-		queue = queue[1:]
+	for _, watchOrderEntry := range result.WatchOrder {
+		if len(relations) >= maxWatchOrderEntries {
+			break
+		}
 
-		entries, err := relationEntries(ctx, c, anime)
+		if !isAllowedWatchOrderType(watchOrderEntry.Type) {
+			continue
+		}
+
+		if seen[watchOrderEntry.ID] {
+			continue
+		}
+
+		anime, err := c.GetAnimeByID(ctx, watchOrderEntry.ID)
+		if err != nil {
+			continue
+		}
+
+		seen[watchOrderEntry.ID] = true
+		relations = append(relations, RelationEntry{
+			Anime:     anime,
+			Relation:  watchOrderTypeLabel(watchOrderEntry.Type),
+			IsCurrent: watchOrderEntry.ID == id,
+			IsExtra:   false,
+		})
+		if watchOrderEntry.ID == id {
+			relations[len(relations)-1].Relation = "Current"
+		}
+	}
+
+	if !seen[id] {
+		currentAnime, err := c.GetAnimeByID(ctx, id)
 		if err != nil {
 			return nil, err
 		}
 
-		for _, rel := range entries {
-			existing, exists := result[rel.Anime.MalID]
-			if !exists {
-				result[rel.Anime.MalID] = rel
-			} else if !existing.IsCurrent {
-				if existing.IsExtra && !rel.IsExtra {
-					// Prefer canonical timeline links over extras when both point to the same anime.
-					result[rel.Anime.MalID] = rel
-				} else if existing.IsExtra && rel.IsExtra && relationOrder(rel.Relation) < relationOrder(existing.Relation) {
-					// Keep the most specific extra label when multiple extra relations exist.
-					result[rel.Anime.MalID] = rel
-				}
-			}
-
-			if !rel.IsExtra && !visited[rel.Anime.MalID] {
-				visited[rel.Anime.MalID] = true
-				queue = append(queue, rel.Anime)
-			}
-		}
+		relations = append([]RelationEntry{{
+			Anime:     currentAnime,
+			Relation:  "Current",
+			IsCurrent: true,
+			IsExtra:   false,
+		}}, relations...)
 	}
 
-	return result, nil
-}
-
-func (c *Client) GetFullRelations(ctx context.Context, id int) ([]RelationEntry, error) {
-	relationByID, err := relationMap(ctx, c, id)
-	if err != nil {
-		return nil, err
+	if len(relations) == 0 {
+		return c.currentOnlyRelation(ctx, id)
 	}
 
-	ordered := make([]RelationEntry, 0, len(relationByID))
-	for _, entry := range relationByID {
-		ordered = append(ordered, entry)
-	}
-
-	sortRelationEntriesChronological(ordered)
-
-	return ordered, nil
+	return relations, nil
 }
