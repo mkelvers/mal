@@ -3,8 +3,10 @@ package auth
 import (
 	"context"
 	"crypto/rand"
+	"crypto/sha256"
 	"database/sql"
 	"encoding/base64"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"net/http"
@@ -23,6 +25,7 @@ var (
 	ErrUserExists         = errors.New("username already exists")
 	ErrNotAuthenticated   = errors.New("not authenticated")
 	ErrInvalidPassword    = errors.New("password does not meet security requirements")
+	ErrInvalidRecoveryKey = errors.New("invalid recovery details")
 )
 
 type Service struct {
@@ -33,13 +36,25 @@ func NewService(db database.Querier) *Service {
 	return &Service{db: db}
 }
 
-// generateSessionToken generates a secure random 32-byte token.
-func generateSessionToken() (string, error) {
-	b := make([]byte, 32)
+func generateToken(size int) (string, error) {
+	b := make([]byte, size)
 	if _, err := rand.Read(b); err != nil {
 		return "", err
 	}
 	return base64.URLEncoding.EncodeToString(b), nil
+}
+
+func generateSessionToken() (string, error) {
+	return generateToken(32)
+}
+
+func generateRecoveryKey() (string, error) {
+	return generateToken(24)
+}
+
+func hashRecoveryKey(recoveryKey string) string {
+	sum := sha256.Sum256([]byte(recoveryKey))
+	return hex.EncodeToString(sum[:])
 }
 
 func ValidatePassword(password string) error {
@@ -67,28 +82,135 @@ func ValidatePassword(password string) error {
 	return nil
 }
 
-func (s *Service) RegisterUser(ctx context.Context, username, password string) (*database.User, error) {
+func (s *Service) RegisterUser(ctx context.Context, username, password string) (*database.User, string, error) {
 	if err := ValidatePassword(password); err != nil {
-		return nil, fmt.Errorf("%w: %v", ErrInvalidPassword, err)
+		return nil, "", fmt.Errorf("%w: %v", ErrInvalidPassword, err)
 	}
 
 	hash, err := bcrypt.GenerateFromPassword([]byte(password), 12) // higher cost
 	if err != nil {
-		return nil, fmt.Errorf("failed to hash password: %w", err)
+		return nil, "", fmt.Errorf("failed to hash password: %w", err)
+	}
+
+	recoveryKey, err := generateRecoveryKey()
+	if err != nil {
+		return nil, "", fmt.Errorf("failed to generate recovery key: %w", err)
 	}
 
 	id := uuid.New().String()
 	user, err := s.db.CreateUser(ctx, database.CreateUserParams{
-		ID:           id,
-		Username:     username,
-		PasswordHash: string(hash),
+		ID:              id,
+		Username:        username,
+		PasswordHash:    string(hash),
+		RecoveryKeyHash: hashRecoveryKey(recoveryKey),
 	})
 	if err != nil {
 		// Assuming unique constraint failure for username
-		return nil, ErrUserExists
+		return nil, "", ErrUserExists
 	}
 
-	return &user, nil
+	return &user, recoveryKey, nil
+}
+
+func (s *Service) RecoverAccount(ctx context.Context, username, recoveryKey, newPassword string) (string, error) {
+	if err := ValidatePassword(newPassword); err != nil {
+		return "", fmt.Errorf("%w: %v", ErrInvalidPassword, err)
+	}
+
+	user, err := s.db.GetUserByUsernameAndRecoveryKeyHash(ctx, database.GetUserByUsernameAndRecoveryKeyHashParams{
+		Username:        username,
+		RecoveryKeyHash: hashRecoveryKey(recoveryKey),
+	})
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return "", ErrInvalidRecoveryKey
+		}
+		return "", fmt.Errorf("failed to lookup user for recovery: %w", err)
+	}
+
+	newPasswordHash, err := bcrypt.GenerateFromPassword([]byte(newPassword), 12)
+	if err != nil {
+		return "", fmt.Errorf("failed to hash new password: %w", err)
+	}
+
+	newRecoveryKey, err := generateRecoveryKey()
+	if err != nil {
+		return "", fmt.Errorf("failed to generate new recovery key: %w", err)
+	}
+
+	err = s.db.UpdateUserPasswordAndRecoveryKeyHash(ctx, database.UpdateUserPasswordAndRecoveryKeyHashParams{
+		ID:              user.ID,
+		PasswordHash:    string(newPasswordHash),
+		RecoveryKeyHash: hashRecoveryKey(newRecoveryKey),
+	})
+	if err != nil {
+		return "", fmt.Errorf("failed to update recovered account: %w", err)
+	}
+
+	err = s.db.DeleteUserSessions(ctx, user.ID)
+	if err != nil {
+		return "", fmt.Errorf("failed to clear existing sessions: %w", err)
+	}
+
+	return newRecoveryKey, nil
+}
+
+func (s *Service) ChangePassword(ctx context.Context, userID, currentPassword, newPassword string) error {
+	if err := ValidatePassword(newPassword); err != nil {
+		return fmt.Errorf("%w: %v", ErrInvalidPassword, err)
+	}
+
+	user, err := s.db.GetUser(ctx, userID)
+	if err != nil {
+		return fmt.Errorf("failed to lookup user: %w", err)
+	}
+
+	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(currentPassword)); err != nil {
+		return ErrInvalidCredentials
+	}
+
+	newPasswordHash, err := bcrypt.GenerateFromPassword([]byte(newPassword), 12)
+	if err != nil {
+		return fmt.Errorf("failed to hash new password: %w", err)
+	}
+
+	err = s.db.UpdateUserPasswordAndRecoveryKeyHash(ctx, database.UpdateUserPasswordAndRecoveryKeyHashParams{
+		ID:              user.ID,
+		PasswordHash:    string(newPasswordHash),
+		RecoveryKeyHash: user.RecoveryKeyHash,
+	})
+	if err != nil {
+		return fmt.Errorf("failed to update password: %w", err)
+	}
+
+	return nil
+}
+
+func (s *Service) RegenerateRecoveryKey(ctx context.Context, userID, password string) (string, error) {
+	user, err := s.db.GetUser(ctx, userID)
+	if err != nil {
+		return "", fmt.Errorf("failed to lookup user: %w", err)
+	}
+
+	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password)); err != nil {
+		return "", ErrInvalidCredentials
+	}
+
+	newRecoveryKey, err := generateRecoveryKey()
+	if err != nil {
+		return "", fmt.Errorf("failed to generate new recovery key: %w", err)
+	}
+
+	err = s.db.UpdateUserPasswordAndRecoveryKeyHash(ctx, database.UpdateUserPasswordAndRecoveryKeyHashParams{
+		ID:              user.ID,
+		PasswordHash:    user.PasswordHash,
+		RecoveryKeyHash: hashRecoveryKey(newRecoveryKey),
+	})
+	if err != nil {
+		return "", fmt.Errorf("failed to rotate recovery key: %w", err)
+	}
+
+	return newRecoveryKey, nil
 }
 
 func (s *Service) Login(ctx context.Context, username, password string) (*database.Session, error) {

@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"fmt"
 	"net/http"
 	"strings"
 	"sync"
@@ -69,6 +70,10 @@ func RateLimitAuth(next http.Handler) http.Handler {
 		// If more than 5 attempts within a minute, block
 		if exists && v.attempts > 5 {
 			mu.Unlock()
+			if strings.HasPrefix(r.URL.Path, "/") {
+				http.Redirect(w, r, fmt.Sprintf("%s?error=rate_limited", r.URL.Path), http.StatusFound)
+				return
+			}
 			http.Error(w, "Too many requests. Please try again later.", http.StatusTooManyRequests)
 			return
 		}
