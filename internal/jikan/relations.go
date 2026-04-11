@@ -3,6 +3,7 @@ package jikan
 import (
 	"context"
 	"fmt"
+	"log"
 	"strings"
 	"time"
 
@@ -48,6 +49,7 @@ func (c *Client) getWatchOrder(ctx context.Context, id int) (watchorder.WatchOrd
 
 	result, err := watchorder.FetchWatchOrder(requestCtx, c.httpClient, watchOrderURL)
 	if err != nil {
+		log.Printf("relations: watch-order fetch failed for %d (%s): %v", id, watchOrderURL, err)
 		return watchorder.WatchOrderResult{}, err
 	}
 
@@ -72,6 +74,7 @@ func (c *Client) currentOnlyRelation(ctx context.Context, id int) ([]RelationEnt
 func (c *Client) GetFullRelations(ctx context.Context, id int) ([]RelationEntry, error) {
 	result, err := c.getWatchOrder(ctx, id)
 	if err != nil {
+		log.Printf("relations: using current-only fallback for %d: %v", id, err)
 		return c.currentOnlyRelation(ctx, id)
 	}
 
@@ -93,6 +96,7 @@ func (c *Client) GetFullRelations(ctx context.Context, id int) ([]RelationEntry,
 
 		anime, err := c.GetAnimeByID(ctx, watchOrderEntry.ID)
 		if err != nil {
+			log.Printf("relations: skipping related anime %d for root %d: %v", watchOrderEntry.ID, id, err)
 			continue
 		}
 

@@ -17,6 +17,7 @@ const defaultUserAgent = "anime-relations-scraper/1.0 (+https://github.com/mkelv
 var idPattern = regexp.MustCompile(`/id/(\d+)`)
 
 var ErrInvalidWatchOrderURL = errors.New("invalid watch order url")
+var ErrWatchOrderMarkupNotFound = errors.New("watch order markup not found")
 
 type WatchOrderEntry struct {
 	ID       int    `json:"id"`
@@ -150,6 +151,10 @@ func extractRows(doc *goquery.Document) []watchOrderRow {
 	return rows
 }
 
+func hasWatchOrderTable(doc *goquery.Document) bool {
+	return doc.Find("#wo_list").Length() > 0
+}
+
 func FetchWatchOrder(ctx context.Context, httpClient *http.Client, url string) (WatchOrderResult, error) {
 	rootID, err := parseRootID(url)
 	if err != nil {
@@ -159,6 +164,10 @@ func FetchWatchOrder(ctx context.Context, httpClient *http.Client, url string) (
 	doc, err := fetchDocument(ctx, httpClient, url)
 	if err != nil {
 		return WatchOrderResult{}, err
+	}
+
+	if !hasWatchOrderTable(doc) {
+		return WatchOrderResult{}, ErrWatchOrderMarkupNotFound
 	}
 
 	rows := extractRows(doc)

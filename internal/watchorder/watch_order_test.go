@@ -2,6 +2,7 @@ package watchorder
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -48,6 +49,16 @@ func testHTMLEmptyRows() string {
       <label><input type="checkbox" value="3" checked> Movie</label>
     </div>
     <table id="wo_list"></table>
+  </body>
+</html>`
+}
+
+func testHTMLWithoutWatchOrderTable() string {
+	return `
+<!doctype html>
+<html>
+  <body>
+    <p>challenge page</p>
   </body>
 </html>`
 }
@@ -101,5 +112,16 @@ func TestFetchWatchOrder_NoRowsReturnsEmpty(t *testing.T) {
 
 	if len(result.WatchOrder) != 0 {
 		t.Fatalf("expected no entries, got %d", len(result.WatchOrder))
+	}
+}
+
+func TestFetchWatchOrder_MissingMarkupReturnsError(t *testing.T) {
+	server := testServer(testHTMLWithoutWatchOrderTable())
+	defer server.Close()
+
+	url := server.URL + "/?/tools/watch_order/id/1535"
+	_, err := FetchWatchOrder(context.Background(), &http.Client{Timeout: time.Second}, url)
+	if !errors.Is(err, ErrWatchOrderMarkupNotFound) {
+		t.Fatalf("expected ErrWatchOrderMarkupNotFound, got %v", err)
 	}
 }
