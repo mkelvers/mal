@@ -9,15 +9,20 @@ import (
 )
 
 type Querier interface {
+	CountPendingAnimeFetchRetries(ctx context.Context) (int64, error)
 	CreateSession(ctx context.Context, arg CreateSessionParams) (Session, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
+	DeleteAnimeFetchRetry(ctx context.Context, animeID int64) error
 	DeleteExpiredJikanCache(ctx context.Context) error
 	DeleteSession(ctx context.Context, id string) error
 	DeleteUserSessions(ctx context.Context, userID string) error
 	DeleteWatchListEntry(ctx context.Context, arg DeleteWatchListEntryParams) error
+	EnqueueAnimeFetchRetry(ctx context.Context, arg EnqueueAnimeFetchRetryParams) error
 	GetAnime(ctx context.Context, id int64) (Anime, error)
 	GetAnimeNeedingRelationSync(ctx context.Context) ([]GetAnimeNeedingRelationSyncRow, error)
+	GetDueAnimeFetchRetries(ctx context.Context, limit int64) ([]AnimeFetchRetry, error)
 	GetJikanCache(ctx context.Context, key string) (string, error)
+	GetJikanCacheStale(ctx context.Context, key string) (string, error)
 	GetSession(ctx context.Context, id string) (Session, error)
 	GetUpcomingSeasons(ctx context.Context, userID string) ([]GetUpcomingSeasonsRow, error)
 	GetUser(ctx context.Context, id string) (User, error)
@@ -26,6 +31,7 @@ type Querier interface {
 	GetUserWatchList(ctx context.Context, userID string) ([]GetUserWatchListRow, error)
 	GetWatchListEntry(ctx context.Context, arg GetWatchListEntryParams) (WatchListEntry, error)
 	GetWatchingAnime(ctx context.Context, userID string) ([]GetWatchingAnimeRow, error)
+	MarkAnimeFetchRetryFailed(ctx context.Context, arg MarkAnimeFetchRetryFailedParams) error
 	MarkRelationsSynced(ctx context.Context, id int64) error
 	SetJikanCache(ctx context.Context, arg SetJikanCacheParams) error
 	UpdateAnimeStatus(ctx context.Context, arg UpdateAnimeStatusParams) error

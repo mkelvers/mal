@@ -29,6 +29,15 @@ type Anime struct {
 	RelationsSyncedAt sql.NullTime   `json:"relations_synced_at"`
 }
 
+type AnimeFetchRetry struct {
+	AnimeID     int64     `json:"anime_id"`
+	Attempts    int64     `json:"attempts"`
+	NextRetryAt time.Time `json:"next_retry_at"`
+	LastError   string    `json:"last_error"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
+}
+
 type AnimeRelation struct {
 	AnimeID        int64  `json:"anime_id"`
 	RelatedAnimeID int64  `json:"related_anime_id"`

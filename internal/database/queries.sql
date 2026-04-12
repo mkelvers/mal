@@ -164,6 +164,10 @@ ORDER BY related.id DESC;
 SELECT data FROM jikan_cache
 WHERE key = ? AND expires_at > CURRENT_TIMESTAMP LIMIT 1;
 
+-- name: GetJikanCacheStale :one
+SELECT data FROM jikan_cache
+WHERE key = ? LIMIT 1;
+
 -- name: SetJikanCache :exec
 INSERT INTO jikan_cache (key, data, expires_at)
 VALUES (?, ?, ?)
@@ -174,3 +178,38 @@ ON CONFLICT (key) DO UPDATE SET
 
 -- name: DeleteExpiredJikanCache :exec
 DELETE FROM jikan_cache WHERE expires_at <= CURRENT_TIMESTAMP;
+
+-- name: EnqueueAnimeFetchRetry :exec
+INSERT INTO anime_fetch_retry (anime_id, attempts, next_retry_at, last_error, updated_at)
+VALUES (?, 0, CURRENT_TIMESTAMP, ?, CURRENT_TIMESTAMP)
+ON CONFLICT (anime_id) DO UPDATE SET
+    next_retry_at = CASE
+        WHEN anime_fetch_retry.next_retry_at > CURRENT_TIMESTAMP THEN anime_fetch_retry.next_retry_at
+        ELSE CURRENT_TIMESTAMP
+    END,
+    last_error = excluded.last_error,
+    updated_at = CURRENT_TIMESTAMP;
+
+-- name: GetDueAnimeFetchRetries :many
+SELECT anime_id, attempts, next_retry_at, last_error, created_at, updated_at
+FROM anime_fetch_retry
+WHERE next_retry_at <= CURRENT_TIMESTAMP
+ORDER BY next_retry_at ASC
+LIMIT ?;
+
+-- name: MarkAnimeFetchRetryFailed :exec
+UPDATE anime_fetch_retry
+SET attempts = attempts + 1,
+    next_retry_at = datetime(CURRENT_TIMESTAMP, ?),
+    last_error = ?,
+    updated_at = CURRENT_TIMESTAMP
+WHERE anime_id = ?;
+
+-- name: DeleteAnimeFetchRetry :exec
+DELETE FROM anime_fetch_retry
+WHERE anime_id = ?;
+
+-- name: CountPendingAnimeFetchRetries :one
+SELECT COUNT(*)
+FROM anime_fetch_retry
+WHERE next_retry_at <= CURRENT_TIMESTAMP;
