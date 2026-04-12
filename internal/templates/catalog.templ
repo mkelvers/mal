@@ -17,3 +17,12 @@ templ Catalog() {
 templ CatalogItems(animes []jikan.Anime, nextPage int, hasNext bool) {
 	@ui.InfiniteAnimeList(animes, hasNext, string(templ.URL(fmt.Sprintf("/api/catalog?page=%d", nextPage))), "catalog-content")
 }
+
+templ CatalogPlaceholderItems(count int) {
+	for i := 0; i < count; i++ {
+		<div class="catalog-item catalog-placeholder" aria-hidden="true">
+			<div class="catalog-placeholder-thumb"></div>
+			<div class="catalog-placeholder-title"></div>
+		</div>
+	}
+}

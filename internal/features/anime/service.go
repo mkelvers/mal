@@ -29,6 +29,19 @@ func (s *Service) GetTopAnime(ctx context.Context, page int) (jikan.TopAnimeResu
 	return s.jikanClient.GetTopAnime(ctx, page)
 }
 
+func (s *Service) GetTopAnimeWithPlaceholder(ctx context.Context, page int) (jikan.TopAnimeResult, bool, error) {
+	result, err := s.jikanClient.GetTopAnime(ctx, page)
+	if err == nil {
+		return result, false, nil
+	}
+
+	if jikan.IsRetryableError(err) {
+		return jikan.TopAnimeResult{}, true, nil
+	}
+
+	return jikan.TopAnimeResult{}, false, err
+}
+
 func (s *Service) GetAiringAnime(ctx context.Context, page int) (jikan.TopAnimeResult, error) {
 	return s.jikanClient.GetSeasonsNow(ctx, page)
 }
@@ -40,6 +53,15 @@ func (s *Service) GetUpcomingAnime(ctx context.Context, page int) (jikan.TopAnim
 func (s *Service) GetAnimeDetails(ctx context.Context, id int, userID string) (jikan.Anime, string, error) {
 	anime, err := s.jikanClient.GetAnimeByID(ctx, id)
 	if err != nil {
+		if jikan.IsNotFoundError(err) {
+			return jikan.Anime{}, "", err
+		}
+
+		s.jikanClient.EnqueueAnimeFetchRetry(ctx, id, err)
+		if jikan.IsRetryableError(err) {
+			return jikan.Anime{}, "", ErrAnimePendingFetch
+		}
+
 		return jikan.Anime{}, "", fmt.Errorf("failed to fetch anime details: %w", err)
 	}
 
@@ -75,6 +97,9 @@ func (s *Service) GetWatchingAnime(ctx context.Context, userID string) ([]templa
 	for _, row := range rows {
 		anime, err := s.jikanClient.GetAnimeByID(ctx, int(row.AnimeID))
 		if err != nil {
+			if jikan.IsRetryableError(err) {
+				s.jikanClient.EnqueueAnimeFetchRetry(ctx, int(row.AnimeID), err)
+			}
 			// Instead of skipping, we still append it, but without the extra Jikan details
 			// This prevents anime from vanishing from the watchlist when Jikan rate limits us.
 			anime = jikan.Anime{}

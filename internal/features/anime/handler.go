@@ -2,6 +2,7 @@ package anime
 
 import (
 	"encoding/json"
+	"errors"
 	"log"
 	"net/http"
 	"strconv"
@@ -100,10 +101,15 @@ func (h *Handler) HandleAPISearch(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) HandleAPICatalog(w http.ResponseWriter, r *http.Request) {
 	page := parsePageParam(r)
 
-	res, err := h.svc.GetTopAnime(r.Context(), page)
+	res, fallbackPlaceholder, err := h.svc.GetTopAnimeWithPlaceholder(r.Context(), page)
 	if err != nil {
 		log.Printf("top anime error: %v", err)
 		http.Error(w, "Failed to fetch top anime", http.StatusInternalServerError)
+		return
+	}
+
+	if fallbackPlaceholder {
+		templates.CatalogPlaceholderItems(24).Render(r.Context(), w)
 		return
 	}
 
@@ -124,6 +130,16 @@ func (h *Handler) HandleAnimeDetails(w http.ResponseWriter, r *http.Request) {
 
 	anime, currentStatus, err := h.svc.GetAnimeDetails(r.Context(), id, userID)
 	if err != nil {
+		if errors.Is(err, ErrAnimePendingFetch) {
+			templates.AnimePending(id).Render(r.Context(), w)
+			return
+		}
+
+		if jikan.IsNotFoundError(err) {
+			http.NotFound(w, r)
+			return
+		}
+
 		log.Printf("anime fetch error for %d: %v", id, err)
 		http.Error(w, "Failed to fetch anime details", http.StatusInternalServerError)
 		return

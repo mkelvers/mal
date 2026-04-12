@@ -165,6 +165,25 @@ templ AnimeDetails(anime jikan.Anime, currentStatus string) {
 	}
 }
 
+templ AnimePending(id int) {
+	@Layout("mal - anime pending", true) {
+		<div class="anime-page">
+			<div class="anime-main">
+				<section class="anime-surface anime-section">
+					<h1>Anime data is being fetched</h1>
+					<p class="empty-inline-note">We could not load this anime right now. A background worker is retrying data fetch for anime #{ fmt.Sprintf("%d", id) }.</p>
+					<p class="empty-inline-note">Refresh this page in a few seconds.</p>
+				</section>
+			</div>
+		</div>
+		<script>
+			setTimeout(function() {
+				window.location.reload()
+			}, 10000)
+		</script>
+	}
+}
+
 func joinNames(entities []jikan.NamedEntity) string {
 	names := make([]string, len(entities))
 	for i, e := range entities {

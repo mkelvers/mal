@@ -295,6 +295,37 @@ main {
   min-width: 0;
 }
 
+.catalog-placeholder {
+  pointer-events: none;
+}
+
+.catalog-placeholder-thumb {
+  width: 100%;
+  max-height: var(--poster-max-height);
+  aspect-ratio: 2 / 3;
+  background: linear-gradient(90deg, var(--surface-search) 0%, rgba(255, 255, 255, 0.08) 45%, var(--surface-search) 100%);
+  background-size: 220% 100%;
+  animation: placeholder-shimmer 1.4s linear infinite;
+}
+
+.catalog-placeholder-title {
+  margin-top: var(--space-2);
+  height: 0.9rem;
+  width: 80%;
+  background: linear-gradient(90deg, var(--surface-search) 0%, rgba(255, 255, 255, 0.08) 45%, var(--surface-search) 100%);
+  background-size: 220% 100%;
+  animation: placeholder-shimmer 1.4s linear infinite;
+}
+
+@keyframes placeholder-shimmer {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: -100% 0;
+  }
+}
+
 .catalog-item > a,
 .catalog-item a,
 .relation-card,
