@@ -53,7 +53,8 @@ func NewHandler(svc *Service) *Handler {
 
 func (h *Handler) HandleCatalog(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path != "/" {
-		http.NotFound(w, r)
+		w.WriteHeader(http.StatusNotFound)
+		templates.NotFoundPage().Render(r.Context(), w)
 		return
 	}
 	templates.Catalog().Render(r.Context(), w)
@@ -122,7 +123,8 @@ func (h *Handler) HandleAnimeDetails(w http.ResponseWriter, r *http.Request) {
 	idStr := r.URL.Path[len("/anime/"):]
 	id, err := strconv.Atoi(idStr)
 	if err != nil || id <= 0 {
-		http.NotFound(w, r)
+		w.WriteHeader(http.StatusNotFound)
+		templates.NotFoundPage().Render(r.Context(), w)
 		return
 	}
 
@@ -136,7 +138,8 @@ func (h *Handler) HandleAnimeDetails(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if jikan.IsNotFoundError(err) {
-			http.NotFound(w, r)
+			w.WriteHeader(http.StatusNotFound)
+			templates.NotFoundPage().Render(r.Context(), w)
 			return
 		}
 
@@ -210,7 +213,8 @@ func (h *Handler) HandleAPIAnime(w http.ResponseWriter, r *http.Request) {
 		}
 		templates.AnimeRecommendations(recs).Render(r.Context(), w)
 	default:
-		http.Error(w, "not found", http.StatusNotFound)
+		w.WriteHeader(http.StatusNotFound)
+		templates.NotFoundPage().Render(r.Context(), w)
 	}
 }
 
