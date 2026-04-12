@@ -3,6 +3,7 @@ package worker
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"log"
 	"time"
 
@@ -25,10 +26,13 @@ func New(db *database.Queries, client *jikan.Client) *Worker {
 func (w *Worker) Start(ctx context.Context) {
 	log.Println("Starting relations sync worker...")
 	ticker := time.NewTicker(1 * time.Minute)
+	retryTicker := time.NewTicker(30 * time.Second)
 	defer ticker.Stop()
+	defer retryTicker.Stop()
 
 	// Run once immediately
 	w.syncRelations(ctx)
+	w.processAnimeFetchRetries(ctx)
 	w.cleanupCache(ctx)
 
 	cleanupCounter := 0
@@ -37,6 +41,10 @@ func (w *Worker) Start(ctx context.Context) {
 		select {
 		case <-ctx.Done():
 			return
+		case <-w.client.RetrySignal():
+			w.processAnimeFetchRetries(ctx)
+		case <-retryTicker.C:
+			w.processAnimeFetchRetries(ctx)
 		case <-ticker.C:
 			w.syncRelations(ctx)
 
@@ -46,6 +54,78 @@ func (w *Worker) Start(ctx context.Context) {
 				w.cleanupCache(ctx)
 				cleanupCounter = 0
 			}
+		}
+	}
+}
+
+func retryBackoff(attempts int64) string {
+	if attempts < 1 {
+		attempts = 1
+	}
+
+	delay := time.Minute
+	if attempts > 1 {
+		shift := attempts - 1
+		if shift > 6 {
+			shift = 6
+		}
+		delay = time.Minute * time.Duration(1<<shift)
+	}
+
+	if delay > 30*time.Minute {
+		delay = 30 * time.Minute
+	}
+
+	seconds := int(delay / time.Second)
+	return fmt.Sprintf("+%d seconds", seconds)
+}
+
+func (w *Worker) processAnimeFetchRetries(ctx context.Context) {
+	pending, err := w.db.CountPendingAnimeFetchRetries(ctx)
+	if err != nil {
+		log.Printf("worker: failed to count pending anime fetch retries: %v", err)
+		return
+	}
+
+	if pending == 0 {
+		return
+	}
+
+	retries, err := w.db.GetDueAnimeFetchRetries(ctx, 20)
+	if err != nil {
+		log.Printf("worker: failed to load due anime fetch retries: %v", err)
+		return
+	}
+
+	if len(retries) == 0 {
+		return
+	}
+
+	for _, retry := range retries {
+		_, err := w.client.GetAnimeByID(ctx, int(retry.AnimeID))
+		if err != nil {
+			if !jikan.IsRetryableError(err) {
+				deleteErr := w.db.DeleteAnimeFetchRetry(ctx, retry.AnimeID)
+				if deleteErr != nil {
+					log.Printf("worker: failed deleting non-retryable anime retry %d: %v", retry.AnimeID, deleteErr)
+				}
+				continue
+			}
+
+			updateErr := w.db.MarkAnimeFetchRetryFailed(ctx, database.MarkAnimeFetchRetryFailedParams{
+				Datetime:  retryBackoff(retry.Attempts + 1),
+				LastError: err.Error(),
+				AnimeID:   retry.AnimeID,
+			})
+			if updateErr != nil {
+				log.Printf("worker: failed updating anime fetch retry %d: %v", retry.AnimeID, updateErr)
+			}
+			continue
+		}
+
+		deleteErr := w.db.DeleteAnimeFetchRetry(ctx, retry.AnimeID)
+		if deleteErr != nil {
+			log.Printf("worker: failed deleting successful anime retry %d: %v", retry.AnimeID, deleteErr)
 		}
 	}
 }

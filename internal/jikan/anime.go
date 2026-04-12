@@ -13,9 +13,16 @@ func (c *Client) GetAnimeByID(ctx context.Context, id int) (Anime, error) {
 		return cached, nil
 	}
 
+	var stale Anime
+	hasStale := c.getStaleCache(ctx, cacheKey, &stale)
+
 	var result AnimeResponse
 	reqURL := fmt.Sprintf("%s/anime/%d/full", c.baseURL, id)
 	if err := c.fetchWithRetry(ctx, reqURL, &result); err != nil {
+		if hasStale {
+			return stale, nil
+		}
+
 		return Anime{}, err
 	}
 

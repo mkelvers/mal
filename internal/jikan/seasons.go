@@ -21,9 +21,16 @@ func (c *Client) GetSchedule(ctx context.Context, day string) (ScheduleResult, e
 		return cached, nil
 	}
 
+	var stale ScheduleResult
+	hasStale := c.getStaleCache(ctx, cacheKey, &stale)
+
 	var result TopAnimeResponse
 	reqURL := fmt.Sprintf("%s/schedules?filter=%s&sfw=true&limit=24", c.baseURL, day)
 	if err := c.fetchWithRetry(ctx, reqURL, &result); err != nil {
+		if hasStale {
+			return stale, nil
+		}
+
 		return ScheduleResult{}, err
 	}
 
@@ -61,9 +68,16 @@ func (c *Client) GetSeasonsNow(ctx context.Context, page int) (TopAnimeResult, e
 		return cached, nil
 	}
 
+	var stale TopAnimeResult
+	hasStale := c.getStaleCache(ctx, cacheKey, &stale)
+
 	var result TopAnimeResponse
 	reqURL := fmt.Sprintf("%s/seasons/now?limit=24&page=%d", c.baseURL, page)
 	if err := c.fetchWithRetry(ctx, reqURL, &result); err != nil {
+		if hasStale {
+			return stale, nil
+		}
+
 		return TopAnimeResult{}, err
 	}
 
@@ -86,9 +100,16 @@ func (c *Client) GetSeasonsUpcoming(ctx context.Context, page int) (TopAnimeResu
 		return cached, nil
 	}
 
+	var stale TopAnimeResult
+	hasStale := c.getStaleCache(ctx, cacheKey, &stale)
+
 	var result TopAnimeResponse
 	reqURL := fmt.Sprintf("%s/seasons/upcoming?limit=24&page=%d", c.baseURL, page)
 	if err := c.fetchWithRetry(ctx, reqURL, &result); err != nil {
+		if hasStale {
+			return stale, nil
+		}
+
 		return TopAnimeResult{}, err
 	}
 

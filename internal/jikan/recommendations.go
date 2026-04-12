@@ -34,9 +34,19 @@ func (c *Client) GetRecommendations(ctx context.Context, animeID int, limit int)
 		return cached, nil
 	}
 
+	var stale []Anime
+	hasStale := c.getStaleCache(ctx, cacheKey, &stale)
+
 	var result RecommendationsResponse
 	reqURL := fmt.Sprintf("%s/anime/%d/recommendations", c.baseURL, animeID)
 	if err := c.fetchWithRetry(ctx, reqURL, &result); err != nil {
+		if hasStale {
+			if limit > 0 && len(stale) > limit {
+				return stale[:limit], nil
+			}
+			return stale, nil
+		}
+
 		return nil, err
 	}
 
