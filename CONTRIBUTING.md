@@ -14,8 +14,14 @@ Thanks for your interest in improving MAL.
 # install templ CLI
 go install github.com/a-h/templ/cmd/templ@latest
 
+# install frontend tooling
+bun install
+
 # generate templates
 templ generate
+
+# build frontend assets (tailwind + typescript)
+bun run build:assets
 
 # run tests
 go test ./...

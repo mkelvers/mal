@@ -73,11 +73,13 @@ There are still honest limits. Metadata quality still depends partly on external
 
 ## Getting started
 
-For local development, install Go `1.24+`, SQLite, and the `templ` CLI, then generate templates and run the server.
+For local development, install Go `1.24+`, SQLite, Bun, and the `templ` CLI, then generate templates, build frontend assets, and run the server.
 
 ```bash
 go install github.com/a-h/templ/cmd/templ@latest
+bun install
 templ generate
+bun run build:assets
 go run ./cmd/server
 ```
 
