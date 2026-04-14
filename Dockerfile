@@ -8,10 +8,21 @@ ENV CGO_ENABLED=1
 # Install templ
 RUN go install github.com/a-h/templ/cmd/templ@latest
 
+# Install bun for frontend asset builds
+RUN apt-get update && apt-get install -y curl unzip && rm -rf /var/lib/apt/lists/*
+RUN curl -fsSL https://bun.sh/install | bash
+ENV PATH="/root/.bun/bin:${PATH}"
+
 COPY go.mod go.sum ./
 RUN go mod download
 
+COPY package.json bun.lock ./
+RUN bun install --frozen-lockfile
+
 COPY . .
+
+# Build frontend assets (tailwind + ts)
+RUN bun run build:assets
 
 # Generate templ files
 RUN templ generate

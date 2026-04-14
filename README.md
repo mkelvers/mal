@@ -83,7 +83,7 @@ bun run build:assets
 go run ./cmd/server
 ```
 
-The frontend pipeline uses a single source stylesheet (`static/css/style.css`) as Tailwind v4 input, then emits `static/css/tailwind.css` for serving.
+The frontend pipeline uses a single source stylesheet (`static/css/style.css`) and TypeScript sources in `static/js/*.ts`, then emits build artifacts (`static/css/tailwind.css` and `static/js/*.js`) for serving.
 
 When the server starts, the app is available at `http://localhost:3000`.
 

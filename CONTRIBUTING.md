@@ -31,6 +31,7 @@ go run ./cmd/server
 ```
 
 TypeScript source files live in `static/js/*.ts` and are bundled to matching `static/js/*.js` files for runtime.
+Generated `static/js/*.js` and `static/css/tailwind.css` files are ignored by git.
 
 ## Development guidelines
 
