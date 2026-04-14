@@ -5,6 +5,7 @@ node_modules
 out
 dist
 *.tgz
+static/css/tailwind.css
 
 # code coverage
 coverage
