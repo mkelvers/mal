@@ -2,9 +2,9 @@
   "name": "myanimelist-ui",
   "private": true,
   "scripts": {
-    "build:css": "bunx @tailwindcss/cli -i ./static/css/tailwind.input.css -o ./static/css/tailwind.css",
-    "watch:css": "bunx @tailwindcss/cli -i ./static/css/tailwind.input.css -o ./static/css/tailwind.css --watch",
-    "build:ts": "bunx tsc -p tsconfig.json",
+    "build:css": "bunx @tailwindcss/cli -i ./static/css/style.css -o ./static/css/tailwind.css",
+    "watch:css": "bunx @tailwindcss/cli -i ./static/css/style.css -o ./static/css/tailwind.css --watch",
+    "build:ts": "bun build ./static/js/*.ts --outdir ./static/js --target browser",
     "typecheck": "bunx tsc -p tsconfig.json --noEmit",
     "build:assets": "bun run build:css && bun run build:ts"
   },

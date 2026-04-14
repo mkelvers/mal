@@ -1,3 +1,7 @@
+@import 'tailwindcss';
+
+@source '../../internal/**/*.templ';
+
 :root {
   --bg: #111419;
   --panel: #181d24;

@@ -30,6 +30,8 @@ go test ./...
 go run ./cmd/server
 ```
 
+TypeScript source files live in `static/js/*.ts` and are bundled to matching `static/js/*.js` files for runtime.
+
 ## Development guidelines
 
 - Follow existing folder boundaries (`internal/features/*`, `internal/jikan`, `internal/templates`)

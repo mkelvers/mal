@@ -83,6 +83,8 @@ bun run build:assets
 go run ./cmd/server
 ```
 
+The frontend pipeline uses a single source stylesheet (`static/css/style.css`) as Tailwind v4 input, then emits `static/css/tailwind.css` for serving.
+
 When the server starts, the app is available at `http://localhost:3000`.
 
 For containerized usage, the included `Dockerfile` uses a multi-stage build that generates templates, compiles `cmd/server`, and ships a slim runtime image with SQLite support.

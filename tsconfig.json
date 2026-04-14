@@ -5,13 +5,13 @@
     "moduleResolution": "Bundler",
     "strict": true,
     "noEmitOnError": true,
-    "outDir": "./static/js",
-    "rootDir": "./static/ts",
+    "allowJs": false,
+    "noEmit": true,
     "sourceMap": false,
     "removeComments": false,
     "skipLibCheck": true
   },
   "include": [
-    "static/ts/**/*.ts"
+    "static/js/**/*.ts"
   ]
 }
