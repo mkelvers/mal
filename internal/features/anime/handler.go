@@ -1,6 +1,7 @@
 package anime
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"log"
@@ -90,6 +91,10 @@ func (h *Handler) HandleSearch(w http.ResponseWriter, r *http.Request) {
 		res, err := h.svc.Search(r.Context(), query, 1)
 		if err != nil {
 			log.Printf("search error: %v", err)
+			if jikan.IsRetryableError(err) || errors.Is(err, context.Canceled) {
+				writeInlineLoadError(w, "Search is temporarily unavailable. Please retry in a few seconds.")
+				return
+			}
 			http.Error(w, "Failed to search anime", http.StatusInternalServerError)
 			return
 		}
@@ -107,6 +112,10 @@ func (h *Handler) HandleAPISearch(w http.ResponseWriter, r *http.Request) {
 	res, err := h.svc.Search(r.Context(), query, page)
 	if err != nil {
 		log.Printf("search pagination error: %v", err)
+		if jikan.IsRetryableError(err) || errors.Is(err, context.Canceled) {
+			writeInlineLoadError(w, "Unable to load more results right now. Please retry shortly.")
+			return
+		}
 		http.Error(w, "Failed to fetch search page", http.StatusInternalServerError)
 		return
 	}
@@ -216,6 +225,11 @@ func (h *Handler) HandleQuickSearch(w http.ResponseWriter, r *http.Request) {
 	res, err := h.svc.QuickSearch(r.Context(), query, 1, 5)
 	if err != nil {
 		log.Printf("quick search error: %v", err)
+		if jikan.IsRetryableError(err) || errors.Is(err, context.Canceled) {
+			w.WriteHeader(http.StatusOK)
+			json.NewEncoder(w).Encode([]quickSearchResult{})
+			return
+		}
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
