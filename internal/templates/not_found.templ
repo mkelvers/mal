@@ -2,11 +2,11 @@ package templates
 
 templ NotFoundPage() {
 	@Layout("mal - not found", false) {
-		<section class="not-found-page anime-surface">
-			<p class="not-found-code">404</p>
-			<h1>Page not found</h1>
-			<p class="empty-inline-note">The page you requested does not exist, or it was moved.</p>
-			<p><a href="/" class="not-found-link">Back to catalog</a></p>
+		<section class="not-found-page anime-surface w-[min(780px,calc(100vw-(1.5rem*2)))] min-h-[72vh] mx-auto py-8 px-7 grid content-center justify-items-center gap-3 text-center">
+			<p class="not-found-code m-0 text-[clamp(4rem,15vw,10rem)] tracking-[0.04em] leading-[0.9] text-[var(--color-text-muted)]">404</p>
+			<h1 class="m-0 text-[clamp(2rem,4vw,3rem)]">Page not found</h1>
+			<p class="empty-inline-note text-[var(--color-text-muted)]">The page you requested does not exist, or it was moved.</p>
+			<p><a href="/" class="not-found-link text-[var(--color-accent)] no-underline text-[1.05rem] hover:underline">Back to catalog</a></p>
 		</section>
 	}
 }

@@ -2,28 +2,28 @@ package templates
 
 templ Login(formError string, username string) {
 	@Layout("Login", false) {
-		<div class="auth-shell">
-			<div class="login-container">
-				<h2>Sign in</h2>
-				<p class="login-subtitle">Enter your credentials to continue.</p>
-				<form action="/login" method="POST" class="login-form">
-					<div class="form-group">
+		<div class="auth-shell w-full max-w-[560px]">
+			<div class="login-container w-full mx-auto p-6 bg-[var(--color-panel)]">
+				<h2 class="m-0 text-[1.4rem]">Sign in</h2>
+				<p class="login-subtitle my-3 mb-5 text-[0.95rem] text-[var(--color-text-muted)]">Enter your credentials to continue.</p>
+				<form action="/login" method="POST" class="login-form grid gap-4">
+					<div class="form-group grid gap-1">
 						<label for="username">Username / Email</label>
 						<input type="text" id="username" name="username" required placeholder="you@example.com" value={ username }/>
 					</div>
-					<div class="form-group">
+					<div class="form-group grid gap-1">
 						<label for="password">Password</label>
 						<input type="password" id="password" name="password" required placeholder="Your password"/>
 					</div>
-					<button type="submit" class="login-button">Sign in</button>
+					<button type="submit" class="login-button h-10 border-0 bg-[var(--color-accent)] text-[var(--text-on-accent)] text-[0.9rem] font-semibold cursor-pointer hover:brightness-95">Sign in</button>
 					if formError != "" {
 						<p class="auth-form-error" role="alert" aria-live="polite">{ formError }</p>
 					}
 				</form>
-				<p class="auth-switch-row">
+				<p class="auth-switch-row mt-5 mb-0 text-center text-[0.9rem] text-[var(--color-text-muted)]">
 					Don't have an account? <a href="/register">Register</a>
 				</p>
-				<p class="auth-switch-row">
+				<p class="auth-switch-row mt-5 mb-0 text-center text-[0.9rem] text-[var(--color-text-muted)]">
 					Lost access? <a href="/recover">Recover account</a>
 				</p>
 			</div>
@@ -33,28 +33,28 @@ templ Login(formError string, username string) {
 
 templ Register(formError string, username string) {
 	@Layout("Register", false) {
-		<div class="auth-shell">
-			<div class="login-container">
-				<h2>Register</h2>
-				<p class="login-subtitle">Create a new account to track anime.</p>
-				<form action="/register" method="POST" class="login-form">
-					<div class="form-group">
+		<div class="auth-shell w-full max-w-[560px]">
+			<div class="login-container w-full mx-auto p-6 bg-[var(--color-panel)]">
+				<h2 class="m-0 text-[1.4rem]">Register</h2>
+				<p class="login-subtitle my-3 mb-5 text-[0.95rem] text-[var(--color-text-muted)]">Create a new account to track anime.</p>
+				<form action="/register" method="POST" class="login-form grid gap-4">
+					<div class="form-group grid gap-1">
 						<label for="username">Username / Email</label>
 						<input type="text" id="username" name="username" required placeholder="you@example.com" value={ username }/>
 					</div>
-					<div class="form-group">
+					<div class="form-group grid gap-1">
 						<label for="password">Password</label>
 						<input type="password" id="password" name="password" required placeholder="Minimum 12 chars"/>
 					</div>
 					<p class="auth-password-note">
 						Password must be at least 12 characters and include an uppercase letter, lowercase letter, number, and special character.
 					</p>
-					<button type="submit" class="login-button">Create account</button>
+					<button type="submit" class="login-button h-10 border-0 bg-[var(--color-accent)] text-[var(--text-on-accent)] text-[0.9rem] font-semibold cursor-pointer hover:brightness-95">Create account</button>
 					if formError != "" {
 						<p class="auth-form-error" role="alert" aria-live="polite">{ formError }</p>
 					}
 				</form>
-				<p class="auth-switch-row">
+				<p class="auth-switch-row mt-5 mb-0 text-center text-[0.9rem] text-[var(--color-text-muted)]">
 					Already have an account? <a href="/login">Sign in</a>
 				</p>
 			</div>
@@ -84,29 +84,29 @@ templ RegistrationRecoveryKey(recoveryKey string) {
 
 templ Recover(formError string, username string, recoveryKey string) {
 	@Layout("Recover account", false) {
-		<div class="auth-shell">
-			<div class="login-container">
-				<h2>Recover account</h2>
-				<p class="login-subtitle">Enter your username, recovery key, and a new password.</p>
-				<form action="/recover" method="POST" class="login-form">
-					<div class="form-group">
+		<div class="auth-shell w-full max-w-[560px]">
+			<div class="login-container w-full mx-auto p-6 bg-[var(--color-panel)]">
+				<h2 class="m-0 text-[1.4rem]">Recover account</h2>
+				<p class="login-subtitle my-3 mb-5 text-[0.95rem] text-[var(--color-text-muted)]">Enter your username, recovery key, and a new password.</p>
+				<form action="/recover" method="POST" class="login-form grid gap-4">
+					<div class="form-group grid gap-1">
 						<label for="username">Username / Email</label>
 						<input type="text" id="username" name="username" required placeholder="you@example.com" value={ username }/>
 					</div>
-					<div class="form-group">
+					<div class="form-group grid gap-1">
 						<label for="recovery_key">Recovery key</label>
 						<input type="text" id="recovery_key" name="recovery_key" required value={ recoveryKey }/>
 					</div>
-					<div class="form-group">
+					<div class="form-group grid gap-1">
 						<label for="new_password">New password</label>
 						<input type="password" id="new_password" name="new_password" required placeholder="Minimum 12 chars"/>
 					</div>
-					<button type="submit" class="login-button">Reset password</button>
+					<button type="submit" class="login-button h-10 border-0 bg-[var(--color-accent)] text-[var(--text-on-accent)] text-[0.9rem] font-semibold cursor-pointer hover:brightness-95">Reset password</button>
 					if formError != "" {
 						<p class="auth-form-error" role="alert" aria-live="polite">{ formError }</p>
 					}
 				</form>
-				<p class="auth-switch-row">
+				<p class="auth-switch-row mt-5 mb-0 text-center text-[0.9rem] text-[var(--color-text-muted)]">
 					Remembered your password? <a href="/login">Sign in</a>
 				</p>
 			</div>

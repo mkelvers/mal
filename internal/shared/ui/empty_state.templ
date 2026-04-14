@@ -1,9 +1,9 @@
 package ui
 
 templ EmptyState(title string) {
-	<div class="empty-state">
-		<div class="empty-state-title">{ title }</div>
-		<div class="empty-state-text">
+	<div class="empty-state py-4">
+		<div class="empty-state-title mb-2 text-base">{ title }</div>
+		<div class="empty-state-text text-sm text-[var(--color-text-muted)]">
 			{ children... }
 		</div>
 	</div>
