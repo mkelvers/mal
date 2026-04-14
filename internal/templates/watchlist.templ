@@ -7,7 +7,7 @@ import (
 )
 
 templ Watchlist(entries []database.GetUserWatchListRow, layout string, currentStatus string, sortBy string, sortOrder string) {
-	@Layout("My Watchlist", true) {
+	@Layout("mal - watchlist", true) {
 		<div class="mb-4 flex items-end justify-between gap-4 max-[860px]:flex-col max-[860px]:items-start">
 			<div class="grid gap-1">
 				<h2>Watchlist</h2>
