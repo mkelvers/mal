@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"mal/internal/database"
 	"mal/internal/jikan"
@@ -27,6 +28,23 @@ func deduplicateAnimes(animes []jikan.Anime) []jikan.Anime {
 
 type Handler struct {
 	svc *Service
+}
+
+type quickSearchResult struct {
+	ID    int    `json:"id"`
+	Title string `json:"title"`
+	Type  string `json:"type"`
+	Image string `json:"image"`
+}
+
+func renderNotFoundPage(r *http.Request, w http.ResponseWriter) {
+	w.WriteHeader(http.StatusNotFound)
+	templates.NotFoundPage().Render(r.Context(), w)
+}
+
+func writeInlineLoadError(w http.ResponseWriter, message string) {
+	w.Header().Set("Content-Type", "text/html")
+	_, _ = w.Write([]byte(`<p style="color: var(--text-muted); font-size: var(--text-sm);">` + message + `</p>`))
 }
 
 func parsePageParam(r *http.Request) int {
@@ -53,8 +71,7 @@ func NewHandler(svc *Service) *Handler {
 
 func (h *Handler) HandleCatalog(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path != "/" {
-		w.WriteHeader(http.StatusNotFound)
-		templates.NotFoundPage().Render(r.Context(), w)
+		renderNotFoundPage(r, w)
 		return
 	}
 	templates.Catalog().Render(r.Context(), w)
@@ -110,7 +127,7 @@ func (h *Handler) HandleAPICatalog(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if fallbackPlaceholder {
-		templates.CatalogPlaceholderItems(24).Render(r.Context(), w)
+		templates.CatalogPlaceholderItems(jikan.ListPageSize).Render(r.Context(), w)
 		return
 	}
 
@@ -123,8 +140,7 @@ func (h *Handler) HandleAnimeDetails(w http.ResponseWriter, r *http.Request) {
 	idStr := r.URL.Path[len("/anime/"):]
 	id, err := strconv.Atoi(idStr)
 	if err != nil || id <= 0 {
-		w.WriteHeader(http.StatusNotFound)
-		templates.NotFoundPage().Render(r.Context(), w)
+		renderNotFoundPage(r, w)
 		return
 	}
 
@@ -138,8 +154,7 @@ func (h *Handler) HandleAnimeDetails(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if jikan.IsNotFoundError(err) {
-			w.WriteHeader(http.StatusNotFound)
-			templates.NotFoundPage().Render(r.Context(), w)
+			renderNotFoundPage(r, w)
 			return
 		}
 
@@ -151,55 +166,27 @@ func (h *Handler) HandleAnimeDetails(w http.ResponseWriter, r *http.Request) {
 	templates.AnimeDetails(anime, currentStatus).Render(r.Context(), w)
 }
 
-func (h *Handler) HandleAPIAnimeRelations(w http.ResponseWriter, r *http.Request) {
-	path := r.URL.Path[len("/api/anime/"):]
-	idStr := ""
-	for i, c := range path {
-		if c == '/' {
-			idStr = path[:i]
-			break
-		}
-	}
-
-	id, _ := strconv.Atoi(idStr)
-	if id <= 0 {
-		http.Error(w, "invalid id", http.StatusBadRequest)
-		return
-	}
-
-	relations, err := h.svc.GetRelations(r.Context(), id)
-	if err != nil {
-		log.Printf("failed to get relations for anime %d: %v", id, err)
-		http.Error(w, "Failed to load relations", http.StatusInternalServerError)
-		return
-	}
-	templates.AnimeRelationsList(relations).Render(r.Context(), w)
-}
-
-// HandleAPIAnime routes anime API requests
 func (h *Handler) HandleAPIAnime(w http.ResponseWriter, r *http.Request) {
 	path := r.URL.Path[len("/api/anime/"):]
 
-	// Parse: {id}/relations or {id}/recommendations
-	parts := splitPath(path)
-	if len(parts) < 2 {
+	idPart, section, ok := strings.Cut(path, "/")
+	if !ok || section == "" {
 		http.Error(w, "invalid path", http.StatusBadRequest)
 		return
 	}
 
-	id, err := strconv.Atoi(parts[0])
+	id, err := strconv.Atoi(idPart)
 	if err != nil || id <= 0 {
 		http.Error(w, "invalid id", http.StatusBadRequest)
 		return
 	}
 
-	switch parts[1] {
+	switch section {
 	case "relations":
 		relations, err := h.svc.GetRelations(r.Context(), id)
 		if err != nil {
 			log.Printf("relations error for %d: %v", id, err)
-			w.Header().Set("Content-Type", "text/html")
-			w.Write([]byte(`<p style="color: var(--text-muted); font-size: var(--text-sm);">Failed to load relations.</p>`))
+			writeInlineLoadError(w, "Failed to load relations.")
 			return
 		}
 		templates.AnimeRelationsList(relations).Render(r.Context(), w)
@@ -207,69 +194,40 @@ func (h *Handler) HandleAPIAnime(w http.ResponseWriter, r *http.Request) {
 		recs, err := h.svc.GetRecommendations(r.Context(), id, 12)
 		if err != nil {
 			log.Printf("recommendations error for %d: %v", id, err)
-			w.Header().Set("Content-Type", "text/html")
-			w.Write([]byte(`<p style="color: var(--text-muted); font-size: var(--text-sm);">Failed to load recommendations.</p>`))
+			writeInlineLoadError(w, "Failed to load recommendations.")
 			return
 		}
 		templates.AnimeRecommendations(recs).Render(r.Context(), w)
 	default:
-		w.WriteHeader(http.StatusNotFound)
-		templates.NotFoundPage().Render(r.Context(), w)
+		renderNotFoundPage(r, w)
 	}
-}
-
-func splitPath(path string) []string {
-	var parts []string
-	var current string
-	for _, c := range path {
-		if c == '/' {
-			if current != "" {
-				parts = append(parts, current)
-				current = ""
-			}
-		} else {
-			current += string(c)
-		}
-	}
-	if current != "" {
-		parts = append(parts, current)
-	}
-	return parts
 }
 
 func (h *Handler) HandleQuickSearch(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
 	query := r.URL.Query().Get("q")
 	if query == "" {
-		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode([]any{})
+		json.NewEncoder(w).Encode([]quickSearchResult{})
 		return
 	}
 
 	res, err := h.svc.Search(r.Context(), query, 1)
 	if err != nil {
 		log.Printf("quick search error: %v", err)
-		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	// Limit to 5 results
 	results := res.Animes
 	if len(results) > 5 {
 		results = results[:5]
 	}
 
-	type SearchResult struct {
-		ID    int    `json:"id"`
-		Title string `json:"title"`
-		Type  string `json:"type"`
-		Image string `json:"image"`
-	}
-
-	output := make([]SearchResult, len(results))
+	output := make([]quickSearchResult, len(results))
 	for i, anime := range results {
-		output[i] = SearchResult{
+		output[i] = quickSearchResult{
 			ID:    anime.MalID,
 			Title: anime.DisplayTitle(),
 			Type:  anime.Type,
@@ -277,7 +235,6 @@ func (h *Handler) HandleQuickSearch(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(output)
 }

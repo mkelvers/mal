@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"strings"
-	"time"
 )
 
 type ScheduleResult struct {
@@ -14,7 +13,7 @@ type ScheduleResult struct {
 
 func (c *Client) GetSchedule(ctx context.Context, day string) (ScheduleResult, error) {
 	day = strings.ToLower(day)
-	cacheKey := fmt.Sprintf("schedule_limit24_%s", day)
+	cacheKey := fmt.Sprintf("schedule_limit%d_%s", ListPageSize, day)
 
 	var cached ScheduleResult
 	if c.getCache(ctx, cacheKey, &cached) {
@@ -25,7 +24,7 @@ func (c *Client) GetSchedule(ctx context.Context, day string) (ScheduleResult, e
 	hasStale := c.getStaleCache(ctx, cacheKey, &stale)
 
 	var result TopAnimeResponse
-	reqURL := fmt.Sprintf("%s/schedules?filter=%s&sfw=true&limit=24", c.baseURL, day)
+	reqURL := fmt.Sprintf("%s/schedules?filter=%s&sfw=true&limit=%d", c.baseURL, day, ListPageSize)
 	if err := c.fetchWithRetry(ctx, reqURL, &result); err != nil {
 		if hasStale {
 			return stale, nil
@@ -39,7 +38,7 @@ func (c *Client) GetSchedule(ctx context.Context, day string) (ScheduleResult, e
 		HasNextPage: result.Pagination.HasNextPage,
 	}
 
-	c.setCache(ctx, cacheKey, res, time.Hour*1)
+	c.setCache(ctx, cacheKey, res, shortCacheTTL)
 	return res, nil
 }
 
@@ -62,7 +61,7 @@ func (c *Client) GetSeasonsNow(ctx context.Context, page int) (TopAnimeResult, e
 	if page < 1 {
 		page = 1
 	}
-	cacheKey := fmt.Sprintf("seasons_now_limit24:%d", page)
+	cacheKey := fmt.Sprintf("seasons_now_limit%d:%d", ListPageSize, page)
 	var cached TopAnimeResult
 	if c.getCache(ctx, cacheKey, &cached) {
 		return cached, nil
@@ -72,7 +71,7 @@ func (c *Client) GetSeasonsNow(ctx context.Context, page int) (TopAnimeResult, e
 	hasStale := c.getStaleCache(ctx, cacheKey, &stale)
 
 	var result TopAnimeResponse
-	reqURL := fmt.Sprintf("%s/seasons/now?limit=24&page=%d", c.baseURL, page)
+	reqURL := fmt.Sprintf("%s/seasons/now?limit=%d&page=%d", c.baseURL, ListPageSize, page)
 	if err := c.fetchWithRetry(ctx, reqURL, &result); err != nil {
 		if hasStale {
 			return stale, nil
@@ -86,7 +85,7 @@ func (c *Client) GetSeasonsNow(ctx context.Context, page int) (TopAnimeResult, e
 		HasNextPage: result.Pagination.HasNextPage,
 	}
 
-	c.setCache(ctx, cacheKey, res, time.Hour*1)
+	c.setCache(ctx, cacheKey, res, shortCacheTTL)
 	return res, nil
 }
 
@@ -94,7 +93,7 @@ func (c *Client) GetSeasonsUpcoming(ctx context.Context, page int) (TopAnimeResu
 	if page < 1 {
 		page = 1
 	}
-	cacheKey := fmt.Sprintf("seasons_upcoming_limit24:%d", page)
+	cacheKey := fmt.Sprintf("seasons_upcoming_limit%d:%d", ListPageSize, page)
 	var cached TopAnimeResult
 	if c.getCache(ctx, cacheKey, &cached) {
 		return cached, nil
@@ -104,7 +103,7 @@ func (c *Client) GetSeasonsUpcoming(ctx context.Context, page int) (TopAnimeResu
 	hasStale := c.getStaleCache(ctx, cacheKey, &stale)
 
 	var result TopAnimeResponse
-	reqURL := fmt.Sprintf("%s/seasons/upcoming?limit=24&page=%d", c.baseURL, page)
+	reqURL := fmt.Sprintf("%s/seasons/upcoming?limit=%d&page=%d", c.baseURL, ListPageSize, page)
 	if err := c.fetchWithRetry(ctx, reqURL, &result); err != nil {
 		if hasStale {
 			return stale, nil
@@ -118,6 +117,6 @@ func (c *Client) GetSeasonsUpcoming(ctx context.Context, page int) (TopAnimeResu
 		HasNextPage: result.Pagination.HasNextPage,
 	}
 
-	c.setCache(ctx, cacheKey, res, time.Hour*1)
+	c.setCache(ctx, cacheKey, res, shortCacheTTL)
 	return res, nil
 }

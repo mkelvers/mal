@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"net/url"
-	"time"
 )
 
 func (c *Client) Search(ctx context.Context, query string, page int) (SearchResult, error) {
@@ -15,7 +14,7 @@ func (c *Client) Search(ctx context.Context, query string, page int) (SearchResu
 		page = 1
 	}
 
-	cacheKey := fmt.Sprintf("search:limit24:%s:%d", query, page)
+	cacheKey := fmt.Sprintf("search:limit%d:%s:%d", ListPageSize, query, page)
 	var cached SearchResult
 	if c.getCache(ctx, cacheKey, &cached) {
 		return cached, nil
@@ -25,7 +24,7 @@ func (c *Client) Search(ctx context.Context, query string, page int) (SearchResu
 	hasStale := c.getStaleCache(ctx, cacheKey, &stale)
 
 	var result SearchResponse
-	reqURL := fmt.Sprintf("%s/anime?q=%s&limit=24&page=%d", c.baseURL, url.QueryEscape(query), page)
+	reqURL := fmt.Sprintf("%s/anime?q=%s&limit=%d&page=%d", c.baseURL, url.QueryEscape(query), ListPageSize, page)
 
 	if err := c.fetchWithRetry(ctx, reqURL, &result); err != nil {
 		if hasStale {
@@ -40,7 +39,7 @@ func (c *Client) Search(ctx context.Context, query string, page int) (SearchResu
 		HasNextPage: result.Pagination.HasNextPage,
 	}
 
-	c.setCache(ctx, cacheKey, res, time.Hour*1)
+	c.setCache(ctx, cacheKey, res, shortCacheTTL)
 	return res, nil
 }
 
@@ -48,7 +47,7 @@ func (c *Client) GetTopAnime(ctx context.Context, page int) (TopAnimeResult, err
 	if page < 1 {
 		page = 1
 	}
-	cacheKey := fmt.Sprintf("top:limit24:%d", page)
+	cacheKey := fmt.Sprintf("top:limit%d:%d", ListPageSize, page)
 	var cached TopAnimeResult
 	if c.getCache(ctx, cacheKey, &cached) {
 		return cached, nil
@@ -58,7 +57,7 @@ func (c *Client) GetTopAnime(ctx context.Context, page int) (TopAnimeResult, err
 	hasStale := c.getStaleCache(ctx, cacheKey, &stale)
 
 	var result TopAnimeResponse
-	reqURL := fmt.Sprintf("%s/top/anime?filter=bypopularity&limit=24&page=%d", c.baseURL, page)
+	reqURL := fmt.Sprintf("%s/top/anime?filter=bypopularity&limit=%d&page=%d", c.baseURL, ListPageSize, page)
 
 	if err := c.fetchWithRetry(ctx, reqURL, &result); err != nil {
 		if hasStale {
@@ -73,6 +72,6 @@ func (c *Client) GetTopAnime(ctx context.Context, page int) (TopAnimeResult, err
 		HasNextPage: result.Pagination.HasNextPage,
 	}
 
-	c.setCache(ctx, cacheKey, res, time.Hour*1)
+	c.setCache(ctx, cacheKey, res, shortCacheTTL)
 	return res, nil
 }
