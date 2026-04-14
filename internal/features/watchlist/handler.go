@@ -5,6 +5,7 @@ import (
 	"errors"
 	"log"
 	"net/http"
+	"sort"
 	"strconv"
 
 	"mal/internal/database"
@@ -20,14 +21,22 @@ func NewHandler(svc *Service) *Handler {
 	return &Handler{svc: svc}
 }
 
+func requireMethod(w http.ResponseWriter, r *http.Request, method string) bool {
+	if r.Method == method {
+		return true
+	}
+
+	http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+	return false
+}
+
 func (h *Handler) HandleUpdateWatchlist(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+	if !requireMethod(w, r, http.MethodPost) {
 		return
 	}
 
-	user, ok := r.Context().Value(middleware.UserContextKey).(*database.User)
-	if !ok || user == nil {
+	user := middleware.GetUser(r.Context())
+	if user == nil {
 		w.Header().Set("HX-Redirect", "/login")
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
@@ -79,13 +88,12 @@ func (h *Handler) HandleUpdateWatchlist(w http.ResponseWriter, r *http.Request) 
 }
 
 func (h *Handler) HandleDeleteWatchlist(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodDelete {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+	if !requireMethod(w, r, http.MethodDelete) {
 		return
 	}
 
-	user, ok := r.Context().Value(middleware.UserContextKey).(*database.User)
-	if !ok || user == nil {
+	user := middleware.GetUser(r.Context())
+	if user == nil {
 		w.Header().Set("HX-Redirect", "/login")
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
@@ -131,8 +139,7 @@ func (h *Handler) HandleDeleteWatchlist(w http.ResponseWriter, r *http.Request) 
 }
 
 func (h *Handler) HandleGetWatchlist(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+	if !requireMethod(w, r, http.MethodGet) {
 		return
 	}
 
@@ -152,8 +159,8 @@ func (h *Handler) HandleGetWatchlist(w http.ResponseWriter, r *http.Request) {
 		sortOrder = "desc"
 	}
 
-	user, ok := r.Context().Value(middleware.UserContextKey).(*database.User)
-	if !ok || user == nil {
+	user := middleware.GetUser(r.Context())
+	if user == nil {
 		http.Redirect(w, r, "/login", http.StatusFound)
 		return
 	}
@@ -191,13 +198,12 @@ func (h *Handler) HandleGetWatchlist(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) HandleExportWatchlist(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+	if !requireMethod(w, r, http.MethodGet) {
 		return
 	}
 
-	user, ok := r.Context().Value(middleware.UserContextKey).(*database.User)
-	if !ok || user == nil {
+	user := middleware.GetUser(r.Context())
+	if user == nil {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
@@ -215,13 +221,12 @@ func (h *Handler) HandleExportWatchlist(w http.ResponseWriter, r *http.Request) 
 }
 
 func (h *Handler) HandleImportWatchlist(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+	if !requireMethod(w, r, http.MethodPost) {
 		return
 	}
 
-	user, ok := r.Context().Value(middleware.UserContextKey).(*database.User)
-	if !ok || user == nil {
+	user := middleware.GetUser(r.Context())
+	if user == nil {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
@@ -280,12 +285,5 @@ func (h *Handler) sortEntries(entries []database.GetUserWatchListRow, sortBy, so
 		}
 	}
 
-	// Simple bubble sort for small lists
-	for i := range len(entries) {
-		for j := i + 1; j < len(entries); j++ {
-			if less(j, i) {
-				entries[i], entries[j] = entries[j], entries[i]
-			}
-		}
-	}
+	sort.SliceStable(entries, less)
 }
