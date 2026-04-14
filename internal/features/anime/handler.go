@@ -127,7 +127,7 @@ func (h *Handler) HandleAPICatalog(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if fallbackPlaceholder {
-		templates.CatalogPlaceholderItems(jikan.ListPageSize).Render(r.Context(), w)
+		templates.CatalogPlaceholderItems(25).Render(r.Context(), w)
 		return
 	}
 
