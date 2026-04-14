@@ -28,6 +28,8 @@ var (
 	ErrInvalidRecoveryKey = errors.New("invalid recovery details")
 )
 
+const bcryptCost = 12
+
 type Service struct {
 	db database.Querier
 }
@@ -87,7 +89,7 @@ func (s *Service) RegisterUser(ctx context.Context, username, password string) (
 		return nil, "", fmt.Errorf("%w: %v", ErrInvalidPassword, err)
 	}
 
-	hash, err := bcrypt.GenerateFromPassword([]byte(password), 12) // higher cost
+	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcryptCost)
 	if err != nil {
 		return nil, "", fmt.Errorf("failed to hash password: %w", err)
 	}
@@ -128,7 +130,7 @@ func (s *Service) RecoverAccount(ctx context.Context, username, recoveryKey, new
 		return "", fmt.Errorf("failed to lookup user for recovery: %w", err)
 	}
 
-	newPasswordHash, err := bcrypt.GenerateFromPassword([]byte(newPassword), 12)
+	newPasswordHash, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcryptCost)
 	if err != nil {
 		return "", fmt.Errorf("failed to hash new password: %w", err)
 	}
@@ -169,7 +171,7 @@ func (s *Service) ChangePassword(ctx context.Context, userID, currentPassword, n
 		return ErrInvalidCredentials
 	}
 
-	newPasswordHash, err := bcrypt.GenerateFromPassword([]byte(newPassword), 12)
+	newPasswordHash, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcryptCost)
 	if err != nil {
 		return fmt.Errorf("failed to hash new password: %w", err)
 	}

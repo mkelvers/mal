@@ -51,7 +51,13 @@ func NewHandler(authService *Service) *Handler {
 	return &Handler{authService: authService}
 }
 
-// Render the login/register pages here (assuming you have these templates)
+func rateLimitErrorFromQuery(r *http.Request) string {
+	if r.URL.Query().Get("error") == "rate_limited" {
+		return rateLimitFormError
+	}
+
+	return ""
+}
 
 func (h *Handler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 	if err := r.ParseForm(); err != nil {
@@ -127,27 +133,15 @@ func (h *Handler) HandleLogout(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) HandleLoginPage(w http.ResponseWriter, r *http.Request) {
-	formError := ""
-	if r.URL.Query().Get("error") == "rate_limited" {
-		formError = rateLimitFormError
-	}
-	templates.Login(formError, "").Render(r.Context(), w)
+	templates.Login(rateLimitErrorFromQuery(r), "").Render(r.Context(), w)
 }
 
 func (h *Handler) HandleRegisterPage(w http.ResponseWriter, r *http.Request) {
-	formError := ""
-	if r.URL.Query().Get("error") == "rate_limited" {
-		formError = rateLimitFormError
-	}
-	templates.Register(formError, "").Render(r.Context(), w)
+	templates.Register(rateLimitErrorFromQuery(r), "").Render(r.Context(), w)
 }
 
 func (h *Handler) HandleRecoverPage(w http.ResponseWriter, r *http.Request) {
-	formError := ""
-	if r.URL.Query().Get("error") == "rate_limited" {
-		formError = rateLimitFormError
-	}
-	templates.Recover(formError, "", "").Render(r.Context(), w)
+	templates.Recover(rateLimitErrorFromQuery(r), "", "").Render(r.Context(), w)
 }
 
 func (h *Handler) HandleRecover(w http.ResponseWriter, r *http.Request) {
