@@ -152,7 +152,7 @@ func (h *Handler) HandleGetWatchlist(w http.ResponseWriter, r *http.Request) {
 	sortBy := r.URL.Query().Get("sort")
 	sortOrder := r.URL.Query().Get("order")
 
-	if sortBy != "title" && sortBy != "score" {
+	if sortBy != "title" {
 		sortBy = "date"
 	}
 	if sortOrder != "asc" {
@@ -269,11 +269,6 @@ func (h *Handler) sortEntries(entries []database.GetUserWatchListRow, sortBy, so
 				return cmp
 			}
 			return !cmp
-		}
-	case "score":
-		less = func(i, j int) bool {
-			// Score is stored as JSON in the DB, for now just keep default order
-			return false
 		}
 	default: // "date"
 		less = func(i, j int) bool {

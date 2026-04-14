@@ -69,7 +69,7 @@ The background worker continuously maintains relation data for sequel awareness,
 
 The hardest part has been balancing freshness and resilience. Upstream APIs can fail transiently with `429` and `5xx` responses, so the app favors graceful degradation over hard failure. Cached values are used when fresh requests fail, retryable failures are persisted and replayed in the worker, and relation synchronization is incremental so one bad fetch does not block the rest of the graph.
 
-There are still honest limits. Score sorting in the watchlist remains a placeholder path, and metadata quality still depends partly on external providers. There is also no formal CI pipeline yet, so local validation is currently the main quality gate.
+There are still honest limits. Metadata quality still depends partly on external providers, and there is also no formal CI pipeline yet, so local validation is currently the main quality gate.
 
 ## Getting started
 
