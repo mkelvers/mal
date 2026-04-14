@@ -15,7 +15,7 @@ templ Notifications(watching []WatchingAnimeWithDetails, activeTab string) {
 	@Layout("mal - notifications", true) {
 		<div class="grid gap-4">
 			<h1>Notifications</h1>
-			<div class="mb-3 flex flex-wrap gap-2 max-[680px]:flex-nowrap max-[680px]:overflow-x-auto max-[680px]:pb-1">
+			<div class="mb-3 flex flex-wrap gap-2 max-md:flex-nowrap max-md:overflow-x-auto max-md:pb-1">
 				<a href="/notifications?tab=tracking" class={ statusTabClass(activeTab == "tracking") }>Tracking</a>
 				<a href="/notifications?tab=sequels" class={ statusTabClass(activeTab == "sequels") }>Sequels</a>
 			</div>
@@ -25,13 +25,13 @@ templ Notifications(watching []WatchingAnimeWithDetails, activeTab string) {
 					@ui.LoadingIndicator("Syncing sequel graphs...")
 				</div>
 			} else {
-				<p class="m-0 text-[0.88rem] text-[var(--text-muted)]">Shows you're currently watching or planning to watch.</p>
+				<p class="m-0 text-sm text-(--text-muted)">Shows you're currently watching or planning to watch.</p>
 				if len(watching) == 0 {
 					@ui.EmptyState("No airing anime in your watching list.") {
-						<span class="text-[0.9rem] text-[var(--text-muted)]">Add currently airing shows to your watching list to see upcoming episodes here.</span>
+						<span class="text-sm text-(--text-muted)">Add currently airing shows to your watching list to see upcoming episodes here.</span>
 					}
 				} else {
-					<div class="grid grid-cols-[repeat(auto-fill,minmax(190px,1fr))] gap-4 max-[680px]:grid-cols-2 max-[680px]:gap-3">
+					<div class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:gap-4 lg:grid-cols-4 xl:grid-cols-5">
 						for _, item := range watching {
 							@NotificationCard(item)
 						}
@@ -56,7 +56,7 @@ func splitUpcomingSeasons(items []database.GetUpcomingSeasonsRow) (airing []data
 templ UpcomingSeasonsList(upcomingSeasons []database.GetUpcomingSeasonsRow) {
 	if len(upcomingSeasons) == 0 {
 		@ui.EmptyState("No upcoming seasons for anime you've watched.") {
-			<span class="text-[0.9rem] text-[var(--text-muted)]">As you watch more shows, new seasons will appear here.</span>
+			<span class="text-sm text-(--text-muted)">As you watch more shows, new seasons will appear here.</span>
 		}
 	} else {
 		@renderSplitSeasons(upcomingSeasons)
@@ -67,9 +67,9 @@ templ renderSplitSeasons(upcomingSeasons []database.GetUpcomingSeasonsRow) {
 	if airing, upcoming := splitUpcomingSeasons(upcomingSeasons); true {
 		if len(airing) > 0 {
 			<section class="mb-4 grid gap-3">
-				<h2 class="m-0 text-[1.25rem] font-semibold leading-[1.2]">Airing now</h2>
-				<p class="m-0 text-[0.88rem] text-[var(--text-muted)]">These are the currently airing anime, but you're not tracking any of these.</p>
-				<div class="grid grid-cols-[repeat(auto-fill,minmax(190px,1fr))] gap-4 max-[680px]:grid-cols-2 max-[680px]:gap-3">
+				<h2 class="m-0 text-xl font-semibold leading-tight">Airing now</h2>
+				<p class="m-0 text-sm text-(--text-muted)">These are the currently airing anime, but you're not tracking any of these.</p>
+				<div class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:gap-4 lg:grid-cols-4 xl:grid-cols-5">
 					for _, item := range airing {
 						@UpcomingSeasonCard(item)
 					}
@@ -79,9 +79,9 @@ templ renderSplitSeasons(upcomingSeasons []database.GetUpcomingSeasonsRow) {
 
 		if len(upcoming) > 0 {
 			<section class="grid gap-3">
-				<h2 class="m-0 text-[1.25rem] font-semibold leading-[1.2]">Announced & upcoming</h2>
-				<p class="m-0 text-[0.88rem] text-[var(--text-muted)]">Newly announced or upcoming seasons related to anime you've watched.</p>
-				<div class="grid grid-cols-[repeat(auto-fill,minmax(190px,1fr))] gap-4 max-[680px]:grid-cols-2 max-[680px]:gap-3">
+				<h2 class="m-0 text-xl font-semibold leading-tight">Announced & upcoming</h2>
+				<p class="m-0 text-sm text-(--text-muted)">Newly announced or upcoming seasons related to anime you've watched.</p>
+				<div class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:gap-4 lg:grid-cols-4 xl:grid-cols-5">
 					for _, item := range upcoming {
 						@UpcomingSeasonCard(item)
 					}
@@ -99,15 +99,15 @@ templ UpcomingSeasonCard(item database.GetUpcomingSeasonsRow) {
 		Class:    "notification-card min-w-0 flex flex-col bg-transparent text-inherit no-underline",
 	}) {
 		<div class="mt-2 grid gap-1 p-0" data-notification-content>
-			<div class="line-clamp-2 text-[0.86rem] leading-[1.3] text-[var(--text)]">
+			<div class="line-clamp-2 text-sm leading-snug text-(--text)">
 				{ displaySeasonTitle(item) }
 			</div>
 			<div class="flex flex-wrap gap-2">
 				if item.Status.Valid {
-					<span class="text-[0.67rem] text-[var(--text-faint)]">{ seasonStatusLabel(item.Status.String) }</span>
+					<span class="text-xs text-(--text-faint)">{ seasonStatusLabel(item.Status.String) }</span>
 				}
 				if strings.TrimSpace(item.PrequelTitle) != "" {
-					<span class="text-[0.67rem] text-[var(--text-faint)]">{ fmt.Sprintf("Sequel to %s", item.PrequelTitle) }</span>
+					<span class="text-xs text-(--text-faint)">{ fmt.Sprintf("Sequel to %s", item.PrequelTitle) }</span>
 				}
 			</div>
 		</div>
@@ -126,16 +126,16 @@ templ NotificationCard(item WatchingAnimeWithDetails) {
 		Class:    "notification-card min-w-0 flex flex-col bg-transparent text-inherit no-underline",
 	}) {
 		<div class="mt-2 grid gap-1 p-0" data-notification-content>
-			<div class="line-clamp-2 text-[0.86rem] leading-[1.3] text-[var(--text)]">
+			<div class="line-clamp-2 text-sm leading-snug text-(--text)">
 				{ displayTitle(item.Entry) }
 			</div>
 			<div class="flex flex-wrap gap-2">
 				if item.Anime.Broadcast.String != "" {
-					<span class="text-[0.67rem] text-[var(--text-faint)]" data-jst-text={ item.Anime.Broadcast.String } data-broadcast-day={ item.Anime.Broadcast.Day } data-broadcast-time={ item.Anime.Broadcast.Time } data-broadcast-timezone={ item.Anime.Broadcast.Timezone }>{ item.Anime.Broadcast.String }</span>
-					<span class="text-[0.67rem] text-[var(--text-faint)]" data-next-airing="pending">Calculating next episode time...</span>
+					<span class="text-xs text-(--text-faint)" data-jst-text={ item.Anime.Broadcast.String } data-broadcast-day={ item.Anime.Broadcast.Day } data-broadcast-time={ item.Anime.Broadcast.Time } data-broadcast-timezone={ item.Anime.Broadcast.Timezone }>{ item.Anime.Broadcast.String }</span>
+					<span class="text-xs text-(--text-faint)" data-next-airing="pending">Calculating next episode time...</span>
 				}
 				if item.Anime.Episodes > 0 {
-					<span class="text-[0.67rem] text-[var(--text-faint)]">
+					<span class="text-xs text-(--text-faint)">
 						if item.Entry.CurrentEpisode.Valid {
 							{ fmt.Sprintf("%d / %d eps", item.Entry.CurrentEpisode.Int64, item.Anime.Episodes) }
 						} else {
@@ -143,7 +143,7 @@ templ NotificationCard(item WatchingAnimeWithDetails) {
 						}
 					</span>
 				} else if item.Entry.CurrentEpisode.Valid && item.Entry.CurrentEpisode.Int64 > 0 {
-					<span class="text-[0.67rem] text-[var(--text-faint)]">
+					<span class="text-xs text-(--text-faint)">
 						{ fmt.Sprintf("%d eps watched", item.Entry.CurrentEpisode.Int64) }
 					</span>
 				}
@@ -174,9 +174,9 @@ func seasonStatusLabel(status string) string {
 }
 
 func statusTabClass(active bool) string {
-	base := "shrink-0 whitespace-nowrap bg-[var(--panel-soft)] px-[0.45rem] py-[0.24rem] text-[0.76rem] text-[var(--text-muted)] no-underline hover:bg-[var(--surface-tab-hover)] hover:text-[var(--text)] hover:no-underline"
+	base := "shrink-0 whitespace-nowrap bg-(--panel-soft) px-2 py-1 text-xs text-(--text-muted) no-underline hover:bg-(--surface-tab-hover) hover:text-(--text) hover:no-underline"
 	if active {
-		return "shrink-0 whitespace-nowrap bg-[var(--surface-tab-active)] px-[0.45rem] py-[0.24rem] text-[0.76rem] text-[var(--accent)] no-underline hover:no-underline"
+		return "shrink-0 whitespace-nowrap bg-(--surface-tab-active) px-2 py-1 text-xs text-(--accent) no-underline hover:no-underline"
 	}
 	return base
 }

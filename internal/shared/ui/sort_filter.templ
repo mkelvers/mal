@@ -8,17 +8,17 @@ type SortFilterOptions struct {
 }
 
 templ SortFilter(opts SortFilterOptions) {
-	<div class="mb-4 flex flex-wrap items-center gap-3 bg-[var(--panel)] p-3 max-[860px]:flex-col max-[860px]:items-start max-[860px]:gap-2">
+	<div class="mb-4 flex flex-wrap items-center gap-3 bg-(--panel) p-3 max-lg:flex-col max-lg:items-start max-lg:gap-2">
 		<div class="flex items-center gap-2">
-			<label for="sort-select" class="text-[0.78rem] text-[var(--text-muted)]">Sort by</label>
-			<select id="sort-select" class="h-[30px] bg-[var(--surface-select)] px-2 text-[0.78rem] text-[var(--text)]" onchange="document.getElementById('sort-input').value = this.value; document.getElementById('sort-form').submit()">
+			<label for="sort-select" class="text-xs text-(--text-muted)">Sort by</label>
+			<select id="sort-select" class="h-8 bg-(--surface-select) px-2 text-xs text-(--text)" onchange="document.getElementById('sort-input').value = this.value; document.getElementById('sort-form').submit()">
 				<option value="date" selected?={ opts.Sort == "date" }>Date added</option>
 				<option value="title" selected?={ opts.Sort == "title" }>Title</option>
 			</select>
 		</div>
 		<div class="flex items-center gap-2">
-			<label for="order-select" class="text-[0.78rem] text-[var(--text-muted)]">Order</label>
-			<select id="order-select" class="h-[30px] bg-[var(--surface-select)] px-2 text-[0.78rem] text-[var(--text)]" onchange="document.getElementById('order-input').value = this.value; document.getElementById('sort-form').submit()">
+			<label for="order-select" class="text-xs text-(--text-muted)">Order</label>
+			<select id="order-select" class="h-8 bg-(--surface-select) px-2 text-xs text-(--text)" onchange="document.getElementById('order-input').value = this.value; document.getElementById('sort-form').submit()">
 				<option value="desc" selected?={ opts.Order == "desc" }>Descending</option>
 				<option value="asc" selected?={ opts.Order == "asc" }>Ascending</option>
 			</select>

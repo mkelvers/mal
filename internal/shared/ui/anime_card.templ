@@ -17,7 +17,7 @@ templ AnimeCard(props AnimeCardProps) {
 	if props.CurrentNode {
 		<div class={ defaultString(props.Class, "min-w-0") }>
 			@animeCardPoster(props.ImageURL, props.Title, props.ImgClass)
-			<div class={ defaultString(props.TitleClass, "mt-2 line-clamp-2 text-[0.86rem] leading-[1.3] text-[var(--text)]") }>
+			<div class={ defaultString(props.TitleClass, "mt-2 line-clamp-2 text-sm leading-snug text-(--text)") }>
 				{ props.Title }
 			</div>
 			{ children... }
@@ -27,7 +27,7 @@ templ AnimeCard(props AnimeCardProps) {
 			@animeCardPoster(props.ImageURL, props.Title, props.ImgClass)
 			
 			if props.Class != "notification-card" && props.Class != "schedule-card" {
-				<div class={ defaultString(props.TitleClass, "mt-2 line-clamp-2 text-[0.86rem] leading-[1.3] text-[var(--text)]") }>
+				<div class={ defaultString(props.TitleClass, "mt-2 line-clamp-2 text-sm leading-snug text-(--text)") }>
 					{ props.Title }
 				</div>
 			}
@@ -37,11 +37,11 @@ templ AnimeCard(props AnimeCardProps) {
 }
 
 templ animeCardPoster(imageURL, title, imgClass string) {
-	<div class="flex h-full w-full aspect-[2/3] max-h-[var(--poster-max-height)] justify-center overflow-hidden">
+	<div class="flex h-full w-full aspect-2/3 max-h-(--poster-max-height) justify-center overflow-hidden">
 		if imageURL != "" {
 			<img src={ imageURL } alt={ title } class={ defaultString(imgClass, "block h-full w-full object-cover object-center") } loading="lazy"/>
 		} else {
-			<div class="flex h-full w-full justify-center overflow-hidden text-[0] text-transparent">No image</div>
+			<div class="flex h-full w-full justify-center overflow-hidden text-transparent">No image</div>
 		}
 	</div>
 }

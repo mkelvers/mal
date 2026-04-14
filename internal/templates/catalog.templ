@@ -6,7 +6,7 @@ import "fmt"
 
 templ Catalog() {
 	@Layout("mal - catalog", true) {
-		<div class="grid grid-cols-[repeat(auto-fill,minmax(190px,1fr))] gap-4 max-[680px]:grid-cols-2 max-[680px]:gap-3" id="catalog-content">
+		<div class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:gap-4 lg:grid-cols-4 xl:grid-cols-5" id="catalog-content">
 			<div class="col-span-full" hx-get="/api/catalog?page=1" hx-trigger="load" hx-swap="outerHTML">
 				@ui.LoadingIndicator("Loading catalog")
 			</div>
@@ -21,8 +21,8 @@ templ CatalogItems(animes []jikan.Anime, nextPage int, hasNext bool) {
 templ CatalogPlaceholderItems(count int) {
 	for i := 0; i < count; i++ {
 		<div class="pointer-events-none min-w-0" aria-hidden="true">
-			<div class="aspect-[2/3] max-h-[var(--poster-max-height)] w-full animate-pulse bg-[var(--surface-search)]"></div>
-			<div class="mt-2 h-[0.9rem] w-4/5 animate-pulse bg-[var(--surface-search)]"></div>
+			<div class="aspect-2/3 max-h-(--poster-max-height) w-full animate-pulse bg-(--surface-search)"></div>
+			<div class="mt-2 h-4 w-4/5 animate-pulse bg-(--surface-search)"></div>
 		</div>
 	}
 }

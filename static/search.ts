@@ -36,18 +36,18 @@ const clearSearchResults = (): void => {
 
 const buildSearchResultItem = (result: QuickSearchResult): HTMLAnchorElement => {
   const item = document.createElement('a')
-  item.className = 'flex items-start gap-3 px-3 py-2 text-inherit no-underline hover:bg-[var(--panel-soft)] hover:no-underline'
+  item.className = 'flex items-start gap-3 px-3 py-2 text-inherit no-underline hover:bg-(--panel-soft) hover:no-underline'
   item.setAttribute('href', '/anime/' + encodeURIComponent(String(result.id || '')))
 
   if (isSafeImageUrl(result.image)) {
     const img = document.createElement('img')
-    img.className = 'aspect-[2/3] w-[42px] shrink-0 object-cover bg-[var(--surface-thumb)]'
+    img.className = 'aspect-2/3 w-[42px] shrink-0 object-cover bg-(--surface-thumb)'
     img.setAttribute('src', result.image || '')
     img.setAttribute('alt', String(result.title || ''))
     item.appendChild(img)
   } else {
     const noImage = document.createElement('div')
-    noImage.className = 'aspect-[2/3] w-[42px] shrink-0 bg-[var(--surface-thumb)] text-[0] text-transparent'
+    noImage.className = 'aspect-2/3 w-[42px] shrink-0 bg-(--surface-thumb) text-[0] text-transparent'
     noImage.textContent = 'no image'
     item.appendChild(noImage)
   }
@@ -56,12 +56,12 @@ const buildSearchResultItem = (result: QuickSearchResult): HTMLAnchorElement => 
   info.className = 'grid min-w-0 gap-px'
 
   const itemTitle = document.createElement('div')
-  itemTitle.className = 'line-clamp-1 text-[0.86rem] leading-[1.3] text-[var(--text)]'
+  itemTitle.className = 'line-clamp-1 text-[0.86rem] leading-[1.3] text-(--text)'
   itemTitle.textContent = String(result.title || '')
   info.appendChild(itemTitle)
 
   const itemType = document.createElement('div')
-  itemType.className = 'text-[0.67rem] text-[var(--text-faint)]'
+  itemType.className = 'text-[0.67rem] text-(--text-faint)'
   itemType.textContent = String(result.type || '')
   info.appendChild(itemType)
 
@@ -83,7 +83,7 @@ const renderQuickSearchResults = (query: string, results: QuickSearchResult[]): 
   searchResults.className = 'grid'
 
   const title = document.createElement('div')
-  title.className = 'px-3 py-2 text-[0.68rem] text-[var(--text-faint)]'
+  title.className = 'px-3 py-2 text-[0.68rem] text-(--text-faint)'
   title.textContent = 'Anime'
   searchResults.appendChild(title)
 
@@ -92,7 +92,7 @@ const renderQuickSearchResults = (query: string, results: QuickSearchResult[]): 
   })
 
   const viewAll = document.createElement('a')
-  viewAll.className = 'bg-[var(--surface-search-view-all)] px-3 py-2 text-center text-[0.8rem] text-[var(--text-muted)] no-underline hover:bg-[var(--panel-soft)] hover:text-[var(--text)] hover:no-underline'
+  viewAll.className = 'bg-(--surface-search-view-all) px-3 py-2 text-center text-[0.8rem] text-(--text-muted) no-underline hover:bg-(--panel-soft) hover:text-(--text) hover:no-underline'
   viewAll.setAttribute('href', '/search?q=' + encodeURIComponent(query))
   viewAll.textContent = 'View all results for ' + query
   searchResults.appendChild(viewAll)
