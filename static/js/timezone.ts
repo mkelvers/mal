@@ -190,7 +190,7 @@
   }
 
   const updateNextAiring = (node: Element, parsed: ParsedBroadcast): void => {
-    const card = node.closest('.notification-content')
+    const card = node.closest('[data-notification-content]')
     if (!card) {
       return
     }
@@ -210,7 +210,7 @@
   }
 
   const updateNode = (node: Element, localOffsetMinutes: number): void => {
-    const card = node.closest('.notification-content')
+    const card = node.closest('[data-notification-content]')
     const nextNode = card ? card.querySelector('[data-next-airing]') : null
 
     const structured = parseFromStructuredAttrs(node)

@@ -148,7 +148,7 @@
     return formatter.format(date);
   };
   const updateNextAiring = (node, parsed) => {
-    const card = node.closest(".notification-content");
+    const card = node.closest("[data-notification-content]");
     if (!card) {
       return;
     }
@@ -164,7 +164,7 @@
     nextNode.textContent = `Next episode ${relativeText(nextDate)} (${localDateTimeText(nextDate)})`;
   };
   const updateNode = (node, localOffsetMinutes) => {
-    const card = node.closest(".notification-content");
+    const card = node.closest("[data-notification-content]");
     const nextNode = card ? card.querySelector("[data-next-airing]") : null;
     const structured = parseFromStructuredAttrs(node);
     const source = node.getAttribute("data-jst-text");

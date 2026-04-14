@@ -107,7 +107,7 @@
       return
     }
 
-    if (!target.closest('.header-search-wrapper')) {
+    if (!target.closest('[data-search-root]')) {
       searchDropdown.replaceChildren()
     }
   })

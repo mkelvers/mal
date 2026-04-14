@@ -8,23 +8,23 @@ type SortFilterOptions struct {
 }
 
 templ SortFilter(opts SortFilterOptions) {
-	<div class="sort-filter">
-		<div class="sort-filter-group">
-			<label for="sort-select">Sort by</label>
-			<select id="sort-select" class="sort-filter-select" onchange="document.getElementById('sort-input').value = this.value; document.getElementById('sort-form').submit()">
+	<div class="mb-4 flex flex-wrap items-center gap-3 bg-[var(--panel)] p-3 max-[860px]:flex-col max-[860px]:items-start max-[860px]:gap-2">
+		<div class="flex items-center gap-2">
+			<label for="sort-select" class="text-[0.78rem] text-[var(--text-muted)]">Sort by</label>
+			<select id="sort-select" class="h-[30px] bg-[var(--surface-select)] px-2 text-[0.78rem] text-[var(--text)]" onchange="document.getElementById('sort-input').value = this.value; document.getElementById('sort-form').submit()">
 				<option value="date" selected?={ opts.Sort == "date" }>Date added</option>
 				<option value="title" selected?={ opts.Sort == "title" }>Title</option>
 			</select>
 		</div>
-		<div class="sort-filter-group">
-			<label for="order-select">Order</label>
-			<select id="order-select" class="sort-filter-select" onchange="document.getElementById('order-input').value = this.value; document.getElementById('sort-form').submit()">
+		<div class="flex items-center gap-2">
+			<label for="order-select" class="text-[0.78rem] text-[var(--text-muted)]">Order</label>
+			<select id="order-select" class="h-[30px] bg-[var(--surface-select)] px-2 text-[0.78rem] text-[var(--text)]" onchange="document.getElementById('order-input').value = this.value; document.getElementById('sort-form').submit()">
 				<option value="desc" selected?={ opts.Order == "desc" }>Descending</option>
 				<option value="asc" selected?={ opts.Order == "asc" }>Ascending</option>
 			</select>
 		</div>
 	</div>
-	<form id="sort-form" method="get" class="is-hidden">
+	<form id="sort-form" method="get" class="hidden">
 		<input type="hidden" name="sort" id="sort-input" value={ opts.Sort }/>
 		<input type="hidden" name="order" id="order-input" value={ opts.Order }/>
 		if opts.View != "" {

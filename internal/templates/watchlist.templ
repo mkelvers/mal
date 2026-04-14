@@ -8,31 +8,31 @@ import (
 
 templ Watchlist(entries []database.GetUserWatchListRow, layout string, currentStatus string, sortBy string, sortOrder string) {
 	@Layout("My Watchlist", true) {
-		<div class="watchlist-header">
-			<div class="watchlist-heading">
+		<div class="mb-4 flex items-end justify-between gap-4 max-[860px]:flex-col max-[860px]:items-start">
+			<div class="grid gap-1">
 				<h2>Watchlist</h2>
-				<p class="watchlist-subtitle">Track what you're watching with less noise.</p>
+				<p class="m-0 text-[0.86rem] text-[var(--text-muted)]">Track what you're watching with less noise.</p>
 			</div>
-			<div class="watchlist-controls">
-				<a href="/api/watchlist/export" class="text-link">Export</a>
-				<button class="text-link" type="button" onclick="document.getElementById('import-file').click()">Import</button>
-				<form id="import-form" hx-post="/api/watchlist/import" hx-encoding="multipart/form-data" class="is-hidden">
+			<div class="flex flex-wrap items-center justify-end gap-2 max-[860px]:w-full max-[860px]:justify-start">
+				<a href="/api/watchlist/export" class="inline-flex min-w-16 items-center justify-center px-[0.45rem] py-[0.24rem] text-center text-[0.8rem] leading-[1.2] text-[var(--text-muted)] no-underline hover:text-[var(--accent)] hover:no-underline">Export</a>
+				<button class="inline-flex min-w-16 cursor-pointer items-center justify-center border-0 bg-transparent px-[0.45rem] py-[0.24rem] text-center text-[0.8rem] leading-[1.2] text-[var(--text-muted)] hover:text-[var(--accent)]" type="button" onclick="document.getElementById('import-file').click()">Import</button>
+				<form id="import-form" hx-post="/api/watchlist/import" hx-encoding="multipart/form-data" class="hidden">
 					<input type="file" id="import-file" name="file" accept=".json" onchange="htmx.trigger('#import-form', 'submit')"/>
 				</form>
-				<div class="view-toggle">
-					<a href={ templ.URL(watchlistURL("grid", currentStatus, sortBy, sortOrder)) } class={ activeClass(layout == "grid") }>Grid</a>
-					<a href={ templ.URL(watchlistURL("table", currentStatus, sortBy, sortOrder)) } class={ activeClass(layout == "table") }>Table</a>
+				<div class="flex flex-wrap gap-2 max-[680px]:flex-nowrap max-[680px]:overflow-x-auto max-[680px]:pb-1">
+					<a href={ templ.URL(watchlistURL("grid", currentStatus, sortBy, sortOrder)) } class={ tabClass(layout == "grid") }>Grid</a>
+					<a href={ templ.URL(watchlistURL("table", currentStatus, sortBy, sortOrder)) } class={ tabClass(layout == "table") }>Table</a>
 				</div>
 			</div>
 		</div>
-		<div class="status-tabs">
-			<a href={ templ.URL(watchlistURL(layout, "all", sortBy, sortOrder)) } class={ activeClass(currentStatus == "all") }>All</a>
-			<a href={ templ.URL(watchlistURL(layout, "watching", sortBy, sortOrder)) } class={ activeClass(currentStatus == "watching") }>Watching</a>
-			<a href={ templ.URL(watchlistURL(layout, "continuing", sortBy, sortOrder)) } class={ activeClass(currentStatus == "continuing") }>Continuing</a>
-			<a href={ templ.URL(watchlistURL(layout, "on_hold", sortBy, sortOrder)) } class={ activeClass(currentStatus == "on_hold") }>On hold</a>
-			<a href={ templ.URL(watchlistURL(layout, "plan_to_watch", sortBy, sortOrder)) } class={ activeClass(currentStatus == "plan_to_watch") }>Plan to watch</a>
-			<a href={ templ.URL(watchlistURL(layout, "dropped", sortBy, sortOrder)) } class={ activeClass(currentStatus == "dropped") }>Dropped</a>
-			<a href={ templ.URL(watchlistURL(layout, "completed", sortBy, sortOrder)) } class={ activeClass(currentStatus == "completed") }>Completed</a>
+		<div class="mb-3 flex flex-wrap gap-2 max-[680px]:flex-nowrap max-[680px]:overflow-x-auto max-[680px]:pb-1">
+			<a href={ templ.URL(watchlistURL(layout, "all", sortBy, sortOrder)) } class={ tabClass(currentStatus == "all") }>All</a>
+			<a href={ templ.URL(watchlistURL(layout, "watching", sortBy, sortOrder)) } class={ tabClass(currentStatus == "watching") }>Watching</a>
+			<a href={ templ.URL(watchlistURL(layout, "continuing", sortBy, sortOrder)) } class={ tabClass(currentStatus == "continuing") }>Continuing</a>
+			<a href={ templ.URL(watchlistURL(layout, "on_hold", sortBy, sortOrder)) } class={ tabClass(currentStatus == "on_hold") }>On hold</a>
+			<a href={ templ.URL(watchlistURL(layout, "plan_to_watch", sortBy, sortOrder)) } class={ tabClass(currentStatus == "plan_to_watch") }>Plan to watch</a>
+			<a href={ templ.URL(watchlistURL(layout, "dropped", sortBy, sortOrder)) } class={ tabClass(currentStatus == "dropped") }>Dropped</a>
+			<a href={ templ.URL(watchlistURL(layout, "completed", sortBy, sortOrder)) } class={ tabClass(currentStatus == "completed") }>Completed</a>
 		</div>
 		@ui.SortFilter(ui.SortFilterOptions{Sort: sortBy, Order: sortOrder, View: layout, Status: currentStatus})
 		if len(entries) == 0 {
@@ -47,16 +47,16 @@ templ Watchlist(entries []database.GetUserWatchListRow, layout string, currentSt
 			}
 		} else {
 			if layout == "grid" {
-				<div class="catalog-grid">
+				<div class="grid grid-cols-[repeat(auto-fill,minmax(190px,1fr))] gap-4 max-[680px]:grid-cols-2 max-[680px]:gap-3">
 					for _, entry := range entries {
-						<div class="catalog-item watchlist-item" id={ fmt.Sprintf("watchlist-entry-%d", entry.AnimeID) }>
+						<div class="group relative min-w-0" id={ fmt.Sprintf("watchlist-entry-%d", entry.AnimeID) }>
 							@ui.AnimeCard(ui.AnimeCardProps{
 								ID:       int(entry.AnimeID),
 								Title:    entry.DisplayTitle(),
 								ImageURL: entry.ImageUrl,
 							})
 							<button
-								class="remove-btn"
+								class="absolute right-2 top-2 h-[22px] w-[22px] cursor-pointer border-0 bg-[var(--overlay-subtle)] text-[var(--text-muted)] opacity-0 transition-opacity duration-150 group-hover:opacity-100 hover:text-[var(--danger)]"
 								hx-delete={ string(templ.URL(fmt.Sprintf("/api/watchlist/%d?from=watchlist", entry.AnimeID))) }
 								hx-target={ fmt.Sprintf("#watchlist-entry-%d", entry.AnimeID) }
 								hx-swap="delete"
@@ -65,30 +65,30 @@ templ Watchlist(entries []database.GetUserWatchListRow, layout string, currentSt
 					}
 				</div>
 			} else {
-				<table class="watchlist-table">
+				<table class="block w-full overflow-x-auto whitespace-nowrap bg-[var(--panel)] md:table md:overflow-visible md:whitespace-normal">
 					<thead>
 						<tr>
-							<th></th>
-							<th>Title</th>
-							<th></th>
+							<th class="p-[0.6rem]"></th>
+							<th class="p-[0.6rem] text-left text-[0.67rem] text-[var(--text-faint)]">Title</th>
+							<th class="p-[0.6rem]"></th>
 						</tr>
 					</thead>
 					<tbody>
 						for _, entry := range entries {
-							<tr id={ fmt.Sprintf("watchlist-entry-%d", entry.AnimeID) }>
-								<td>
+							<tr class="hover:bg-[var(--panel-soft)]" id={ fmt.Sprintf("watchlist-entry-%d", entry.AnimeID) }>
+								<td class="p-[0.6rem]">
 									<a href={ templ.SafeURL(fmt.Sprintf("/anime/%d", entry.AnimeID)) }>
-										<img src={ entry.ImageUrl } alt={ entry.DisplayTitle() } class="thumb" loading="lazy"/>
+										<img src={ entry.ImageUrl } alt={ entry.DisplayTitle() } class="aspect-[2/3] w-9 object-cover" loading="lazy"/>
 									</a>
 								</td>
-								<td class="title-cell">
+								<td class="p-[0.6rem] font-medium">
 									<a href={ templ.SafeURL(fmt.Sprintf("/anime/%d", entry.AnimeID)) }>
 										{ entry.DisplayTitle() }
 									</a>
 								</td>
-								<td class="actions-cell">
+								<td class="w-[90px] p-[0.6rem]">
 									<button
-										class="remove-link"
+										class="cursor-pointer border-0 bg-transparent p-0 text-[0.8rem] text-[var(--text-muted)] hover:text-[var(--danger)]"
 										hx-delete={ string(templ.URL(fmt.Sprintf("/api/watchlist/%d?from=watchlist", entry.AnimeID))) }
 										hx-target={ fmt.Sprintf("#watchlist-entry-%d", entry.AnimeID) }
 										hx-swap="delete"
@@ -103,11 +103,12 @@ templ Watchlist(entries []database.GetUserWatchListRow, layout string, currentSt
 	}
 }
 
-func activeClass(active bool) string {
+func tabClass(active bool) string {
+	base := "shrink-0 whitespace-nowrap bg-[var(--panel-soft)] px-[0.45rem] py-[0.24rem] text-[0.76rem] text-[var(--text-muted)] no-underline hover:bg-[var(--surface-tab-hover)] hover:text-[var(--text)] hover:no-underline"
 	if active {
-		return "active"
+		return "shrink-0 whitespace-nowrap bg-[var(--surface-tab-active)] px-[0.45rem] py-[0.24rem] text-[0.76rem] text-[var(--accent)] no-underline hover:no-underline"
 	}
-	return ""
+	return base
 }
 
 func watchlistURL(view string, status string, sortBy string, sortOrder string) string {
