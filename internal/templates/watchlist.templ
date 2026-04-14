@@ -20,19 +20,19 @@ templ Watchlist(entries []database.GetUserWatchListRow, layout string, currentSt
 					<input type="file" id="import-file" name="file" accept=".json" onchange="htmx.trigger('#import-form', 'submit')"/>
 				</form>
 				<div class="view-toggle">
-					<a href={ templ.URL(watchlistURL("grid", currentStatus, sortBy, sortOrder)) } class={ viewClass(layout == "grid") }>Grid</a>
-					<a href={ templ.URL(watchlistURL("table", currentStatus, sortBy, sortOrder)) } class={ viewClass(layout == "table") }>Table</a>
+					<a href={ templ.URL(watchlistURL("grid", currentStatus, sortBy, sortOrder)) } class={ activeClass(layout == "grid") }>Grid</a>
+					<a href={ templ.URL(watchlistURL("table", currentStatus, sortBy, sortOrder)) } class={ activeClass(layout == "table") }>Table</a>
 				</div>
 			</div>
 		</div>
 		<div class="status-tabs">
-			<a href={ templ.URL(watchlistURL(layout, "all", sortBy, sortOrder)) } class={ tabClass(currentStatus == "all") }>All</a>
-			<a href={ templ.URL(watchlistURL(layout, "watching", sortBy, sortOrder)) } class={ tabClass(currentStatus == "watching") }>Watching</a>
-			<a href={ templ.URL(watchlistURL(layout, "continuing", sortBy, sortOrder)) } class={ tabClass(currentStatus == "continuing") }>Continuing</a>
-			<a href={ templ.URL(watchlistURL(layout, "on_hold", sortBy, sortOrder)) } class={ tabClass(currentStatus == "on_hold") }>On hold</a>
-			<a href={ templ.URL(watchlistURL(layout, "plan_to_watch", sortBy, sortOrder)) } class={ tabClass(currentStatus == "plan_to_watch") }>Plan to watch</a>
-			<a href={ templ.URL(watchlistURL(layout, "dropped", sortBy, sortOrder)) } class={ tabClass(currentStatus == "dropped") }>Dropped</a>
-			<a href={ templ.URL(watchlistURL(layout, "completed", sortBy, sortOrder)) } class={ tabClass(currentStatus == "completed") }>Completed</a>
+			<a href={ templ.URL(watchlistURL(layout, "all", sortBy, sortOrder)) } class={ activeClass(currentStatus == "all") }>All</a>
+			<a href={ templ.URL(watchlistURL(layout, "watching", sortBy, sortOrder)) } class={ activeClass(currentStatus == "watching") }>Watching</a>
+			<a href={ templ.URL(watchlistURL(layout, "continuing", sortBy, sortOrder)) } class={ activeClass(currentStatus == "continuing") }>Continuing</a>
+			<a href={ templ.URL(watchlistURL(layout, "on_hold", sortBy, sortOrder)) } class={ activeClass(currentStatus == "on_hold") }>On hold</a>
+			<a href={ templ.URL(watchlistURL(layout, "plan_to_watch", sortBy, sortOrder)) } class={ activeClass(currentStatus == "plan_to_watch") }>Plan to watch</a>
+			<a href={ templ.URL(watchlistURL(layout, "dropped", sortBy, sortOrder)) } class={ activeClass(currentStatus == "dropped") }>Dropped</a>
+			<a href={ templ.URL(watchlistURL(layout, "completed", sortBy, sortOrder)) } class={ activeClass(currentStatus == "completed") }>Completed</a>
 		</div>
 		@ui.SortFilter(ui.SortFilterOptions{Sort: sortBy, Order: sortOrder, View: layout, Status: currentStatus})
 		if len(entries) == 0 {
@@ -103,14 +103,7 @@ templ Watchlist(entries []database.GetUserWatchListRow, layout string, currentSt
 	}
 }
 
-func viewClass(active bool) string {
-	if active {
-		return "active"
-	}
-	return ""
-}
-
-func tabClass(active bool) string {
+func activeClass(active bool) string {
 	if active {
 		return "active"
 	}

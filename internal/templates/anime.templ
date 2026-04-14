@@ -241,18 +241,6 @@ templ dropdownStatusOption(animeID int, animeTitle string, animeTitleEnglish str
 	</button>
 }
 
-templ statusOption(anime jikan.Anime, status string, currentStatus string) {
-	<button
-		class={ "dropdown-item", templ.KV("active", status == currentStatus) }
-		hx-post="/api/watchlist"
-		hx-vals={ fmt.Sprintf(`{"anime_id": "%d", "anime_title": "%s", "anime_title_english": "%s", "anime_title_japanese": "%s", "anime_image": "%s", "status": "%s"}`, anime.MalID, anime.Title, anime.TitleEnglish, anime.TitleJapanese, anime.ImageURL(), status) }
-		hx-target="#watchlist-dropdown"
-		hx-swap="outerHTML swap:150ms"
-	>
-		{ formatStatus(status) }
-	</button>
-}
-
 func formatStatus(status string) string {
 	switch status {
 	case "watching":

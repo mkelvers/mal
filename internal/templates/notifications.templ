@@ -15,8 +15,8 @@ templ Notifications(watching []WatchingAnimeWithDetails, activeTab string) {
 		<div class="notifications-page">
 			<h1>Notifications</h1>
 			<div class="status-tabs">
-				<a href="/notifications?tab=tracking" class={ tabClass(activeTab == "tracking") }>Tracking</a>
-				<a href="/notifications?tab=sequels" class={ tabClass(activeTab == "sequels") }>Sequels</a>
+				<a href="/notifications?tab=tracking" class={ activeClass(activeTab == "tracking") }>Tracking</a>
+				<a href="/notifications?tab=sequels" class={ activeClass(activeTab == "sequels") }>Sequels</a>
 			</div>
 
 			if activeTab == "sequels" {
@@ -146,11 +146,4 @@ templ NotificationCard(item WatchingAnimeWithDetails) {
 
 func displayTitle(entry database.GetWatchingAnimeRow) string {
 	return database.DisplayTitle(entry.TitleEnglish, entry.TitleJapanese, entry.TitleOriginal)
-}
-
-func truncate(s string, max int) string {
-	if len(s) <= max {
-		return s
-	}
-	return s[:max-3] + "..."
 }
