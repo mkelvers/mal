@@ -42,6 +42,7 @@ RUN mkdir -p /app/data
 
 COPY --from=builder /app/main_server .
 COPY --from=builder /app/static ./static
+COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/migrations ./migrations
 
 # Expose the application port

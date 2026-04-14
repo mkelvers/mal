@@ -32,6 +32,10 @@ func NewRouter(cfg Config) http.Handler {
 	fs := http.FileServer(http.Dir("./static"))
 	mux.Handle("/static/", http.StripPrefix("/static/", fs))
 
+	// Serve built frontend assets
+	dist := http.FileServer(http.Dir("./dist"))
+	mux.Handle("/dist/", http.StripPrefix("/dist/", dist))
+
 	mux.HandleFunc("/", animeHandler.HandleCatalog)
 	mux.HandleFunc("/discover", animeHandler.HandleDiscover)
 	mux.HandleFunc("/notifications", animeHandler.HandleNotifications)
