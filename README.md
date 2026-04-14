@@ -1,29 +1,21 @@
-# MAL
+# MyAnimeList
 
 <table align="center">
   <tr>
     <td>
-      <img src="static/favicon.svg" alt="MAL logo" width="120" />
+      <img src="static/favicon.svg" alt="MyAnimeList logo" width="140" />
     </td>
     <td>
-      <strong>MAL</strong><br />
-      For everyone who wanted MyAnimeList-style tracking,<br />
-      but with cleaner UI, better UX, and fewer compromises.
+      <strong>MyAnimeList</strong><br />
+      My personal anime tracker, built because nothing else felt right.
     </td>
   </tr>
 </table>
 
 <p align="center">
-  A calmer anime tracker built for people who care about flow.
-</p>
-<p align="center">
-  Discover anime, track progress, follow sequels, and keep your watchlist clean without fighting noisy UI.
-</p>
-
-<p align="center">
   <img alt="Go" src="https://img.shields.io/badge/go-1.24-00ADD8?style=flat-square&logo=go" />
   <img alt="SQLite" src="https://img.shields.io/badge/database-sqlite-003B57?style=flat-square&logo=sqlite" />
-  <img alt="templ" src="https://img.shields.io/badge/templ-server--side-111111?style=flat-square" />
+  <img alt="templ" src="https://img.shields.io/badge/templ-server--rendered-111111?style=flat-square" />
   <img alt="HTMX" src="https://img.shields.io/badge/htmx-partial--updates-3366CC?style=flat-square" />
 </p>
 
@@ -31,149 +23,71 @@
 
 ## Why this project exists
 
-I built this because I genuinely disliked the UI and UX of the alternatives.
+I built this for myself.
 
-Most anime tracking tools I tried felt cluttered, slow to navigate, or missing basic pieces I wanted in one place. I wanted a product that felt focused: search quickly, open details quickly, decide status quickly, and move on.
+I was frustrated with the UI and UX of every tracker I tried. Even when something looked decent, it still felt awkward to use day-to-day, or it was missing pieces I considered essential. I wanted one place that matched how I actually watch anime: search fast, get context fast, update status fast, and move on.
 
-This project is that answer.
+So this project is personal first and public second. I put it on GitHub because I like shipping in the open, not because it was originally designed as a general-purpose product for everyone.
 
-Under the hood, it is also an engineering exercise in building a reliable product on top of an unreliable upstream data source. Anime metadata APIs can rate-limit, timeout, or intermittently fail. Instead of pretending that never happens, this codebase is designed around that reality.
+Technically, I also wanted to prove that a small, server-rendered Go app could stay reliable even when upstream anime APIs are inconsistent. A lot of this code exists because real APIs rate-limit, timeout, and occasionally fail at the worst possible moment.
 
-## What you can do with it
+## What the application offers
 
-- Browse a catalog view of popular anime
-- Discover airing and upcoming shows
-- Search instantly from the header quick-search
-- Open anime detail pages with related titles and recommendations
-- Add, update, remove, import, and export watchlist entries
-- Track statuses (`watching`, `completed`, `plan_to_watch`, etc.)
-- Get notification-oriented views for tracking and upcoming sequels
-- Register/login/logout, rotate account recovery keys, and recover accounts
+For my own workflow, MyAnimeList combines catalog browsing, seasonal discovery, quick search, detail pages with recommendations and relations, and full watchlist management in one server-rendered interface. It also includes account flows such as registration, login, recovery, and recovery-key rotation. The notifications area is tuned for practical tracking, including sequel visibility derived from watchlist context.
 
-## Product philosophy
+## Technical approach
 
-- **Minimal friction:** fewer clicks and less visual noise
-- **Practical over perfect:** fast, readable pages over heavy front-end complexity
-- **Resilient by default:** graceful fallback behavior when upstream services fail
-- **Honest constraints:** explicitly acknowledge tradeoffs and incomplete pieces
+The application is written in Go and rendered on the server with `templ`, with SQLite as the primary datastore and `sqlc` for typed query generation. HTMX and small JavaScript modules handle incremental interactions, which keeps the interface responsive without moving the entire product into a heavy client-side architecture.
 
-## Technical overview
+The external anime data source is Jikan (`https://api.jikan.moe/v4`). Because reliability is a first-class concern, the client layer includes request pacing, bounded retries, backoff behavior, stale-cache fallback, and a persisted retry queue for failed fetches that should be retried later.
 
-This is a server-rendered Go web application with SQLite persistence, generated SQL accessors, background workers, and templ-based UI rendering.
+## Repository structure
 
-### Stack
+Instead of treating the repository as one flat service, the codebase is organized into focused boundaries.
 
-- Go `1.24`
-- SQLite (`github.com/mattn/go-sqlite3`)
-- `sqlc` for typed query generation
-- `templ` for server-side HTML components
-- HTMX + small vanilla JS modules for interactivity
-- Jikan API (`https://api.jikan.moe/v4`) as primary anime data provider
-- `goquery` for watch-order parsing/fallback extraction
+| Path | Purpose |
+| --- | --- |
+| `cmd/server` | Application entrypoint and process lifecycle setup |
+| `internal/server` | Route registration and middleware composition |
+| `internal/features/anime` | Anime browsing, discovery, search, detail, and notifications logic |
+| `internal/features/watchlist` | Watchlist updates, retrieval, import, and export |
+| `internal/features/auth` | Authentication, sessions, account recovery, and account settings |
+| `internal/jikan` | Upstream API client, caching, and retry-aware fetch behavior |
+| `internal/worker` | Background relation sync, retry processing, and cache cleanup |
+| `internal/database` | Migration runner, generated query layer, and DB models |
+| `internal/templates` | Server-rendered page and partial templates |
+| `migrations` | Schema evolution and operational DB changes |
+| `static` | CSS, JavaScript, and static assets |
 
-### Repository layout
+## Runtime behavior
 
-```text
-cmd/server/                  # app entrypoint
-internal/server/             # route composition + middleware wiring
-internal/features/anime/     # anime handlers + service logic
-internal/features/watchlist/ # watchlist handlers + service logic
-internal/features/auth/      # auth/session/recovery logic
-internal/jikan/              # upstream API client + caching + retry paths
-internal/worker/             # relation sync + retry processing + cache cleanup
-internal/database/           # sqlc models/queries + migration runner
-internal/templates/          # templ views and partials
-migrations/                  # schema evolution scripts
-static/                      # CSS/JS assets
-```
+On startup, the server opens SQLite using `DATABASE_FILE` (defaulting to `mal.db`), runs migrations automatically, initializes core services, starts the background worker, and then serves HTTP traffic on `PORT` (defaulting to `3000`). A request enters the router, passes through global middleware for origin and authentication boundaries, reaches a feature handler, and then resolves through service logic that combines database access with upstream data where needed before rendering HTML.
 
-## How the app works
+The background worker continuously maintains relation data for sequel awareness, processes queued retryable anime fetches, and periodically removes expired cache records. This keeps user-facing pages stable even when data collection has to happen in multiple phases.
 
-At startup, the server:
+## Reliability and tradeoffs
 
-1. Opens SQLite (`DATABASE_FILE`, default `mal.db`)
-2. Runs migrations
-3. Initializes typed DB queries, auth service, and Jikan client
-4. Starts a background worker
-5. Starts HTTP server on `PORT` (default `3000`)
+The hardest part has been balancing freshness and resilience. Upstream APIs can fail transiently with `429` and `5xx` responses, so the app favors graceful degradation over hard failure. Cached values are used when fresh requests fail, retryable failures are persisted and replayed in the worker, and relation synchronization is incremental so one bad fetch does not block the rest of the graph.
 
-Request flow is intentionally straightforward:
-
-1. Request enters `http.ServeMux`
-2. Middleware enforces origin checks and auth boundaries
-3. Feature handlers call feature services
-4. Services read/write SQLite and/or fetch from Jikan
-5. Templ renders pages or partials
-
-## The hard parts (and how they are handled)
-
-### 1) Upstream instability
-
-Jikan can return `429`/`5xx`, intermittently timeout, or vary response behavior under load.
-
-Mitigations implemented in this codebase:
-
-- Request pacing to stay under known rate limits (base delay between requests)
-- Retry with bounded backoff and `Retry-After` support
-- Cache-first reads where possible
-- Stale cache fallback if fresh fetch fails
-- Persisted retry queue (`anime_fetch_retry`) for retryable failures
-- Worker signaling so retries can be processed quickly after enqueue
-
-### 2) Keeping sequel graphs useful
-
-Finding upcoming sequels is not just a single lookup. The app keeps relation data updated using worker jobs and recursive SQL CTEs, then maps those relations back to your watchlist context.
-
-### 3) UI responsiveness without a heavy front-end framework
-
-The app uses server-rendered templates plus HTMX partial updates and focused JS files. The goal is immediate UI feedback with less complexity than a large SPA stack.
-
-### 4) Security basics done properly
-
-- Password rules enforce complexity and minimum length
-- Password hashes use bcrypt
-- Session cookies are `HttpOnly` and `SameSite=Strict`
-- `Secure` cookies are enabled in production mode (`ENV=production`)
-- Origin/Referer checks protect non-GET actions
-- Auth routes are rate-limited per IP
+There are still honest limits. Score sorting in the watchlist remains a placeholder path, and metadata quality still depends partly on external providers. There is also no formal CI pipeline yet, so local validation is currently the main quality gate.
 
 ## Getting started
 
-### Prerequisites
-
-- Go `1.24+`
-- SQLite
-- `templ` CLI
-
-### Local development
+For local development, install Go `1.24+`, SQLite, and the `templ` CLI, then generate templates and run the server.
 
 ```bash
-# install templ CLI
 go install github.com/a-h/templ/cmd/templ@latest
-
-# generate templ code
 templ generate
-
-# run server
 go run ./cmd/server
 ```
 
-Open `http://localhost:3000`.
+When the server starts, the app is available at `http://localhost:3000`.
 
-### Docker
-
-The repository includes a multi-stage `Dockerfile` that:
-
-- installs dependencies
-- generates templ files
-- builds `./cmd/server`
-- ships a slim runtime image with SQLite support
-
-Example:
+For containerized usage, the included `Dockerfile` uses a multi-stage build that generates templates, compiles `cmd/server`, and ships a slim runtime image with SQLite support.
 
 ```bash
-docker build -t mal .
-docker run --rm -p 3000:3000 mal
+docker build -t myanimelist .
+docker run --rm -p 3000:3000 myanimelist
 ```
 
 ## Configuration
@@ -182,81 +96,26 @@ docker run --rm -p 3000:3000 mal
 | --- | --- | --- |
 | `PORT` | `3000` | HTTP listen port |
 | `DATABASE_FILE` | `mal.db` | SQLite database file path |
-| `ENV` | _(empty)_ | Set to `production` to mark session cookies as secure |
+| `ENV` | _(empty)_ | Set to `production` to enable secure session cookies |
 
-## Database and migrations
+## Database and testing
 
-Migrations run automatically on startup.
+Migrations run at startup, so schema changes are applied automatically before the server begins accepting traffic. Migration history includes the initial auth and watchlist schema, anime metadata expansion, relation tracking, Jikan cache persistence, indexing updates, recovery key support, and retry-queue support for failed fetches.
 
-Current migration history covers:
-
-- initial auth/session/watchlist schema
-- anime title and airing metadata
-- notifications data model
-- relation graph support
-- Jikan response caching
-- query-performance indexes
-- account recovery key support
-- persisted anime fetch retry queue
-
-## Testing
-
-The repo includes tests around core behavior such as:
-
-- watchlist service logic
-- watch-order parsing behavior
-- relation helpers
-- auth middleware behavior
-
-Run all tests:
+Tests are available for watchlist behavior, relation helpers, auth middleware boundaries, and watch-order parsing. Run the full test suite with:
 
 ```bash
 go test ./...
 ```
 
-## Tradeoffs and known limitations
-
-- Watchlist sorting by `score` is currently a placeholder path
-- External data quality and uptime still depend on Jikan/third-party sources
-- There is no formal CI pipeline configured in this repository yet
-- Project docs (contributing/license) are still lightweight and evolving
-
-## Roadmap direction
-
-- Complete score sorting semantics for watchlist
-- Expand test coverage for handler + integration paths
-- Add clearer contribution and governance docs
-- Improve observability around worker retries and cache health
-- Continue refining the UI for speed and clarity over visual noise
-
-## Development notes
-
-- Generated templ outputs (`*_templ.go`) are checked in
-- SQL is authored in `internal/database/queries.sql` and generated through `sqlc`
-- Static assets live in `static/`
-
 ## Contributing
 
-Please read `CONTRIBUTING.md` before opening a pull request.
+This is primarily a personal project, so development priorities are driven by my own use and preferences. That said, if you spot a bug or have a focused improvement, feel free to open an issue or pull request. Please read `CONTRIBUTING.md` first so expectations around scope, validation, and security handling are clear.
 
-If you want to contribute, open an issue or pull request with:
+## Security
 
-- the user-facing problem you are solving
-- the technical approach and tradeoffs
-- before/after behavior notes
-
-Small, focused changes are preferred over broad rewrites.
-
-## Security and secrets
-
-- Do not commit real API keys or private credentials
-- Keep local `.env` values out of documentation and screenshots
-- If you discover a security issue, report it privately before public disclosure
+Keep secrets out of version control, do not publish real credentials in documentation or screenshots, and report security issues privately before public disclosure.
 
 ## License
 
-MIT. See `LICENSE`.
-
----
-
-If this project resonates with you, it is probably for the same reason it exists: you want anime tracking that gets out of your way and lets you focus on actually watching.
+This project is released under the MIT License. See `LICENSE` for details.
