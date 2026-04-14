@@ -14,7 +14,7 @@ templ AnimeDetails(anime jikan.Anime, currentStatus string) {
 						if anime.ImageURL() != "" {
 							<img class="w-full" src={ anime.ImageURL() } alt={ anime.DisplayTitle() }/>
 						} else {
-							<div class="flex aspect-[2/3] max-h-[var(--poster-max-height)] w-full items-end justify-center overflow-hidden text-[0] text-transparent">No image</div>
+							<div class="flex aspect-[2/3] max-h-[var(--poster-max-height)] w-full justify-center overflow-hidden text-[0] text-transparent">No image</div>
 						}
 					</div>
 					<div>
