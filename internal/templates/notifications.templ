@@ -4,6 +4,7 @@ import "mal/internal/jikan"
 import "mal/internal/database"
 import "mal/internal/shared/ui"
 import "fmt"
+import "strings"
 
 type WatchingAnimeWithDetails struct {
 	Entry database.GetWatchingAnimeRow
@@ -102,6 +103,14 @@ templ UpcomingSeasonCard(item database.GetUpcomingSeasonsRow) {
 			<div class="notification-title">
 				{ displaySeasonTitle(item) }
 			</div>
+			<div class="notification-meta">
+				if item.Status.Valid {
+					<span class="notification-muted">{ seasonStatusLabel(item.Status.String) }</span>
+				}
+				if strings.TrimSpace(item.PrequelTitle) != "" {
+					<span class="notification-muted">{ fmt.Sprintf("Sequel to %s", item.PrequelTitle) }</span>
+				}
+			</div>
 		</div>
 	}
 }
@@ -124,7 +133,8 @@ templ NotificationCard(item WatchingAnimeWithDetails) {
 			</div>
 			<div class="notification-meta">
 				if item.Anime.Broadcast.String != "" {
-					<span class="notification-broadcast" data-jst-text={ item.Anime.Broadcast.String }>{ item.Anime.Broadcast.String }</span>
+					<span class="notification-broadcast" data-jst-text={ item.Anime.Broadcast.String } data-broadcast-day={ item.Anime.Broadcast.Day } data-broadcast-time={ item.Anime.Broadcast.Time } data-broadcast-timezone={ item.Anime.Broadcast.Timezone }>{ item.Anime.Broadcast.String }</span>
+					<span class="notification-next-airing" data-next-airing="pending">Calculating next episode time...</span>
 				}
 				if item.Anime.Episodes > 0 {
 					<span class="notification-progress">
@@ -146,4 +156,21 @@ templ NotificationCard(item WatchingAnimeWithDetails) {
 
 func displayTitle(entry database.GetWatchingAnimeRow) string {
 	return database.DisplayTitle(entry.TitleEnglish, entry.TitleJapanese, entry.TitleOriginal)
+}
+
+func seasonStatusLabel(status string) string {
+	statusText := strings.TrimSpace(status)
+	if statusText == "" {
+		return ""
+	}
+
+	if statusText == "Currently Airing" {
+		return "Airing now"
+	}
+
+	if statusText == "Not yet aired" {
+		return "Upcoming"
+	}
+
+	return statusText
 }
