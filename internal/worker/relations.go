@@ -81,16 +81,6 @@ func retryBackoff(attempts int64) string {
 }
 
 func (w *Worker) processAnimeFetchRetries(ctx context.Context) {
-	pending, err := w.db.CountPendingAnimeFetchRetries(ctx)
-	if err != nil {
-		log.Printf("worker: failed to count pending anime fetch retries: %v", err)
-		return
-	}
-
-	if pending == 0 {
-		return
-	}
-
 	retries, err := w.db.GetDueAnimeFetchRetries(ctx, 20)
 	if err != nil {
 		log.Printf("worker: failed to load due anime fetch retries: %v", err)
@@ -190,16 +180,12 @@ func (w *Worker) syncRelations(ctx context.Context) {
 				}
 			}
 
-			// Also update the status of the anime itself so we know if it's Not yet aired, etc.
-			animeDetails, err := w.client.GetAnimeByID(ctx, int(a.ID))
-			if err == nil {
-				err = w.db.UpdateAnimeStatus(ctx, database.UpdateAnimeStatusParams{
-					Status: sql.NullString{String: animeDetails.Status, Valid: true},
-					ID:     a.ID,
-				})
-				if err != nil {
-					log.Printf("worker: failed to update status for %d: %v", a.ID, err)
-				}
+			err = w.db.UpdateAnimeStatus(ctx, database.UpdateAnimeStatusParams{
+				Status: sql.NullString{String: animeData.Status, Valid: true},
+				ID:     a.ID,
+			})
+			if err != nil {
+				log.Printf("worker: failed to update status for %d: %v", a.ID, err)
 			}
 		}()
 	}
