@@ -7,14 +7,25 @@ import (
 )
 
 func (c *Client) Search(ctx context.Context, query string, page int) (SearchResult, error) {
+	return c.search(ctx, query, page, 0)
+}
+
+func (c *Client) SearchWithLimit(ctx context.Context, query string, page int, limit int) (SearchResult, error) {
+	return c.search(ctx, query, page, limit)
+}
+
+func (c *Client) search(ctx context.Context, query string, page int, limit int) (SearchResult, error) {
 	if query == "" {
 		return SearchResult{}, nil
 	}
 	if page < 1 {
 		page = 1
 	}
+	if limit < 0 {
+		limit = 0
+	}
 
-	cacheKey := fmt.Sprintf("search:%s:%d", query, page)
+	cacheKey := fmt.Sprintf("search:%s:%d:%d", query, page, limit)
 	var cached SearchResult
 	if c.getCache(ctx, cacheKey, &cached) {
 		return cached, nil
@@ -25,6 +36,9 @@ func (c *Client) Search(ctx context.Context, query string, page int) (SearchResu
 
 	var result SearchResponse
 	reqURL := fmt.Sprintf("%s/anime?q=%s&page=%d", c.baseURL, url.QueryEscape(query), page)
+	if limit > 0 {
+		reqURL = fmt.Sprintf("%s&limit=%d", reqURL, limit)
+	}
 
 	if err := c.fetchWithRetry(ctx, reqURL, &result); err != nil {
 		if hasStale {

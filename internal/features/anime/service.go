@@ -25,6 +25,10 @@ func (s *Service) Search(ctx context.Context, query string, page int) (jikan.Sea
 	return s.jikanClient.Search(ctx, query, page)
 }
 
+func (s *Service) QuickSearch(ctx context.Context, query string, page int, limit int) (jikan.SearchResult, error) {
+	return s.jikanClient.SearchWithLimit(ctx, query, page, limit)
+}
+
 func (s *Service) GetTopAnime(ctx context.Context, page int) (jikan.TopAnimeResult, error) {
 	return s.jikanClient.GetTopAnime(ctx, page)
 }

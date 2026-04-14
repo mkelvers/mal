@@ -213,7 +213,7 @@ func (h *Handler) HandleQuickSearch(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res, err := h.svc.Search(r.Context(), query, 1)
+	res, err := h.svc.QuickSearch(r.Context(), query, 1, 5)
 	if err != nil {
 		log.Printf("quick search error: %v", err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -221,9 +221,6 @@ func (h *Handler) HandleQuickSearch(w http.ResponseWriter, r *http.Request) {
 	}
 
 	results := res.Animes
-	if len(results) > 5 {
-		results = results[:5]
-	}
 
 	output := make([]quickSearchResult, len(results))
 	for i, anime := range results {
