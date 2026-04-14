@@ -41,6 +41,18 @@ func (c *Client) search(ctx context.Context, query string, page int, limit int) 
 	}
 
 	if err := c.fetchWithRetry(ctx, reqURL, &result); err != nil {
+		if limit > 0 && IsRetryableError(err) {
+			fallbackURL := fmt.Sprintf("%s/anime?q=%s&page=%d", c.baseURL, url.QueryEscape(query), page)
+			if fallbackErr := c.fetchWithRetry(ctx, fallbackURL, &result); fallbackErr == nil {
+				res := SearchResult{
+					Animes:      result.Data,
+					HasNextPage: result.Pagination.HasNextPage,
+				}
+				c.setCache(ctx, cacheKey, res, shortCacheTTL)
+				return res, nil
+			}
+		}
+
 		if hasStale {
 			return stale, nil
 		}
