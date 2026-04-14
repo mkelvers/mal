@@ -1,7 +1,7 @@
 package ui
 
 type SortFilterOptions struct {
-	Sort   string // "title", "date", "score"
+	Sort   string // "title", "date"
 	Order  string // "asc", "desc"
 	View   string // for watchlist: "grid", "table"
 	Status string // for watchlist: "all", "watching", etc
@@ -14,7 +14,6 @@ templ SortFilter(opts SortFilterOptions) {
 			<select id="sort-select" class="sort-filter-select" onchange="document.getElementById('sort-input').value = this.value; document.getElementById('sort-form').submit()">
 				<option value="date" selected?={ opts.Sort == "date" }>Date added</option>
 				<option value="title" selected?={ opts.Sort == "title" }>Title</option>
-				<option value="score" selected?={ opts.Sort == "score" }>Score</option>
 			</select>
 		</div>
 		<div class="sort-filter-group">
