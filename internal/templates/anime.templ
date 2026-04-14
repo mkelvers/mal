@@ -82,12 +82,6 @@ templ AnimeDetails(anime jikan.Anime, currentStatus string) {
 							<span class="sidebar-value">{ anime.Status }</span>
 						</div>
 					}
-					if anime.Score > 0 {
-						<div class="sidebar-row">
-							<span class="sidebar-label">MAL Score</span>
-							<span class="sidebar-value">{ fmt.Sprintf("%.2f", anime.Score) }</span>
-						</div>
-					}
 					if anime.Duration != "" {
 						<div class="sidebar-row">
 							<span class="sidebar-label">Duration</span>
