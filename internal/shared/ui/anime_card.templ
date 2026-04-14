@@ -37,11 +37,11 @@ templ AnimeCard(props AnimeCardProps) {
 }
 
 templ animeCardPoster(imageURL, title, imgClass string) {
-	<div class="flex h-full w-full aspect-2/3 max-h-(--poster-max-height) justify-center overflow-hidden">
+	<div class="flex w-full aspect-2/3 justify-center overflow-hidden">
 		if imageURL != "" {
-			<img src={ imageURL } alt={ title } class={ defaultString(imgClass, "block h-full w-full object-cover object-center") } loading="lazy"/>
+			<img src={ imageURL } alt={ title } class={ defaultString(imgClass, "block w-full object-cover object-center") } loading="lazy"/>
 		} else {
-			<div class="flex h-full w-full justify-center overflow-hidden text-transparent">No image</div>
+			<div class="flex w-full justify-center overflow-hidden text-transparent">No image</div>
 		}
 	</div>
 }
