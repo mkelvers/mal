@@ -9,8 +9,8 @@
     "build:assets": "bun run build:css && bun run build:ts"
   },
   "devDependencies": {
-    "@tailwindcss/cli": "^4.1.14",
-    "tailwindcss": "^4.1.14",
+    "@tailwindcss/cli": "^4.2.2",
+    "tailwindcss": "^4.2.2",
     "typescript": "^5.9.3"
   }
 }
