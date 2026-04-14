@@ -1,3 +1,5 @@
+export {}
+
 function copyRecoveryKey(keyElementId: string, feedbackElementId: string): void {
   const keyElement = document.getElementById(keyElementId)
   const feedbackElement = document.getElementById(feedbackElementId)

@@ -1,5 +1,6 @@
-((): void => {
-  const jstOffsetMinutes = 9 * 60
+export {}
+
+const jstOffsetMinutes = 9 * 60
 
   type ParsedBroadcast = {
     day: string
@@ -241,6 +242,9 @@
     nodes.forEach((node: Element): void => updateNode(node, localOffsetMinutes))
   }
 
+const initTimezoneConversion = (): void => {
   document.addEventListener('DOMContentLoaded', updateAll)
   document.body.addEventListener('htmx:afterSwap', updateAll)
-})()
+}
+
+initTimezoneConversion()
