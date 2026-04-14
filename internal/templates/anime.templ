@@ -49,13 +49,13 @@ templ AnimeDetails(anime jikan.Anime, currentStatus string) {
 					</div>
 				</div>
 				<section>
-					<h3>Related</h3>
+					<h3 class="mb-3 text-lg font-semibold tracking-wide text-(--text)">Related</h3>
 					<div hx-get={ string(templ.URL(fmt.Sprintf("/api/anime/%d/relations", anime.MalID))) } hx-trigger="load">
 						@ui.LoadingIndicator("Loading relations")
 					</div>
 				</section>
 				<section>
-					<h3>Recommendations</h3>
+					<h3 class="mb-3 text-lg font-semibold tracking-wide text-(--text)">Recommendations</h3>
 					<div hx-get={ string(templ.URL(fmt.Sprintf("/api/anime/%d/recommendations", anime.MalID))) } hx-trigger="load">
 						@ui.LoadingIndicator("Loading recommendations")
 					</div>
@@ -63,7 +63,7 @@ templ AnimeDetails(anime jikan.Anime, currentStatus string) {
 			</div>
 			<aside class="sticky top-20 grid gap-4 bg-(--panel) p-3 max-xl:static">
 				<div class="grid gap-3">
-					<h3 class="mb-2 text-xs text-(--text-faint)">Details</h3>
+					<h3 class="mb-2 text-base font-semibold tracking-wide text-(--text)">Details</h3>
 					if anime.Aired.String != "" {
 						<div class="mt-1 grid gap-1">
 							<span class="mt-0.5 text-sm text-(--text-faint)">Aired</span>
