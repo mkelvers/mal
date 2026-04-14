@@ -1,15 +1,40 @@
 ((): void => {
+  const parseClassList = (value: string | null): string[] => {
+    if (!value) {
+      return []
+    }
+
+    return value
+      .split(' ')
+      .map((entry: string): string => entry.trim())
+      .filter((entry: string): boolean => entry.length > 0)
+  }
+
+  const setMenuState = (menu: HTMLElement, isOpen: boolean): void => {
+    const openClasses = parseClassList(menu.getAttribute('data-dropdown-open-classes'))
+    const closedClasses = parseClassList(menu.getAttribute('data-dropdown-closed-classes'))
+
+    if (isOpen) {
+      menu.classList.remove(...closedClasses)
+      menu.classList.add(...openClasses)
+      return
+    }
+
+    menu.classList.remove(...openClasses)
+    menu.classList.add(...closedClasses)
+  }
+
   const toggleDropdown = (): void => {
     const dropdown = document.getElementById('watchlist-dropdown')
     if (!dropdown) {
       return
     }
 
-    dropdown.classList.toggle('open')
+    const isOpen = !dropdown.classList.contains('open')
+    dropdown.classList.toggle('open', isOpen)
     const menu = dropdown.querySelector('[data-dropdown-menu]')
     if (menu instanceof HTMLElement) {
-      menu.classList.toggle('invisible')
-      menu.classList.toggle('opacity-0')
+      setMenuState(menu, isOpen)
     }
   }
 
@@ -30,8 +55,7 @@
       dropdown.classList.remove('open')
       const menu = dropdown.querySelector('[data-dropdown-menu]')
       if (menu instanceof HTMLElement) {
-        menu.classList.add('invisible')
-        menu.classList.add('opacity-0')
+        setMenuState(menu, false)
       }
     }
   })

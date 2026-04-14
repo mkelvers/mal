@@ -1,4 +1,15 @@
 ((): void => {
+  const parseClassList = (value: string | null): string[] => {
+    if (!value) {
+      return []
+    }
+
+    return value
+      .split(' ')
+      .map((entry: string): string => entry.trim())
+      .filter((entry: string): boolean => entry.length > 0)
+  }
+
   const setActiveTab = (clickedTab: Element): void => {
     const group = clickedTab.closest('[data-tab-group="discover"]')
     if (!group) {
@@ -7,13 +18,16 @@
 
     const triggers = group.querySelectorAll('[data-tab-trigger]')
     triggers.forEach((tab: Element): void => {
-      tab.classList.add('tab-trigger')
-      tab.classList.remove('bg-[var(--surface-tab-active)]', 'text-[var(--accent)]')
-      tab.classList.add('bg-[var(--panel-soft)]', 'text-[var(--text-muted)]')
+      const activeClasses = parseClassList(tab.getAttribute('data-tab-active-classes'))
+      const inactiveClasses = parseClassList(tab.getAttribute('data-tab-inactive-classes'))
+      tab.classList.remove(...activeClasses)
+      tab.classList.add(...inactiveClasses)
     })
-    clickedTab.classList.add('tab-trigger')
-    clickedTab.classList.remove('bg-[var(--panel-soft)]', 'text-[var(--text-muted)]')
-    clickedTab.classList.add('bg-[var(--surface-tab-active)]', 'text-[var(--accent)]')
+
+    const activeClasses = parseClassList(clickedTab.getAttribute('data-tab-active-classes'))
+    const inactiveClasses = parseClassList(clickedTab.getAttribute('data-tab-inactive-classes'))
+    clickedTab.classList.remove(...inactiveClasses)
+    clickedTab.classList.add(...activeClasses)
   }
 
   document.addEventListener('click', (event: MouseEvent): void => {

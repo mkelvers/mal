@@ -36,7 +36,7 @@ templ Layout(title string, showHeader bool) {
 						<div class="relative ml-auto min-w-[240px] w-[min(420px,45vw)] max-[860px]:ml-0 max-[860px]:w-full" data-search-root>
 							<form action="/search" method="GET" class="w-full" id="search-form">
 								<input type="text" id="search-input" name="q" class="h-[34px] w-full border border-transparent bg-[var(--surface-search)] px-3 text-[var(--text)] transition-colors duration-120 placeholder:text-[var(--text-faint)] focus:border-[var(--surface-search-focus-border)] focus:outline-none" placeholder="Search anime..." autocomplete="off"/>
-								<div id="search-dropdown" class="absolute inset-x-0 top-[calc(100%+2px)] z-[120] max-h-[min(70vh,560px)] overflow-y-auto bg-[var(--panel)]"></div>
+								<div id="search-dropdown" class="absolute inset-x-0 top-[calc(100%+2px)] z-[120] max-h-[min(70vh,560px)] overflow-y-auto bg-[var(--panel)]" data-search-results-container></div>
 							</form>
 						</div>
 					</div>

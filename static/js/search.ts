@@ -7,7 +7,7 @@
 
   let searchTimeout: number | undefined
   const searchInput = document.getElementById('search-input') as HTMLInputElement | null
-  const searchDropdown = document.getElementById('search-dropdown')
+  const searchDropdown = document.querySelector('[data-search-results-container]') as HTMLElement | null
 
   if (!searchInput || !searchDropdown) {
     return
@@ -39,41 +39,41 @@
           }
 
           const searchResults = document.createElement('div')
-          searchResults.className = 'search-results'
+          searchResults.className = 'grid'
 
           const title = document.createElement('div')
-          title.className = 'search-results-title'
+          title.className = 'px-3 py-2 text-[0.68rem] text-[var(--text-faint)]'
           title.textContent = 'Anime'
           searchResults.appendChild(title)
 
           results.forEach((result): void => {
             const item = document.createElement('a')
-            item.className = 'search-result-item'
+            item.className = 'flex items-start gap-3 px-3 py-2 text-inherit no-underline hover:bg-[var(--panel-soft)] hover:no-underline'
             item.setAttribute('href', '/anime/' + encodeURIComponent(String(result.id || '')))
 
             if (isSafeImageUrl(result.image)) {
               const img = document.createElement('img')
-              img.className = 'search-result-thumb'
+              img.className = 'aspect-[2/3] w-[42px] shrink-0 object-cover bg-[var(--surface-thumb)]'
               img.setAttribute('src', result.image || '')
               img.setAttribute('alt', String(result.title || ''))
               item.appendChild(img)
             } else {
               const noImage = document.createElement('div')
-              noImage.className = 'search-result-no-image'
+              noImage.className = 'aspect-[2/3] w-[42px] shrink-0 bg-[var(--surface-thumb)] text-[0] text-transparent'
               noImage.textContent = 'no image'
               item.appendChild(noImage)
             }
 
             const info = document.createElement('div')
-            info.className = 'search-result-info'
+            info.className = 'grid min-w-0 gap-px'
 
             const itemTitle = document.createElement('div')
-            itemTitle.className = 'search-result-title'
+            itemTitle.className = 'line-clamp-1 text-[0.86rem] leading-[1.3] text-[var(--text)]'
             itemTitle.textContent = String(result.title || '')
             info.appendChild(itemTitle)
 
             const itemType = document.createElement('div')
-            itemType.className = 'search-result-type'
+            itemType.className = 'text-[0.67rem] text-[var(--text-faint)]'
             itemType.textContent = String(result.type || '')
             info.appendChild(itemType)
 
@@ -82,7 +82,7 @@
           })
 
           const viewAll = document.createElement('a')
-          viewAll.className = 'search-result-view-all'
+          viewAll.className = 'bg-[var(--surface-search-view-all)] px-3 py-2 text-center text-[0.8rem] text-[var(--text-muted)] no-underline hover:bg-[var(--panel-soft)] hover:text-[var(--text)] hover:no-underline'
           viewAll.setAttribute('href', '/search?q=' + encodeURIComponent(query))
           viewAll.textContent = 'View all results for ' + query
           searchResults.appendChild(viewAll)
