@@ -10,12 +10,12 @@ templ Layout(title string, showHeader bool) {
 			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 			<title>{ title }</title>
 			<link rel="icon" type="image/svg+xml" href="/static/favicon.svg"/>
-			<link rel="stylesheet" href="/static/css/tailwind.css"/>
+			<link rel="stylesheet" href="/static/tailwind.css"/>
 			<script src="https://unpkg.com/htmx.org@1.9.11"></script>
-			<script src="/static/js/discover.js" defer></script>
-			<script src="/static/js/anime.js" defer></script>
-			<script src="/static/js/timezone.js" defer></script>
-			<script src="/static/js/auth.js" defer></script>
+			<script src="/static/discover.js" defer></script>
+			<script src="/static/anime.js" defer></script>
+			<script src="/static/timezone.js" defer></script>
+			<script src="/static/auth.js" defer></script>
 		</head>
 		<body class="min-h-screen bg-[var(--bg)] text-[var(--text)] font-[var(--font)] text-[14px] leading-[1.45]">
 			if showHeader {
@@ -48,7 +48,7 @@ templ Layout(title string, showHeader bool) {
 			}>
 				{ children... }
 			</main>
-			<script src="/static/js/search.js"></script>
+			<script src="/static/search.js"></script>
 		</body>
 	</html>
 }

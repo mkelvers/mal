@@ -12,6 +12,6 @@
     "skipLibCheck": true
   },
   "include": [
-    "static/js/**/*.ts"
+    "static/*.ts"
   ]
 }
