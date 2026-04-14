@@ -2,29 +2,29 @@ package templates
 
 templ Login(formError string, username string) {
 	@Layout("Login", false) {
-		<div class="auth-shell">
-			<div class="login-container">
-				<h2>Sign in</h2>
-				<p class="login-subtitle">Enter your credentials to continue.</p>
-				<form action="/login" method="POST" class="login-form">
-					<div class="form-group">
+		<div class="w-full max-w-[560px]">
+			<div class="mx-auto w-full bg-[var(--panel)] p-6">
+				<h2 class="m-0 text-[1.4rem]">Sign in</h2>
+				<p class="my-3 mb-5 text-[0.95rem] text-[var(--text-muted)]">Enter your credentials to continue.</p>
+				<form action="/login" method="POST" class="grid gap-4">
+					<div class="grid gap-1">
 						<label for="username">Username / Email</label>
-						<input type="text" id="username" name="username" required placeholder="you@example.com" value={ username }/>
+						<input class="h-10 border border-transparent bg-[var(--surface-search)] px-3 text-[var(--text)] transition-colors duration-120 focus:border-[var(--surface-search-focus-border)] focus:outline-none" type="text" id="username" name="username" required placeholder="you@example.com" value={ username }/>
 					</div>
-					<div class="form-group">
+					<div class="grid gap-1">
 						<label for="password">Password</label>
-						<input type="password" id="password" name="password" required placeholder="Your password"/>
+						<input class="h-10 border border-transparent bg-[var(--surface-search)] px-3 text-[var(--text)] transition-colors duration-120 focus:border-[var(--surface-search-focus-border)] focus:outline-none" type="password" id="password" name="password" required placeholder="Your password"/>
 					</div>
-					<button type="submit" class="login-button">Sign in</button>
+					<button type="submit" class="h-10 cursor-pointer border-0 bg-[var(--accent)] text-[0.9rem] font-semibold text-[var(--text-on-accent)] hover:brightness-95">Sign in</button>
 					if formError != "" {
-						<p class="auth-form-error" role="alert" aria-live="polite">{ formError }</p>
+						<p class="mt-2 text-[0.82rem] text-[var(--danger)]" role="alert" aria-live="polite">{ formError }</p>
 					}
 				</form>
-				<p class="auth-switch-row">
-					Don't have an account? <a href="/register">Register</a>
+				<p class="mt-5 mb-0 text-center text-[0.9rem] text-[var(--text-muted)]">
+					Don't have an account? <a class="text-[var(--accent)]" href="/register">Register</a>
 				</p>
-				<p class="auth-switch-row">
-					Lost access? <a href="/recover">Recover account</a>
+				<p class="mt-5 mb-0 text-center text-[0.9rem] text-[var(--text-muted)]">
+					Lost access? <a class="text-[var(--accent)]" href="/recover">Recover account</a>
 				</p>
 			</div>
 		</div>
@@ -33,29 +33,29 @@ templ Login(formError string, username string) {
 
 templ Register(formError string, username string) {
 	@Layout("Register", false) {
-		<div class="auth-shell">
-			<div class="login-container">
-				<h2>Register</h2>
-				<p class="login-subtitle">Create a new account to track anime.</p>
-				<form action="/register" method="POST" class="login-form">
-					<div class="form-group">
+		<div class="w-full max-w-[560px]">
+			<div class="mx-auto w-full bg-[var(--panel)] p-6">
+				<h2 class="m-0 text-[1.4rem]">Register</h2>
+				<p class="my-3 mb-5 text-[0.95rem] text-[var(--text-muted)]">Create a new account to track anime.</p>
+				<form action="/register" method="POST" class="grid gap-4">
+					<div class="grid gap-1">
 						<label for="username">Username / Email</label>
-						<input type="text" id="username" name="username" required placeholder="you@example.com" value={ username }/>
+						<input class="h-10 border border-transparent bg-[var(--surface-search)] px-3 text-[var(--text)] transition-colors duration-120 focus:border-[var(--surface-search-focus-border)] focus:outline-none" type="text" id="username" name="username" required placeholder="you@example.com" value={ username }/>
 					</div>
-					<div class="form-group">
+					<div class="grid gap-1">
 						<label for="password">Password</label>
-						<input type="password" id="password" name="password" required placeholder="Minimum 12 chars"/>
+						<input class="h-10 border border-transparent bg-[var(--surface-search)] px-3 text-[var(--text)] transition-colors duration-120 focus:border-[var(--surface-search-focus-border)] focus:outline-none" type="password" id="password" name="password" required placeholder="Minimum 12 chars"/>
 					</div>
-					<p class="auth-password-note">
+					<p class="m-0 text-[0.75rem] leading-[1.4] text-[var(--text-faint)]">
 						Password must be at least 12 characters and include an uppercase letter, lowercase letter, number, and special character.
 					</p>
-					<button type="submit" class="login-button">Create account</button>
+					<button type="submit" class="h-10 cursor-pointer border-0 bg-[var(--accent)] text-[0.9rem] font-semibold text-[var(--text-on-accent)] hover:brightness-95">Create account</button>
 					if formError != "" {
-						<p class="auth-form-error" role="alert" aria-live="polite">{ formError }</p>
+						<p class="mt-2 text-[0.82rem] text-[var(--danger)]" role="alert" aria-live="polite">{ formError }</p>
 					}
 				</form>
-				<p class="auth-switch-row">
-					Already have an account? <a href="/login">Sign in</a>
+				<p class="mt-5 mb-0 text-center text-[0.9rem] text-[var(--text-muted)]">
+					Already have an account? <a class="text-[var(--accent)]" href="/login">Sign in</a>
 				</p>
 			</div>
 		</div>
@@ -64,18 +64,18 @@ templ Register(formError string, username string) {
 
 templ RegistrationRecoveryKey(recoveryKey string) {
 	@Layout("Save recovery key", false) {
-		<div class="auth-shell">
-			<div class="login-container">
+		<div class="w-full max-w-[560px]">
+			<div class="mx-auto w-full bg-[var(--panel)] p-6">
 				<h2>Save your recovery key</h2>
-				<p class="login-subtitle">Store this key somewhere safe. It is shown only once.</p>
-				<div class="recovery-key-row">
-					<p class="recovery-key-box" id="registration-recovery-key">{ recoveryKey }</p>
-					<button type="button" class="recovery-copy-btn" onclick="copyRecoveryKey('registration-recovery-key', 'registration-copy-feedback')">Copy key</button>
+				<p class="my-3 mb-5 text-[0.95rem] text-[var(--text-muted)]">Store this key somewhere safe. It is shown only once.</p>
+				<div class="grid gap-2">
+					<p class="m-0 break-all border border-[var(--surface-search-focus-border)] bg-[var(--surface-search)] p-3 text-[0.86rem] text-[var(--text)]" id="registration-recovery-key">{ recoveryKey }</p>
+					<button type="button" class="min-w-0 justify-self-start border border-[var(--surface-search-focus-border)] bg-[var(--surface-search)] px-[0.72rem] py-[0.42rem] text-[0.8rem] leading-none text-[var(--text)] hover:bg-[var(--surface-input-focus)]" onclick="copyRecoveryKey('registration-recovery-key', 'registration-copy-feedback')">Copy key</button>
 				</div>
-				<p class="auth-password-note recovery-copy-feedback" id="registration-copy-feedback" aria-live="polite"></p>
-				<p class="auth-password-note">If you lose your password, this key is the only way to recover your account without email.</p>
-				<p class="auth-switch-row">
-					<a href="/" class="auth-primary-link">I saved it, continue</a>
+				<p class="mt-2 min-h-[1.1rem] text-[0.75rem] leading-[1.4] text-[var(--text-faint)]" id="registration-copy-feedback" aria-live="polite"></p>
+				<p class="m-0 text-[0.75rem] leading-[1.4] text-[var(--text-faint)]">If you lose your password, this key is the only way to recover your account without email.</p>
+				<p class="mt-5 mb-0 text-center text-[0.9rem] text-[var(--text-muted)]">
+					<a href="/" class="inline-flex min-h-10 items-center justify-center border border-[var(--surface-search-focus-border)] bg-[var(--surface-search)] px-4 text-[var(--text)] no-underline hover:bg-[var(--panel-soft)] hover:no-underline">I saved it, continue</a>
 				</p>
 			</div>
 		</div>
@@ -84,30 +84,30 @@ templ RegistrationRecoveryKey(recoveryKey string) {
 
 templ Recover(formError string, username string, recoveryKey string) {
 	@Layout("Recover account", false) {
-		<div class="auth-shell">
-			<div class="login-container">
-				<h2>Recover account</h2>
-				<p class="login-subtitle">Enter your username, recovery key, and a new password.</p>
-				<form action="/recover" method="POST" class="login-form">
-					<div class="form-group">
+		<div class="w-full max-w-[560px]">
+			<div class="mx-auto w-full bg-[var(--panel)] p-6">
+				<h2 class="m-0 text-[1.4rem]">Recover account</h2>
+				<p class="my-3 mb-5 text-[0.95rem] text-[var(--text-muted)]">Enter your username, recovery key, and a new password.</p>
+				<form action="/recover" method="POST" class="grid gap-4">
+					<div class="grid gap-1">
 						<label for="username">Username / Email</label>
-						<input type="text" id="username" name="username" required placeholder="you@example.com" value={ username }/>
+						<input class="h-10 border border-transparent bg-[var(--surface-search)] px-3 text-[var(--text)] transition-colors duration-120 focus:border-[var(--surface-search-focus-border)] focus:outline-none" type="text" id="username" name="username" required placeholder="you@example.com" value={ username }/>
 					</div>
-					<div class="form-group">
+					<div class="grid gap-1">
 						<label for="recovery_key">Recovery key</label>
-						<input type="text" id="recovery_key" name="recovery_key" required value={ recoveryKey }/>
+						<input class="h-10 border border-transparent bg-[var(--surface-search)] px-3 text-[var(--text)] transition-colors duration-120 focus:border-[var(--surface-search-focus-border)] focus:outline-none" type="text" id="recovery_key" name="recovery_key" required value={ recoveryKey }/>
 					</div>
-					<div class="form-group">
+					<div class="grid gap-1">
 						<label for="new_password">New password</label>
-						<input type="password" id="new_password" name="new_password" required placeholder="Minimum 12 chars"/>
+						<input class="h-10 border border-transparent bg-[var(--surface-search)] px-3 text-[var(--text)] transition-colors duration-120 focus:border-[var(--surface-search-focus-border)] focus:outline-none" type="password" id="new_password" name="new_password" required placeholder="Minimum 12 chars"/>
 					</div>
-					<button type="submit" class="login-button">Reset password</button>
+					<button type="submit" class="h-10 cursor-pointer border-0 bg-[var(--accent)] text-[0.9rem] font-semibold text-[var(--text-on-accent)] hover:brightness-95">Reset password</button>
 					if formError != "" {
-						<p class="auth-form-error" role="alert" aria-live="polite">{ formError }</p>
+						<p class="mt-2 text-[0.82rem] text-[var(--danger)]" role="alert" aria-live="polite">{ formError }</p>
 					}
 				</form>
-				<p class="auth-switch-row">
-					Remembered your password? <a href="/login">Sign in</a>
+				<p class="mt-5 mb-0 text-center text-[0.9rem] text-[var(--text-muted)]">
+					Remembered your password? <a class="text-[var(--accent)]" href="/login">Sign in</a>
 				</p>
 			</div>
 		</div>
@@ -116,18 +116,18 @@ templ Recover(formError string, username string, recoveryKey string) {
 
 templ RecoveryComplete(newRecoveryKey string) {
 	@Layout("Recovery complete", false) {
-		<div class="auth-shell">
-			<div class="login-container">
+		<div class="w-full max-w-[560px]">
+			<div class="mx-auto w-full bg-[var(--panel)] p-6">
 				<h2>Account recovered</h2>
-				<p class="login-subtitle">Your password was reset and your recovery key was rotated.</p>
-				<div class="recovery-key-row">
-					<p class="recovery-key-box" id="recovery-complete-key">{ newRecoveryKey }</p>
-					<button type="button" class="recovery-copy-btn" onclick="copyRecoveryKey('recovery-complete-key', 'recovery-complete-feedback')">Copy key</button>
+				<p class="my-3 mb-5 text-[0.95rem] text-[var(--text-muted)]">Your password was reset and your recovery key was rotated.</p>
+				<div class="grid gap-2">
+					<p class="m-0 break-all border border-[var(--surface-search-focus-border)] bg-[var(--surface-search)] p-3 text-[0.86rem] text-[var(--text)]" id="recovery-complete-key">{ newRecoveryKey }</p>
+					<button type="button" class="min-w-0 justify-self-start border border-[var(--surface-search-focus-border)] bg-[var(--surface-search)] px-[0.72rem] py-[0.42rem] text-[0.8rem] leading-none text-[var(--text)] hover:bg-[var(--surface-input-focus)]" onclick="copyRecoveryKey('recovery-complete-key', 'recovery-complete-feedback')">Copy key</button>
 				</div>
-				<p class="auth-password-note recovery-copy-feedback" id="recovery-complete-feedback" aria-live="polite"></p>
-				<p class="auth-password-note">Replace your old recovery key with this one.</p>
-				<p class="auth-switch-row">
-					<a href="/login" class="auth-primary-link">Go to login</a>
+				<p class="mt-2 min-h-[1.1rem] text-[0.75rem] leading-[1.4] text-[var(--text-faint)]" id="recovery-complete-feedback" aria-live="polite"></p>
+				<p class="m-0 text-[0.75rem] leading-[1.4] text-[var(--text-faint)]">Replace your old recovery key with this one.</p>
+				<p class="mt-5 mb-0 text-center text-[0.9rem] text-[var(--text-muted)]">
+					<a href="/login" class="inline-flex min-h-10 items-center justify-center border border-[var(--surface-search-focus-border)] bg-[var(--surface-search)] px-4 text-[var(--text)] no-underline hover:bg-[var(--panel-soft)] hover:no-underline">Go to login</a>
 				</p>
 			</div>
 		</div>
@@ -136,75 +136,75 @@ templ RecoveryComplete(newRecoveryKey string) {
 
 templ Account(username string, createdAt string, passwordError string, passwordSuccess string, recoveryError string, recoverySuccess string, recoveryKey string) {
 	@Layout("Account", true) {
-		<div class="account-page">
-			<section class="account-card">
+		<div class="mx-auto grid w-[min(720px,100%)] gap-4">
+			<section class="grid gap-3 bg-[var(--panel)] p-5">
 				<h2>Account</h2>
-				<div class="account-meta">
-					<div class="account-meta-row">
-						<span class="account-meta-label">Email / Username</span>
-						<span class="account-meta-value">{ username }</span>
+				<div class="grid gap-2">
+					<div class="grid gap-1">
+						<span class="text-[0.78rem] text-[var(--text-faint)]">Email / Username</span>
+						<span class="text-[0.95rem] text-[var(--text)]">{ username }</span>
 					</div>
-					<div class="account-meta-row">
-						<span class="account-meta-label">Created</span>
-						<span class="account-meta-value">{ createdAt }</span>
+					<div class="grid gap-1">
+						<span class="text-[0.78rem] text-[var(--text-faint)]">Created</span>
+						<span class="text-[0.95rem] text-[var(--text)]">{ createdAt }</span>
 					</div>
 				</div>
 			</section>
 
-			<section class="account-card">
+			<section class="grid gap-3 bg-[var(--panel)] p-5">
 				<h3>Change password</h3>
-				<form action="/account/password" method="POST" class="account-form" onsubmit="return confirmDangerAction('Change your password now?')">
-					<div class="form-group">
+				<form action="/account/password" method="POST" class="grid gap-3" onsubmit="return confirmDangerAction('Change your password now?')">
+					<div class="grid gap-1">
 						<label for="current_password">Current password</label>
-						<input type="password" id="current_password" name="current_password" required/>
+						<input class="h-10 w-full border border-transparent bg-[var(--surface-search)] px-3 text-[var(--text)] transition-colors duration-120 focus:border-[var(--surface-search-focus-border)] focus:outline-none" type="password" id="current_password" name="current_password" required/>
 					</div>
-					<div class="form-group">
+					<div class="grid gap-1">
 						<label for="new_password">New password</label>
-						<input type="password" id="new_password" name="new_password" required placeholder="Minimum 12 chars"/>
+						<input class="h-10 w-full border border-transparent bg-[var(--surface-search)] px-3 text-[var(--text)] transition-colors duration-120 focus:border-[var(--surface-search-focus-border)] focus:outline-none" type="password" id="new_password" name="new_password" required placeholder="Minimum 12 chars"/>
 					</div>
-					<div class="form-group">
+					<div class="grid gap-1">
 						<label for="confirm_new_password">Confirm new password</label>
-						<input type="password" id="confirm_new_password" name="confirm_new_password" required/>
+						<input class="h-10 w-full border border-transparent bg-[var(--surface-search)] px-3 text-[var(--text)] transition-colors duration-120 focus:border-[var(--surface-search-focus-border)] focus:outline-none" type="password" id="confirm_new_password" name="confirm_new_password" required/>
 					</div>
-					<button type="submit" class="account-submit-btn">Update password</button>
+					<button type="submit" class="h-10 cursor-pointer border border-[var(--surface-search-focus-border)] bg-[var(--surface-search)] px-4 text-[var(--text)] hover:bg-[var(--panel-soft)]">Update password</button>
 					if passwordError != "" {
-						<p class="auth-form-error" role="alert" aria-live="polite">{ passwordError }</p>
+						<p class="mt-2 text-[0.82rem] text-[var(--danger)]" role="alert" aria-live="polite">{ passwordError }</p>
 					}
 					if passwordSuccess != "" {
-						<p class="account-success" role="status" aria-live="polite">{ passwordSuccess }</p>
+						<p class="m-0 text-[0.82rem] text-[var(--accent)]" role="status" aria-live="polite">{ passwordSuccess }</p>
 					}
 				</form>
 			</section>
 
-			<section class="account-card">
+			<section class="grid gap-3 bg-[var(--panel)] p-5">
 				<h3>Recovery key</h3>
-				<p class="auth-password-note">To view a new recovery key, confirm your current password. This rotates your old key.</p>
-				<form action="/account/recovery-key" method="POST" class="account-form" onsubmit="return confirmDangerAction('Rotate recovery key now? Your old key will stop working.')">
-					<div class="form-group">
+				<p class="m-0 text-[0.75rem] leading-[1.4] text-[var(--text-faint)]">To view a new recovery key, confirm your current password. This rotates your old key.</p>
+				<form action="/account/recovery-key" method="POST" class="grid gap-3" onsubmit="return confirmDangerAction('Rotate recovery key now? Your old key will stop working.')">
+					<div class="grid gap-1">
 						<label for="recovery_password">Current password</label>
-						<input type="password" id="recovery_password" name="password" required/>
+						<input class="h-10 w-full border border-transparent bg-[var(--surface-search)] px-3 text-[var(--text)] transition-colors duration-120 focus:border-[var(--surface-search-focus-border)] focus:outline-none" type="password" id="recovery_password" name="password" required/>
 					</div>
-					<button type="submit" class="account-submit-btn">Show new recovery key</button>
+					<button type="submit" class="h-10 cursor-pointer border border-[var(--surface-search-focus-border)] bg-[var(--surface-search)] px-4 text-[var(--text)] hover:bg-[var(--panel-soft)]">Show new recovery key</button>
 					if recoveryError != "" {
-						<p class="auth-form-error" role="alert" aria-live="polite">{ recoveryError }</p>
+						<p class="mt-2 text-[0.82rem] text-[var(--danger)]" role="alert" aria-live="polite">{ recoveryError }</p>
 					}
 					if recoverySuccess != "" {
-						<p class="account-success" role="status" aria-live="polite">{ recoverySuccess }</p>
+						<p class="m-0 text-[0.82rem] text-[var(--accent)]" role="status" aria-live="polite">{ recoverySuccess }</p>
 					}
 				</form>
 				if recoveryKey != "" {
-					<div class="recovery-key-row">
-						<p class="recovery-key-box" id="account-recovery-key">{ recoveryKey }</p>
-						<button type="button" class="recovery-copy-btn" onclick="copyRecoveryKey('account-recovery-key', 'account-copy-feedback')">Copy key</button>
+					<div class="grid gap-2">
+						<p class="m-0 break-all border border-[var(--surface-search-focus-border)] bg-[var(--surface-search)] p-3 text-[0.86rem] text-[var(--text)]" id="account-recovery-key">{ recoveryKey }</p>
+						<button type="button" class="min-w-0 justify-self-start border border-[var(--surface-search-focus-border)] bg-[var(--surface-search)] px-[0.72rem] py-[0.42rem] text-[0.8rem] leading-none text-[var(--text)] hover:bg-[var(--surface-input-focus)]" onclick="copyRecoveryKey('account-recovery-key', 'account-copy-feedback')">Copy key</button>
 					</div>
-					<p class="auth-password-note recovery-copy-feedback" id="account-copy-feedback" aria-live="polite"></p>
+					<p class="mt-2 min-h-[1.1rem] text-[0.75rem] leading-[1.4] text-[var(--text-faint)]" id="account-copy-feedback" aria-live="polite"></p>
 				}
 			</section>
 
-			<section class="account-card">
+			<section class="grid gap-3 bg-[var(--panel)] p-5">
 				<h3>Danger zone</h3>
-				<form action="/logout" method="POST" class="account-form-inline" onsubmit="return confirmDangerAction('Log out of this account now?')">
-					<button type="submit" class="account-logout-btn">Log out</button>
+				<form action="/logout" method="POST" class="inline-flex" onsubmit="return confirmDangerAction('Log out of this account now?')">
+					<button type="submit" class="h-10 cursor-pointer border border-[var(--surface-search-focus-border)] bg-[var(--surface-search)] px-4 text-[var(--text)] hover:bg-[var(--panel-soft)]">Log out</button>
 				</form>
 			</section>
 		</div>

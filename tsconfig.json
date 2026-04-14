@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "ES2020",
+    "moduleResolution": "Bundler",
+    "strict": true,
+    "noEmitOnError": true,
+    "allowJs": false,
+    "noEmit": true,
+    "sourceMap": false,
+    "removeComments": false,
+    "skipLibCheck": true
+  },
+  "include": [
+    "static/js/**/*.ts"
+  ]
+}

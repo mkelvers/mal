@@ -6,35 +6,39 @@ import "fmt"
 
 templ Discover() {
 	@Layout("mal - discover", true) {
-		<div class="discover-container">
-			<div class="discover-header">
+		<div class="grid gap-4">
+			<div class="grid gap-4">
 				<h1>Discover</h1>
-				<p class="discover-subtitle">Browse what's airing now and what is coming soon.</p>
+				<p class="m-0 text-[0.88rem] text-[var(--text-muted)]">Browse what's airing now and what is coming soon.</p>
 			</div>
-			<div class="tabs discover-tabs" data-tab-group="discover">
+			<div class="flex flex-wrap gap-2 max-[680px]:flex-nowrap max-[680px]:overflow-x-auto max-[680px]:pb-1" data-tab-group="discover">
 				<button
-					class="tab active"
+					class="tab-trigger shrink-0 whitespace-nowrap bg-[var(--surface-tab-active)] px-[0.45rem] py-[0.24rem] text-[0.76rem] text-[var(--accent)]"
 					type="button"
 					hx-get="/api/discover/airing?page=1"
 					hx-target="#discover-content"
 					hx-trigger="click"
 					data-tab-trigger
+					data-tab-active-classes="bg-[var(--surface-tab-active)] text-[var(--accent)]"
+					data-tab-inactive-classes="bg-[var(--panel-soft)] text-[var(--text-muted)]"
 				>
 					airing now
 				</button>
 				<button
-					class="tab"
+					class="tab-trigger shrink-0 whitespace-nowrap bg-[var(--panel-soft)] px-[0.45rem] py-[0.24rem] text-[0.76rem] text-[var(--text-muted)] hover:bg-[var(--surface-tab-hover)] hover:text-[var(--text)]"
 					type="button"
 					hx-get="/api/discover/upcoming?page=1"
 					hx-target="#discover-content"
 					hx-trigger="click"
 					data-tab-trigger
+					data-tab-active-classes="bg-[var(--surface-tab-active)] text-[var(--accent)]"
+					data-tab-inactive-classes="bg-[var(--panel-soft)] text-[var(--text-muted)]"
 				>
 					upcoming
 				</button>
 			</div>
-			<div class="catalog-grid" id="discover-content" hx-get="/api/discover/airing?page=1" hx-trigger="load">
-				<div class="grid-full-width">
+			<div class="grid grid-cols-[repeat(auto-fill,minmax(190px,1fr))] gap-4 max-[680px]:grid-cols-2 max-[680px]:gap-3" id="discover-content" hx-get="/api/discover/airing?page=1" hx-trigger="load">
+				<div class="col-span-full">
 					@ui.LoadingIndicator("Loading discover")
 				</div>
 			</div>

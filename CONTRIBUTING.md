@@ -14,8 +14,14 @@ Thanks for your interest in improving MAL.
 # install templ CLI
 go install github.com/a-h/templ/cmd/templ@latest
 
+# install frontend tooling
+bun install
+
 # generate templates
 templ generate
+
+# build frontend assets (tailwind + typescript)
+bun run build:assets
 
 # run tests
 go test ./...
@@ -23,6 +29,9 @@ go test ./...
 # run app
 go run ./cmd/server
 ```
+
+TypeScript source files live in `static/js/*.ts` and are bundled to matching `static/js/*.js` files for runtime.
+Generated `static/js/*.js` and `static/css/tailwind.css` files are ignored by git.
 
 ## Development guidelines
 

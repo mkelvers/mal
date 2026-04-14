@@ -10,7 +10,7 @@ import (
 templ Search(q string) {
 	@Layout("mal - search", true) {
 		if q != "" {
-			<div id="loading" class="htmx-indicator">
+			<div id="loading" class="hidden htmx-request:inline-flex">
 				@ui.LoadingIndicator("Searching...")
 			</div>
 			<div id="results" hx-get={ string(templ.URL("/search?q=" + url.QueryEscape(q))) } hx-trigger="load" hx-indicator="#loading"></div>
@@ -28,7 +28,7 @@ templ SearchResultsWrapper(query string, animes []jikan.Anime, nextPage int, has
 			Try a different search term.
 		}
 	} else {
-		<div class="catalog-grid">
+		<div class="grid grid-cols-[repeat(auto-fill,minmax(190px,1fr))] gap-4 max-[680px]:grid-cols-2 max-[680px]:gap-3">
 			@SearchItems(query, animes, nextPage, hasNext)
 		</div>
 	}

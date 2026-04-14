@@ -1,7 +1,13 @@
-;(function () {
+((): void => {
   const jstOffsetMinutes = 9 * 60
 
-  const parseBroadcastTime = (value) => {
+  type ParsedBroadcast = {
+    day: string
+    hour: number
+    minute: number
+  }
+
+  const parseBroadcastTime = (value: string | null): { hour: number; minute: number } | null => {
     if (!value || typeof value !== 'string') {
       return null
     }
@@ -20,7 +26,7 @@
     return { hour, minute }
   }
 
-  const isJstTimezone = (timezone) => {
+  const isJstTimezone = (timezone: string | null): boolean => {
     if (!timezone) {
       return true
     }
@@ -29,7 +35,7 @@
     return normalized === 'asia/tokyo' || normalized === 'jst'
   }
 
-  const parseFromStructuredAttrs = (node) => {
+  const parseFromStructuredAttrs = (node: Element): ParsedBroadcast | null => {
     const day = node.getAttribute('data-broadcast-day')
     const time = node.getAttribute('data-broadcast-time')
     const timezone = node.getAttribute('data-broadcast-timezone')
@@ -46,7 +52,7 @@
     return { day: day.trim(), hour: parsedTime.hour, minute: parsedTime.minute }
   }
 
-  const parseBroadcast = (text) => {
+  const parseBroadcast = (text: string | null): ParsedBroadcast | null => {
     if (!text || typeof text !== 'string') {
       return null
     }
@@ -71,9 +77,9 @@
     return { day, hour, minute }
   }
 
-  const normalizeDay = (day) => {
+  const normalizeDay = (day: string): number | null => {
     const key = day.trim().toLowerCase().replace(/s$/, '')
-    const days = {
+    const days: Record<string, number> = {
       mon: 1,
       monday: 1,
       tue: 2,
@@ -100,7 +106,7 @@
     return days[key]
   }
 
-  const convertToLocal = (parsed, localOffsetMinutes) => {
+  const convertToLocal = (parsed: ParsedBroadcast, localOffsetMinutes: number): string | null => {
     const sourceMinutes = parsed.hour * 60 + parsed.minute
     const diff = jstOffsetMinutes - localOffsetMinutes
     const localTotal = sourceMinutes - diff
@@ -122,7 +128,7 @@
     return `${localDay} at ${time} (Local)`
   }
 
-  const nextAiringUTC = (parsed) => {
+  const nextAiringUTC = (parsed: ParsedBroadcast): Date | null => {
     const targetDay = normalizeDay(parsed.day)
     if (targetDay === null) {
       return null
@@ -144,7 +150,17 @@
     return new Date(now.getTime() + minuteDelta * 60 * 1000)
   }
 
-  const relativeText = (target) => {
+  const formatRelative = (value: number, unit: Intl.RelativeTimeFormatUnit): string => {
+    if (typeof Intl !== 'undefined' && typeof Intl.RelativeTimeFormat === 'function') {
+      const formatter = new Intl.RelativeTimeFormat(undefined, { numeric: 'auto' })
+      return formatter.format(value, unit)
+    }
+
+    const suffix = value === 1 ? unit : `${unit}s`
+    return `in ${value} ${suffix}`
+  }
+
+  const relativeText = (target: Date): string => {
     const diffMs = target.getTime() - Date.now()
     if (diffMs <= 0) {
       return 'soon'
@@ -164,17 +180,7 @@
     return formatRelative(days, 'day')
   }
 
-  const formatRelative = (value, unit) => {
-    if (typeof Intl !== 'undefined' && typeof Intl.RelativeTimeFormat === 'function') {
-      const formatter = new Intl.RelativeTimeFormat(undefined, { numeric: 'auto' })
-      return formatter.format(value, unit)
-    }
-
-    const suffix = value === 1 ? unit : `${unit}s`
-    return `in ${value} ${suffix}`
-  }
-
-  const localDateTimeText = (date) => {
+  const localDateTimeText = (date: Date): string => {
     const formatter = new Intl.DateTimeFormat(undefined, {
       weekday: 'short',
       hour: '2-digit',
@@ -183,8 +189,8 @@
     return formatter.format(date)
   }
 
-  const updateNextAiring = (node, parsed) => {
-    const card = node.closest('.notification-content')
+  const updateNextAiring = (node: Element, parsed: ParsedBroadcast): void => {
+    const card = node.closest('[data-notification-content]')
     if (!card) {
       return
     }
@@ -203,8 +209,8 @@
     nextNode.textContent = `Next episode ${relativeText(nextDate)} (${localDateTimeText(nextDate)})`
   }
 
-  const updateNode = (node, localOffsetMinutes) => {
-    const card = node.closest('.notification-content')
+  const updateNode = (node: Element, localOffsetMinutes: number): void => {
+    const card = node.closest('[data-notification-content]')
     const nextNode = card ? card.querySelector('[data-next-airing]') : null
 
     const structured = parseFromStructuredAttrs(node)
@@ -229,10 +235,10 @@
     updateNextAiring(node, parsed)
   }
 
-  const updateAll = () => {
+  const updateAll = (): void => {
     const localOffsetMinutes = -new Date().getTimezoneOffset()
     const nodes = document.querySelectorAll('[data-jst-text]')
-    nodes.forEach((node) => updateNode(node, localOffsetMinutes))
+    nodes.forEach((node: Element): void => updateNode(node, localOffsetMinutes))
   }
 
   document.addEventListener('DOMContentLoaded', updateAll)
