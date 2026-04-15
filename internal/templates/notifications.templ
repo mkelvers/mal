@@ -97,6 +97,7 @@ templ UpcomingSeasonCard(item database.GetUpcomingSeasonsRow) {
 		Title:    displaySeasonTitle(item),
 		ImageURL: item.ImageUrl,
 		Class:    "notification-card min-w-0 flex flex-col bg-transparent text-inherit no-underline",
+		HideTitle: true,
 	}) {
 		<div class="mt-2 grid gap-1 p-0" data-notification-content>
 			<div class="line-clamp-2 text-sm leading-snug text-(--text)">
@@ -124,6 +125,7 @@ templ NotificationCard(item WatchingAnimeWithDetails) {
 		Title:    displayTitle(item.Entry),
 		ImageURL: item.Entry.ImageUrl,
 		Class:    "notification-card min-w-0 flex flex-col bg-transparent text-inherit no-underline",
+		HideTitle: true,
 	}) {
 		<div class="mt-2 grid gap-1 p-0" data-notification-content>
 			<div class="line-clamp-2 text-sm leading-snug text-(--text)">

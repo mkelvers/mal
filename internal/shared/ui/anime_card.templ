@@ -10,6 +10,7 @@ type AnimeCardProps struct {
 	Class       string // override default wrapper class
 	ImgClass    string // override default image class
 	TitleClass  string // override default title class
+	HideTitle   bool   // if true, do not render the default title block
 	CurrentNode bool   // if true, renders a div instead of an anchor tag (useful for graph nodes)
 }
 
@@ -26,7 +27,7 @@ templ AnimeCard(props AnimeCardProps) {
 		<a href={ templ.URL(fmt.Sprintf("/anime/%d", props.ID)) } class={ defaultString(props.Class, "flex flex-col bg-transparent text-inherit no-underline") }>
 			@animeCardPoster(props.ImageURL, props.Title, props.ImgClass)
 			
-			if props.Class != "notification-card" && props.Class != "schedule-card" {
+			if !props.HideTitle {
 				<div class={ defaultString(props.TitleClass, "mt-2 line-clamp-2 text-sm leading-snug text-(--text)") }>
 					{ props.Title }
 				</div>
