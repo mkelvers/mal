@@ -113,7 +113,9 @@ templ AnimeDetails(anime jikan.Anime, currentStatus string) {
 						if len(anime.Studios) > 0 {
 							<div class="mt-1 grid gap-1">
 								<span class="mt-0.5 text-sm text-(--text-faint)">Studios</span>
-								<span class="text-sm text-(--text-muted)">{ joinNames(anime.Studios) }</span>
+								<span class="text-sm text-(--text-muted)">
+									@studioLinks(anime.Studios)
+								</span>
 							</div>
 						}
 						if len(anime.Producers) > 0 {
@@ -307,4 +309,16 @@ templ AnimeRecommendations(recs []jikan.Anime) {
 
 func hasExtraSidebarDetails(anime jikan.Anime) bool {
 	return anime.TitleJapanese != "" || len(anime.TitleSynonyms) > 0 || len(anime.Studios) > 0 || len(anime.Producers) > 0 || anime.Source != "" || len(anime.Demographics) > 0 || len(anime.Themes) > 0 || anime.Broadcast.String != "" || len(anime.Streaming) > 0
+}
+
+templ studioLinks(studios []jikan.NamedEntity) {
+	for i, studio := range studios {
+		<a
+			href={ templ.URL(fmt.Sprintf("/studios/%d", studio.MalID)) }
+			class="hover:text-(--text) hover:underline"
+		>{ studio.Name }</a>
+		if i < len(studios)-1 {
+			<span>, </span>
+		}
+	}
 }
