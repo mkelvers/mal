@@ -15,6 +15,12 @@ type TopAnimeResult struct {
 	HasNextPage bool
 }
 
+type StudioAnimeResult struct {
+	Animes      []Anime
+	HasNextPage bool
+	StudioName  string
+}
+
 type NamedEntity struct {
 	MalID int    `json:"mal_id"`
 	Name  string `json:"name"`
