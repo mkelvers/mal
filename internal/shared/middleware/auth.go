@@ -60,7 +60,8 @@ func RequireAuth(next http.Handler) http.Handler {
 func RequireGlobalAuth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Allow unauthenticated access to login, register, search, and static files
-		if r.URL.Path == "/login" || r.URL.Path == "/register" || r.URL.Path == "/recover" || strings.HasPrefix(r.URL.Path, "/static/") ||
+		if r.URL.Path == "/login" || r.URL.Path == "/register" || r.URL.Path == "/recover" ||
+			strings.HasPrefix(r.URL.Path, "/static/") || strings.HasPrefix(r.URL.Path, "/dist/") ||
 			r.URL.Path == "/search" || r.URL.Path == "/api/search" || r.URL.Path == "/api/search-quick" ||
 			r.URL.Path == "/" {
 			next.ServeHTTP(w, r)
