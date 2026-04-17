@@ -48,6 +48,8 @@ func NewRouter(cfg Config) http.Handler {
 	mux.HandleFunc("/api/catalog", animeHandler.HandleAPICatalog)
 	mux.HandleFunc("/anime/", animeHandler.HandleAnimeDetails)
 	mux.HandleFunc("/api/anime/", animeHandler.HandleAPIAnime)
+	mux.HandleFunc("/studios/", animeHandler.HandleStudioDetails)
+	mux.HandleFunc("/api/studios/", animeHandler.HandleAPIStudioAnime)
 
 	// Auth Endpoints
 	mux.HandleFunc("/login", func(w http.ResponseWriter, r *http.Request) {

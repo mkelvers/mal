@@ -328,3 +328,71 @@ func (h *Handler) HandleNotificationsUpcoming(w http.ResponseWriter, r *http.Req
 
 	templates.UpcomingSeasonsList(upcomingSeasons).Render(r.Context(), w)
 }
+
+func (h *Handler) HandleStudioDetails(w http.ResponseWriter, r *http.Request) {
+	idStr := r.URL.Path[len("/studios/"):]
+	id, err := strconv.Atoi(idStr)
+	if err != nil || id <= 0 {
+		renderNotFoundPage(r, w)
+		return
+	}
+
+	producer, err := h.svc.GetProducerByID(r.Context(), id)
+	if err != nil {
+		if jikan.IsNotFoundError(err) {
+			renderNotFoundPage(r, w)
+			return
+		}
+
+		log.Printf("studio fetch error for %d: %v", id, err)
+		http.Error(w, "Failed to fetch studio details", http.StatusInternalServerError)
+		return
+	}
+
+	result, err := h.svc.GetAnimeByProducer(r.Context(), id, 1)
+	if err != nil {
+		log.Printf("studio anime fetch error for %d: %v", id, err)
+		if jikan.IsRetryableError(err) || errors.Is(err, context.Canceled) {
+			// Render page with empty anime list if API is rate limiting
+			templates.StudioDetails(producer, []jikan.Anime{}, false, 2).Render(r.Context(), w)
+			return
+		}
+		http.Error(w, "Failed to fetch studio anime", http.StatusInternalServerError)
+		return
+	}
+
+	templates.StudioDetails(producer, result.Animes, result.HasNextPage, 2).Render(r.Context(), w)
+}
+
+func (h *Handler) HandleAPIStudioAnime(w http.ResponseWriter, r *http.Request) {
+	path := r.URL.Path[len("/api/studios/"):]
+
+	idPart, after, ok := strings.Cut(path, "/")
+	if !ok || after != "anime" {
+		http.Error(w, "invalid path", http.StatusBadRequest)
+		return
+	}
+
+	id, err := strconv.Atoi(idPart)
+	if err != nil || id <= 0 {
+		http.Error(w, "invalid id", http.StatusBadRequest)
+		return
+	}
+
+	page := parsePageParam(r)
+
+	result, err := h.svc.GetAnimeByProducer(r.Context(), id, page)
+	if err != nil {
+		log.Printf("studio anime pagination error for %d page %d: %v", id, page, err)
+		if jikan.IsRetryableError(err) || errors.Is(err, context.Canceled) {
+			writeInlineLoadError(w, "Unable to load more results right now. Please retry shortly.")
+			return
+		}
+		http.Error(w, "Failed to fetch studio anime", http.StatusInternalServerError)
+		return
+	}
+
+	result.Animes = deduplicateAnimes(result.Animes)
+
+	templates.StudioAnimeItems(result.Animes, result.HasNextPage, id, page+1).Render(r.Context(), w)
+}
