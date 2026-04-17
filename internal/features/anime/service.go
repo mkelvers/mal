@@ -136,3 +136,11 @@ func (s *Service) GetUpcomingSeasons(ctx context.Context, userID string) ([]data
 
 	return deduped, nil
 }
+
+func (s *Service) GetAnimeByProducer(ctx context.Context, producerID int, page int) (jikan.StudioAnimeResult, error) {
+	return s.jikanClient.GetAnimeByProducer(ctx, producerID, page)
+}
+
+func (s *Service) GetProducerByID(ctx context.Context, producerID int) (jikan.ProducerResponse, error) {
+	return s.jikanClient.GetProducerByID(ctx, producerID)
+}
