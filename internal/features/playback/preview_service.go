@@ -5,6 +5,7 @@ import (
 	"crypto/sha1"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"math"
@@ -26,6 +27,7 @@ const (
 	previewFrameInterval   = 10
 	previewFrameLimit      = previewGridColumns * previewGridRows
 	previewGenerationLimit = 120 * time.Second
+	previewFailureTTL      = 2 * time.Minute
 	previewManifestName    = "map.json"
 	spriteFileName         = "sprite.jpg"
 )
@@ -67,6 +69,9 @@ func (s *Service) EnsurePreviewMap(ctx context.Context, req PreviewRequest) (Pre
 
 	previewHash := hashPreviewIdentity(req.MalID, normalizedEpisode, normalizedMode, req.Source, req.Referer)
 	previewKey := fmt.Sprintf("%d-%s", req.MalID, previewHash)
+	if s.previewFailureActive(previewKey) {
+		return PreviewMap{}, "", fmt.Errorf("preview temporarily disabled")
+	}
 	previewDir := filepath.Join(s.previewRoot, previewKey)
 	manifestPath := filepath.Join(previewDir, previewManifestName)
 	spritePath := filepath.Join(previewDir, spriteFileName)
@@ -120,8 +125,12 @@ func (s *Service) EnsurePreviewMap(ctx context.Context, req PreviewRequest) (Pre
 	interval := selectPreviewInterval(duration)
 
 	if err := generatePreviewSprite(ctxWithTimeout, ffmpegPath, req.Source, req.Referer, spritePath, interval); err != nil {
+		if shouldBackoffPreview(err) {
+			s.markPreviewFailure(previewKey)
+		}
 		return PreviewMap{}, "", err
 	}
+	s.clearPreviewFailure(previewKey)
 
 	mapData := buildPreviewMap(duration, interval)
 	if err := writePreviewManifest(manifestPath, mapData); err != nil {
@@ -157,6 +166,37 @@ func (s *Service) previewLock(key string) *sync.Mutex {
 	newLock := &sync.Mutex{}
 	s.previewLocks[key] = newLock
 	return newLock
+}
+
+func (s *Service) previewFailureActive(key string) bool {
+	s.previewFailMu.Lock()
+	defer s.previewFailMu.Unlock()
+
+	expiresAt, ok := s.previewFailTTL[key]
+	if !ok {
+		return false
+	}
+
+	if time.Now().After(expiresAt) {
+		delete(s.previewFailTTL, key)
+		return false
+	}
+
+	return true
+}
+
+func (s *Service) markPreviewFailure(key string) {
+	s.previewFailMu.Lock()
+	defer s.previewFailMu.Unlock()
+
+	s.previewFailTTL[key] = time.Now().Add(previewFailureTTL)
+}
+
+func (s *Service) clearPreviewFailure(key string) {
+	s.previewFailMu.Lock()
+	defer s.previewFailMu.Unlock()
+
+	delete(s.previewFailTTL, key)
 }
 
 func hashPreviewIdentity(malID int, episode string, mode string, source string, referer string) string {
@@ -397,4 +437,27 @@ func isFinitePositive(value float64) bool {
 	}
 
 	return true
+}
+
+func shouldBackoffPreview(err error) bool {
+	if err == nil {
+		return false
+	}
+
+	if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
+		return true
+	}
+
+	errText := strings.ToLower(err.Error())
+	if strings.Contains(errText, "signal: killed") {
+		return true
+	}
+	if strings.Contains(errText, "context canceled") {
+		return true
+	}
+	if strings.Contains(errText, "cannot allocate memory") {
+		return true
+	}
+
+	return false
 }

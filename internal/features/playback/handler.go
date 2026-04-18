@@ -256,7 +256,9 @@ func (h *Handler) HandleProxyPreviewMap(w http.ResponseWriter, r *http.Request) 
 		Duration: duration,
 	})
 	if previewErr != nil {
-		log.Printf("preview map error mal_id=%d ep=%s mode=%s: %v", malID, episode, mode, previewErr)
+		if previewErr.Error() != "preview temporarily disabled" {
+			log.Printf("preview map error mal_id=%d ep=%s mode=%s: %v", malID, episode, mode, previewErr)
+		}
 		http.Error(w, "failed to generate preview map", http.StatusBadGateway)
 		return
 	}

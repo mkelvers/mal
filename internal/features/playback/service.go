@@ -28,6 +28,8 @@ type Service struct {
 	previewRoot    string
 	previewMu      sync.Mutex
 	previewLocks   map[string]*sync.Mutex
+	previewFailMu  sync.Mutex
+	previewFailTTL map[string]time.Time
 }
 
 type sourceScore struct {
@@ -47,6 +49,7 @@ func NewService(jikanClient *jikan.Client, db database.Querier) *Service {
 		db:             db,
 		previewRoot:    newPreviewRootDir(),
 		previewLocks:   make(map[string]*sync.Mutex),
+		previewFailTTL: make(map[string]time.Time),
 	}
 }
 
