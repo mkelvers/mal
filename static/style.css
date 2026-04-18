@@ -44,6 +44,7 @@
   width: 4px;
   border-radius: 9999px;
   background: rgba(255, 255, 255, 0.55);
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.45);
 }
 
 .volume-range::-webkit-slider-thumb {
@@ -55,12 +56,14 @@
   background: #ffffff;
   border: 0;
   margin-left: -5px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.55);
 }
 
 .volume-range::-moz-range-track {
   width: 4px;
   border-radius: 9999px;
   background: rgba(255, 255, 255, 0.55);
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.45);
 }
 
 .volume-range::-moz-range-thumb {
@@ -69,6 +72,7 @@
   border-radius: 9999px;
   background: #ffffff;
   border: 0;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.55);
 }
 
 .volume-wrap::before {
