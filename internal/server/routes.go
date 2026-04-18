@@ -41,8 +41,10 @@ func NewRouter(cfg Config) http.Handler {
 
 	mux.HandleFunc("/", animeHandler.HandleCatalog)
 	mux.HandleFunc("/discover", animeHandler.HandleDiscover)
-	mux.HandleFunc("/notifications", animeHandler.HandleNotifications)
-	mux.HandleFunc("/notifications/upcoming", animeHandler.HandleNotificationsUpcoming)
+	mux.HandleFunc("/continue-watching", watchlistHandler.HandleContinueWatching)
+	mux.HandleFunc("/notifications", func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, "/continue-watching", http.StatusMovedPermanently)
+	})
 	mux.HandleFunc("/api/discover/airing", animeHandler.HandleAPIDiscoverAiring)
 	mux.HandleFunc("/api/discover/upcoming", animeHandler.HandleAPIDiscoverUpcoming)
 	mux.HandleFunc("/search", animeHandler.HandleSearch)
@@ -77,6 +79,7 @@ func NewRouter(cfg Config) http.Handler {
 	mux.HandleFunc("/api/watchlist/import", watchlistHandler.HandleImportWatchlist)
 	mux.HandleFunc("/api/watchlist", watchlistHandler.HandleUpdateWatchlist)
 	mux.HandleFunc("/api/watchlist/", watchlistHandler.HandleDeleteWatchlist)
+	mux.HandleFunc("/api/continue-watching/", watchlistHandler.HandleDeleteContinueWatching)
 	mux.HandleFunc("/watchlist", watchlistHandler.HandleGetWatchlist)
 
 	// Wrap mux with global CSRF origin verification and auth checking,

@@ -6,7 +6,6 @@ import (
 
 	"mal/internal/database"
 	"mal/internal/jikan"
-	"mal/internal/templates"
 )
 
 type Service struct {
@@ -96,52 +95,6 @@ func (s *Service) GetRelations(ctx context.Context, id int) ([]jikan.RelationEnt
 
 func (s *Service) GetRecommendations(ctx context.Context, animeID int, limit int) ([]jikan.Anime, error) {
 	return s.jikanClient.GetRecommendations(ctx, animeID, limit)
-}
-
-func (s *Service) GetWatchingAnime(ctx context.Context, userID string) ([]templates.WatchingAnimeWithDetails, error) {
-	rows, err := s.db.GetWatchingAnime(ctx, userID)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get watching anime: %w", err)
-	}
-
-	var result []templates.WatchingAnimeWithDetails
-	for _, row := range rows {
-		anime, err := s.jikanClient.GetAnimeByID(ctx, int(row.AnimeID))
-		if err != nil {
-			if jikan.IsRetryableError(err) {
-				s.jikanClient.EnqueueAnimeFetchRetry(ctx, int(row.AnimeID), err)
-			}
-			// Instead of skipping, we still append it, but without the extra Jikan details
-			// This prevents anime from vanishing from the watchlist when Jikan rate limits us.
-			anime = jikan.Anime{}
-		}
-		result = append(result, templates.WatchingAnimeWithDetails{
-			Entry: row,
-			Anime: anime,
-		})
-	}
-
-	return result, nil
-}
-
-func (s *Service) GetUpcomingSeasons(ctx context.Context, userID string) ([]database.GetUpcomingSeasonsRow, error) {
-	rows, err := s.db.GetUpcomingSeasons(ctx, userID)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get upcoming seasons: %w", err)
-	}
-
-	// Deduplicate by related anime ID
-	// Because of the recursive query, multiple prequels can point to the same upcoming season
-	seen := make(map[int64]bool)
-	var deduped []database.GetUpcomingSeasonsRow
-	for _, row := range rows {
-		if !seen[row.ID] {
-			seen[row.ID] = true
-			deduped = append(deduped, row)
-		}
-	}
-
-	return deduped, nil
 }
 
 func (s *Service) GetAnimeByProducer(ctx context.Context, producerID int, page int) (jikan.StudioAnimeResult, error) {

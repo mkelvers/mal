@@ -173,14 +173,7 @@ func (h *Handler) HandleGetWatchlist(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var filteredEntries []database.GetUserWatchListRow
-	if statusFilter == "continuing" {
-		// Show airing anime with watching or plan_to_watch status
-		for _, entry := range entries {
-			if entry.Airing.Bool && (entry.Status == "watching" || entry.Status == "plan_to_watch") {
-				filteredEntries = append(filteredEntries, entry)
-			}
-		}
-	} else if statusFilter != "" && statusFilter != "all" {
+	if statusFilter != "" && statusFilter != "all" {
 		for _, entry := range entries {
 			if entry.Status == statusFilter {
 				filteredEntries = append(filteredEntries, entry)
@@ -195,6 +188,59 @@ func (h *Handler) HandleGetWatchlist(w http.ResponseWriter, r *http.Request) {
 	h.sortEntries(filteredEntries, sortBy, sortOrder)
 
 	templates.Watchlist(filteredEntries, layout, statusFilter, sortBy, sortOrder).Render(r.Context(), w)
+}
+
+func (h *Handler) HandleContinueWatching(w http.ResponseWriter, r *http.Request) {
+	if !requireMethod(w, r, http.MethodGet) {
+		return
+	}
+
+	user := middleware.GetUser(r.Context())
+	if user == nil {
+		http.Redirect(w, r, "/login", http.StatusFound)
+		return
+	}
+
+	entries, err := h.svc.db.GetContinueWatchingEntries(r.Context(), user.ID)
+	if err != nil {
+		log.Printf("continue watching fetch failed: user_id=%s err=%v", user.ID, err)
+		http.Error(w, "failed to fetch continue watching", http.StatusInternalServerError)
+		return
+	}
+
+	templates.ContinueWatching(entries).Render(r.Context(), w)
+}
+
+func (h *Handler) HandleDeleteContinueWatching(w http.ResponseWriter, r *http.Request) {
+	if !requireMethod(w, r, http.MethodDelete) {
+		return
+	}
+
+	user := middleware.GetUser(r.Context())
+	if user == nil {
+		w.Header().Set("HX-Redirect", "/login")
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	path := r.URL.Path[len("/api/continue-watching/"):]
+	animeID, err := strconv.ParseInt(path, 10, 64)
+	if err != nil || animeID <= 0 {
+		http.Error(w, "invalid anime ID", http.StatusBadRequest)
+		return
+	}
+
+	err = h.svc.db.DeleteContinueWatchingEntry(r.Context(), database.DeleteContinueWatchingEntryParams{
+		UserID:  user.ID,
+		AnimeID: animeID,
+	})
+	if err != nil {
+		log.Printf("continue watching delete failed: user_id=%s anime_id=%d err=%v", user.ID, animeID, err)
+		http.Error(w, "failed to delete continue watching entry", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
 }
 
 func (h *Handler) HandleExportWatchlist(w http.ResponseWriter, r *http.Request) {

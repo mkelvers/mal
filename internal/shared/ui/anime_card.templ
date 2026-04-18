@@ -6,6 +6,7 @@ type AnimeCardProps struct {
 	ID       int
 	Title    string
 	ImageURL string
+	Href     string
 	// Options to customize the card behavior
 	Class       string // override default wrapper class
 	ImgClass    string // override default image class
@@ -24,7 +25,7 @@ templ AnimeCard(props AnimeCardProps) {
 			{ children... }
 		</div>
 	} else {
-		<a href={ templ.URL(fmt.Sprintf("/anime/%d", props.ID)) } class={ defaultString(props.Class, "flex flex-col bg-transparent text-inherit no-underline") }>
+		<a href={ templ.URL(cardHref(props)) } class={ defaultString(props.Class, "flex flex-col bg-transparent text-inherit no-underline") }>
 			@animeCardPoster(props.ImageURL, props.Title, props.ImgClass)
 			
 			if !props.HideTitle {
@@ -35,6 +36,14 @@ templ AnimeCard(props AnimeCardProps) {
 			{ children... }
 		</a>
 	}
+}
+
+func cardHref(props AnimeCardProps) string {
+	if props.Href != "" {
+		return props.Href
+	}
+
+	return fmt.Sprintf("/anime/%d", props.ID)
 }
 
 templ animeCardPoster(imageURL, title, imgClass string) {

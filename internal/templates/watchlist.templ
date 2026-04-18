@@ -29,7 +29,6 @@ templ Watchlist(entries []database.GetUserWatchListRow, layout string, currentSt
 		<div class="mb-3 flex flex-wrap gap-2 max-md:flex-nowrap max-md:overflow-x-auto max-md:pb-1">
 			<a href={ templ.URL(watchlistURL(layout, "all", sortBy, sortOrder)) } class={ tabClass(currentStatus == "all") }>All</a>
 			<a href={ templ.URL(watchlistURL(layout, "watching", sortBy, sortOrder)) } class={ tabClass(currentStatus == "watching") }>Watching</a>
-			<a href={ templ.URL(watchlistURL(layout, "continuing", sortBy, sortOrder)) } class={ tabClass(currentStatus == "continuing") }>Continuing</a>
 			<a href={ templ.URL(watchlistURL(layout, "on_hold", sortBy, sortOrder)) } class={ tabClass(currentStatus == "on_hold") }>On hold</a>
 			<a href={ templ.URL(watchlistURL(layout, "plan_to_watch", sortBy, sortOrder)) } class={ tabClass(currentStatus == "plan_to_watch") }>Plan to watch</a>
 			<a href={ templ.URL(watchlistURL(layout, "dropped", sortBy, sortOrder)) } class={ tabClass(currentStatus == "dropped") }>Dropped</a>
@@ -40,8 +39,6 @@ templ Watchlist(entries []database.GetUserWatchListRow, layout string, currentSt
 			@ui.EmptyState("Nothing here yet") {
 				if currentStatus == "all" {
 					Your watchlist is empty. <a href="/">Search for anime</a> to get started.
-				} else if currentStatus == "continuing" {
-					No airing anime with watching or plan to watch status.
 				} else {
 					No anime in this category.
 				}
