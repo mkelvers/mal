@@ -6,6 +6,7 @@ import (
 	"mal/internal/database"
 	"mal/internal/features/anime"
 	"mal/internal/features/auth"
+	"mal/internal/features/playback"
 	"mal/internal/features/watchlist"
 	"mal/internal/jikan"
 	"mal/internal/shared/middleware"
@@ -27,6 +28,8 @@ func NewRouter(cfg Config) http.Handler {
 
 	animeSvc := anime.NewService(cfg.JikanClient, cfg.DB)
 	animeHandler := anime.NewHandler(animeSvc)
+	playbackSvc := playback.NewService(cfg.JikanClient)
+	playbackHandler := playback.NewHandler(playbackSvc, cfg.JikanClient)
 
 	// Serve static files
 	fs := http.FileServer(http.Dir("./static"))
@@ -48,10 +51,14 @@ func NewRouter(cfg Config) http.Handler {
 	mux.HandleFunc("/api/catalog", animeHandler.HandleAPICatalog)
 	mux.HandleFunc("/anime/", animeHandler.HandleAnimeDetails)
 	mux.HandleFunc("/api/anime/", animeHandler.HandleAPIAnime)
+	mux.HandleFunc("/api/episodes/", animeHandler.HandleAPIEpisodes)
 	mux.HandleFunc("/studios/", animeHandler.HandleStudioDetails)
 	mux.HandleFunc("/api/studios/", animeHandler.HandleAPIStudioAnime)
+	mux.HandleFunc("/watch/", playbackHandler.HandleWatchPage)
+	mux.HandleFunc("/watch/proxy/stream", playbackHandler.HandleProxyStream)
+	mux.HandleFunc("/watch/proxy/segment", playbackHandler.HandleProxySegment)
+	mux.HandleFunc("/watch/proxy/subtitle", playbackHandler.HandleProxySubtitle)
 
-	mux.HandleFunc("/api/episodes/", animeHandler.HandleAPIEpisodes)
 	// Auth Endpoints
 	mux.HandleFunc("/login", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodGet {
