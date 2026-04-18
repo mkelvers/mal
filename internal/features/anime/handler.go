@@ -194,6 +194,9 @@ func (h *Handler) HandleAPIAnime(w http.ResponseWriter, r *http.Request) {
 	case "relations":
 		relations, err := h.svc.GetRelations(r.Context(), id)
 		if err != nil {
+			if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
+				return
+			}
 			log.Printf("relations error for %d: %v", id, err)
 			writeInlineLoadError(w, "Failed to load relations.")
 			return

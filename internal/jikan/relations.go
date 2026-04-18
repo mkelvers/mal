@@ -114,6 +114,9 @@ func (c *Client) GetFullRelations(ctx context.Context, id int) ([]RelationEntry,
 
 		anime, err := c.GetAnimeByID(ctx, watchOrderEntry.ID)
 		if err != nil {
+			if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
+				continue
+			}
 			c.EnqueueAnimeFetchRetry(ctx, watchOrderEntry.ID, err)
 			log.Printf("relations: skipping related anime %d for root %d: %v", watchOrderEntry.ID, id, err)
 			continue
