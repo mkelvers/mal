@@ -34,8 +34,8 @@ FROM debian:bullseye-slim
 
 WORKDIR /app
 
-# Required for sqlite
-RUN apt-get update && apt-get install -y ca-certificates sqlite3 && rm -rf /var/lib/apt/lists/*
+# Required at runtime (sqlite + preview generation)
+RUN apt-get update && apt-get install -y ca-certificates sqlite3 ffmpeg && rm -rf /var/lib/apt/lists/*
 
 # Create data directory for sqlite
 RUN mkdir -p /app/data
