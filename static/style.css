@@ -84,8 +84,9 @@
   height: 130px;
 }
 
-.volume-wrap.show-volume .volume-panel,
-.volume-wrap.show-volume::before,
+.volume-wrap:has([data-mute]:hover) .volume-panel,
+.volume-wrap:has([data-volume-bridge]:hover) .volume-panel,
+.volume-wrap:has(.volume-panel:hover) .volume-panel,
 .volume-wrap:focus-within .volume-panel,
 .volume-panel:hover,
 .volume-panel:focus-within {
@@ -94,7 +95,9 @@
   pointer-events: auto;
 }
 
-.volume-wrap.show-volume .volume-underline,
+.volume-wrap:has([data-mute]:hover) .volume-underline,
+.volume-wrap:has([data-volume-bridge]:hover) .volume-underline,
+.volume-wrap:has(.volume-panel:hover) .volume-underline,
 .volume-wrap:focus-within .volume-underline {
   opacity: 1;
 }
