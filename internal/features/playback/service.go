@@ -104,6 +104,7 @@ func (s *Service) BuildWatchPageData(ctx context.Context, malID int, title strin
 	segments := s.fetchSkipSegments(ctx, malID, normalizedEpisode)
 
 	currentStatus := ""
+	startTimeSeconds := 0.0
 	if userID != "" && s.db != nil {
 		entry, err := s.db.GetWatchListEntry(ctx, database.GetWatchListEntryParams{
 			UserID:  userID,
@@ -111,6 +112,9 @@ func (s *Service) BuildWatchPageData(ctx context.Context, malID int, title strin
 		})
 		if err == nil {
 			currentStatus = entry.Status
+			if entry.CurrentEpisode.Valid && strconv.FormatInt(entry.CurrentEpisode.Int64, 10) == normalizedEpisode && entry.CurrentTimeSeconds > 0 {
+				startTimeSeconds = entry.CurrentTimeSeconds
+			}
 		}
 	}
 
@@ -123,15 +127,16 @@ func (s *Service) BuildWatchPageData(ctx context.Context, malID int, title strin
 	}
 
 	return WatchPageData{
-		MalID:          malID,
-		Title:          watchTitle,
-		CurrentEpisode: normalizedEpisode,
-		CurrentStatus:  currentStatus,
-		InitialMode:    initialMode,
-		AvailableModes: availableModes,
-		ModeSources:    modeSources,
-		Episodes:       episodes,
-		Segments:       segments,
+		MalID:            malID,
+		Title:            watchTitle,
+		CurrentEpisode:   normalizedEpisode,
+		StartTimeSeconds: startTimeSeconds,
+		CurrentStatus:    currentStatus,
+		InitialMode:      initialMode,
+		AvailableModes:   availableModes,
+		ModeSources:      modeSources,
+		Episodes:         episodes,
+		Segments:         segments,
 	}, nil
 }
 

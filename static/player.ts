@@ -115,6 +115,8 @@ const initPlayer = (): void => {
   const streamURL = container.getAttribute('data-stream-url') || '/watch/proxy/stream'
   const previewMapURL = container.getAttribute('data-preview-map-url') || '/watch/proxy/preview-map'
   const currentEpisode = container.getAttribute('data-current-episode') || '1'
+  const malID = Number.parseInt(container.getAttribute('data-mal-id') || '', 10)
+  const startTimeSeconds = Number.parseFloat(container.getAttribute('data-start-time-seconds') || '0')
   const modeSources = JSON.parse(container.getAttribute('data-mode-sources') || '{}')
   const availableModes = JSON.parse(container.getAttribute('data-available-modes') || '[]')
   const initialMode = container.getAttribute('data-initial-mode') || 'dub'
@@ -157,6 +159,8 @@ const initPlayer = (): void => {
   let activeSegments: Array<{ type: string, start: number, end: number }> = []
   let previewState: { [key: string]: PreviewPayload } = {}
   let previewRequestToken = 0
+  let lastSavedProgress = { episode: currentEpisode, seconds: -1 }
+  let progressSaveTimer: number | undefined
 
   const previewPopover = container.querySelector('[data-preview-popover]') as HTMLElement
   const previewFrame = container.querySelector('[data-preview-frame]') as HTMLElement
@@ -411,6 +415,47 @@ const initPlayer = (): void => {
     }
   }
 
+  const saveProgress = async (): Promise<void> => {
+    if (!Number.isInteger(malID) || malID <= 0) return
+    if (!video.duration || !Number.isFinite(video.duration)) return
+    const episodeNumber = Number.parseInt(currentEpisode, 10)
+    if (!Number.isInteger(episodeNumber) || episodeNumber <= 0) return
+
+    const safeTime = Math.max(0, Math.min(video.currentTime, video.duration))
+    if (lastSavedProgress.episode === currentEpisode && Math.abs(lastSavedProgress.seconds - safeTime) < 2) {
+      return
+    }
+
+    try {
+      const response = await fetch('/api/watch-progress', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          mal_id: malID,
+          episode: episodeNumber,
+          time_seconds: safeTime,
+        }),
+      })
+      if (!response.ok) return
+      lastSavedProgress = {
+        episode: currentEpisode,
+        seconds: safeTime,
+      }
+    } catch {
+      return
+    }
+  }
+
+  const scheduleProgressSave = (): void => {
+    if (progressSaveTimer !== undefined) return
+    progressSaveTimer = window.setTimeout(() => {
+      progressSaveTimer = undefined
+      saveProgress()
+    }, 1500)
+  }
+
   const parseVttTime = (raw: string): number => {
     const parts = raw.trim().split(':')
     if (parts.length < 2) return 0
@@ -611,6 +656,14 @@ const initPlayer = (): void => {
       if (loading) loading.style.display = 'none'
       resolveActiveSegments()
       renderSegments()
+      if (Number.isFinite(startTimeSeconds) && startTimeSeconds > 0 && video.currentTime === 0) {
+        const nextStart = Math.min(startTimeSeconds, Math.max(0, video.duration - 0.5))
+        if (nextStart > 0) {
+          try {
+            video.currentTime = nextStart
+          } catch {}
+        }
+      }
       if (pendingSeekTime !== null && Number.isFinite(pendingSeekTime)) {
         try {
           video.currentTime = pendingSeekTime
@@ -634,6 +687,7 @@ const initPlayer = (): void => {
       updateTimeline(video.currentTime)
       updateSubtitleRender(video.currentTime)
       updateSkipButton(video.currentTime)
+      scheduleProgressSave()
     })
 
     video.addEventListener('play', () => {
@@ -644,6 +698,9 @@ const initPlayer = (): void => {
     video.addEventListener('pause', () => {
       updatePlayPauseIcons(false)
       showControls()
+      window.clearTimeout(progressSaveTimer)
+      progressSaveTimer = undefined
+      saveProgress()
     })
 
     video.addEventListener('volumechange', () => {
@@ -818,6 +875,7 @@ const initPlayer = (): void => {
 
   window.addEventListener('mouseup', () => {
     isScrubbing = false
+    saveProgress()
   })
 
   window.addEventListener('mousemove', (event) => {
@@ -853,6 +911,23 @@ const initPlayer = (): void => {
       }
     }
     showControls()
+  })
+
+  window.addEventListener('beforeunload', () => {
+    if (!Number.isInteger(malID) || malID <= 0) return
+    if (!video.duration || !Number.isFinite(video.duration)) return
+    const episodeNumber = Number.parseInt(currentEpisode, 10)
+    if (!Number.isInteger(episodeNumber) || episodeNumber <= 0) return
+    const safeTime = Math.max(0, Math.min(video.currentTime, video.duration))
+    const payload = JSON.stringify({
+      mal_id: malID,
+      episode: episodeNumber,
+      time_seconds: safeTime,
+    })
+    if (navigator.sendBeacon) {
+      const blob = new Blob([payload], { type: 'application/json' })
+      navigator.sendBeacon('/api/watch-progress', blob)
+    }
   })
 
   updatePlayPauseIcons(false)

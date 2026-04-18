@@ -71,6 +71,7 @@ func (s *Service) AddEntry(ctx context.Context, userID string, req AddRequest) e
 		AnimeID:        req.AnimeID,
 		Status:         req.Status,
 		CurrentEpisode: sql.NullInt64{Int64: 0, Valid: false},
+		CurrentTimeSeconds: 0,
 	})
 	if err != nil {
 		return fmt.Errorf("failed to update watchlist: %w", err)
@@ -165,6 +166,7 @@ func (s *Service) Import(ctx context.Context, userID string, export ExportData) 
 			AnimeID:        entry.AnimeID,
 			Status:         entry.Status,
 			CurrentEpisode: sql.NullInt64{Int64: 0, Valid: false},
+			CurrentTimeSeconds: 0,
 		})
 		if err != nil {
 			continue

@@ -2,6 +2,7 @@ package playback
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
 	"io"
 	"log"
@@ -91,6 +92,7 @@ func (h *Handler) HandleWatchPage(w http.ResponseWriter, r *http.Request) {
 		MalID:          data.MalID,
 		Title:          data.Title,
 		CurrentEpisode: data.CurrentEpisode,
+		StartTimeSeconds: data.StartTimeSeconds,
 		CurrentStatus:  data.CurrentStatus,
 		InitialMode:    data.InitialMode,
 		AvailableModes: data.AvailableModes,
@@ -295,6 +297,67 @@ func (h *Handler) HandleProxyPreviewSprite(w http.ResponseWriter, r *http.Reques
 	w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
 	w.Header().Set("Content-Type", "image/jpeg")
 	http.ServeFile(w, r, spritePath)
+}
+
+func (h *Handler) HandleSaveProgress(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	user := middleware.GetUser(r.Context())
+	if user == nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	type saveProgressRequest struct {
+		MalID      int     `json:"mal_id"`
+		Episode    int     `json:"episode"`
+		TimeSecond float64 `json:"time_seconds"`
+	}
+
+	var payload saveProgressRequest
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+		http.Error(w, "invalid payload", http.StatusBadRequest)
+		return
+	}
+
+	if payload.MalID <= 0 || payload.Episode <= 0 {
+		http.Error(w, "invalid payload", http.StatusBadRequest)
+		return
+	}
+
+	timeSeconds := payload.TimeSecond
+	if timeSeconds < 0 || timeSeconds != timeSeconds {
+		timeSeconds = 0
+	}
+
+	if h.svc.db == nil {
+		http.Error(w, "database unavailable", http.StatusServiceUnavailable)
+		return
+	}
+
+	if _, err := h.svc.db.GetWatchListEntry(r.Context(), database.GetWatchListEntryParams{
+		UserID:  user.ID,
+		AnimeID: int64(payload.MalID),
+	}); err != nil {
+		http.Error(w, "watchlist entry not found", http.StatusNotFound)
+		return
+	}
+
+	if err := h.svc.db.SaveWatchProgress(r.Context(), database.SaveWatchProgressParams{
+		CurrentEpisode:     sql.NullInt64{Int64: int64(payload.Episode), Valid: true},
+		CurrentTimeSeconds: timeSeconds,
+		UserID:             user.ID,
+		AnimeID:            int64(payload.MalID),
+	}); err != nil {
+		log.Printf("save progress failed user_id=%s mal_id=%d err=%v", user.ID, payload.MalID, err)
+		http.Error(w, "failed to save progress", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }
 
 func (h *Handler) proxyUpstream(w http.ResponseWriter, r *http.Request, targetURL string, referer string) {

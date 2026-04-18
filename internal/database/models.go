@@ -74,12 +74,13 @@ type User struct {
 }
 
 type WatchListEntry struct {
-	ID             string        `json:"id"`
-	UserID         string        `json:"user_id"`
-	AnimeID        int64         `json:"anime_id"`
-	Status         string        `json:"status"`
-	CreatedAt      time.Time     `json:"created_at"`
-	UpdatedAt      time.Time     `json:"updated_at"`
-	CurrentEpisode sql.NullInt64 `json:"current_episode"`
-	LastEpisodeAt  sql.NullTime  `json:"last_episode_at"`
+	ID                 string        `json:"id"`
+	UserID             string        `json:"user_id"`
+	AnimeID            int64         `json:"anime_id"`
+	Status             string        `json:"status"`
+	CreatedAt          time.Time     `json:"created_at"`
+	UpdatedAt          time.Time     `json:"updated_at"`
+	CurrentEpisode     sql.NullInt64 `json:"current_episode"`
+	LastEpisodeAt      sql.NullTime  `json:"last_episode_at"`
+	CurrentTimeSeconds float64       `json:"current_time_seconds"`
 }
