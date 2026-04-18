@@ -11,7 +11,9 @@ import (
 	"strings"
 	"time"
 
+	"mal/internal/database"
 	"mal/internal/jikan"
+	"mal/internal/shared/middleware"
 	"mal/internal/templates"
 )
 
@@ -75,7 +77,8 @@ func (h *Handler) HandleWatchPage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	title := anime.DisplayTitle()
-	data, err := h.svc.BuildWatchPageData(ctx, malID, title, episode, mode)
+	userID := watchlistUserIDFromRequest(r)
+	data, err := h.svc.BuildWatchPageData(ctx, malID, title, episode, mode, userID)
 	if err != nil {
 		log.Printf("watch page error for mal_id=%d: %v", malID, err)
 		http.Error(w, "Failed to load playback", http.StatusBadGateway)
@@ -87,6 +90,7 @@ func (h *Handler) HandleWatchPage(w http.ResponseWriter, r *http.Request) {
 		MalID:          data.MalID,
 		Title:          data.Title,
 		CurrentEpisode: data.CurrentEpisode,
+		CurrentStatus:  data.CurrentStatus,
 		InitialMode:    data.InitialMode,
 		AvailableModes: data.AvailableModes,
 		ModeSources:    convertModeSources(data.ModeSources),
@@ -94,6 +98,15 @@ func (h *Handler) HandleWatchPage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	templates.WatchPage(anime, pageData).Render(r.Context(), w)
+}
+
+func watchlistUserIDFromRequest(r *http.Request) string {
+	user, ok := r.Context().Value(middleware.UserContextKey).(*database.User)
+	if !ok || user == nil {
+		return ""
+	}
+
+	return user.ID
 }
 
 func convertModeSources(sources map[string]ModeSource) map[string]templates.ModeSource {

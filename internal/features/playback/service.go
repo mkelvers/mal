@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"mal/internal/database"
 	"net/http"
 	"net/url"
 	"sort"
@@ -22,6 +23,7 @@ type Service struct {
 	allAnimeClient *allAnimeClient
 	jikanClient    *jikan.Client
 	httpClient     *http.Client
+	db             database.Querier
 }
 
 type sourceScore struct {
@@ -33,15 +35,16 @@ type sourceScore struct {
 	refererScore  int
 }
 
-func NewService(jikanClient *jikan.Client) *Service {
+func NewService(jikanClient *jikan.Client, db database.Querier) *Service {
 	return &Service{
 		allAnimeClient: newAllAnimeClient(),
 		jikanClient:    jikanClient,
 		httpClient:     &http.Client{Timeout: 12 * time.Second},
+		db:             db,
 	}
 }
 
-func (s *Service) BuildWatchPageData(ctx context.Context, malID int, title string, episode string, mode string) (WatchPageData, error) {
+func (s *Service) BuildWatchPageData(ctx context.Context, malID int, title string, episode string, mode string, userID string) (WatchPageData, error) {
 	if malID <= 0 {
 		return WatchPageData{}, errors.New("invalid mal id")
 	}
@@ -94,6 +97,17 @@ func (s *Service) BuildWatchPageData(ctx context.Context, malID int, title strin
 
 	segments := s.fetchSkipSegments(ctx, malID, normalizedEpisode)
 
+	currentStatus := ""
+	if userID != "" && s.db != nil {
+		entry, err := s.db.GetWatchListEntry(ctx, database.GetWatchListEntryParams{
+			UserID:  userID,
+			AnimeID: int64(malID),
+		})
+		if err == nil {
+			currentStatus = entry.Status
+		}
+	}
+
 	watchTitle := strings.TrimSpace(resolvedTitle)
 	if watchTitle == "" {
 		watchTitle = strings.TrimSpace(title)
@@ -106,6 +120,7 @@ func (s *Service) BuildWatchPageData(ctx context.Context, malID int, title strin
 		MalID:          malID,
 		Title:          watchTitle,
 		CurrentEpisode: normalizedEpisode,
+		CurrentStatus:  currentStatus,
 		InitialMode:    initialMode,
 		AvailableModes: availableModes,
 		ModeSources:    modeSources,
