@@ -75,29 +75,21 @@
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.55);
 }
 
-.volume-wrap::before {
-  content: '';
-  position: absolute;
-  left: -10px;
-  right: -10px;
-  bottom: 100%;
-  height: 130px;
-}
-
-.volume-wrap:has([data-mute]:hover) .volume-panel,
-.volume-wrap:has([data-volume-bridge]:hover) .volume-panel,
-.volume-wrap:has(.volume-panel:hover) .volume-panel,
-.volume-wrap:focus-within .volume-panel,
-.volume-panel:hover,
-.volume-panel:focus-within {
+.volume-panel.is-visible {
   opacity: 1;
   visibility: visible;
   pointer-events: auto;
 }
 
-.volume-wrap:has([data-mute]:hover) .volume-underline,
-.volume-wrap:has([data-volume-bridge]:hover) .volume-underline,
-.volume-wrap:has(.volume-panel:hover) .volume-underline,
+.volume-wrap[data-volume-wrap] [data-volume-bridge] {
+  pointer-events: none;
+}
+
+.volume-wrap.is-volume-open[data-volume-wrap] [data-volume-bridge] {
+  pointer-events: auto;
+}
+
+.volume-wrap:has(.volume-panel.is-visible) .volume-underline,
 .volume-wrap:focus-within .volume-underline {
   opacity: 1;
 }

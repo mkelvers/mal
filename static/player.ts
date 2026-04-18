@@ -29,6 +29,7 @@ const initPlayer = (): void => {
   const iconPause = container.querySelector('[data-icon-pause]') as SVGElement
   const muteBtn = container.querySelector('[data-mute]') as HTMLButtonElement
   const volumeWrap = container.querySelector('[data-volume-wrap]') as HTMLElement
+  const volumePanel = container.querySelector('.volume-panel') as HTMLElement
   const volumeRange = container.querySelector('[data-volume-range]') as HTMLInputElement
   const iconVolume = container.querySelector('[data-icon-volume]') as SVGElement
   const iconMuted = container.querySelector('[data-icon-muted]') as SVGElement
@@ -501,25 +502,35 @@ const initPlayer = (): void => {
     showControls()
   })
 
-  muteBtn?.addEventListener('mouseenter', () => {
-    muteBtn.classList.add('show-volume')
-    isHoveringVolume = true
-    showControls()
-  })
+  const setVolumePanelOpen = (isOpen: boolean): void => {
+    if (volumePanel) {
+      volumePanel.classList.toggle('is-visible', isOpen)
+    }
+    volumeWrap?.classList.toggle('is-volume-open', isOpen)
+    isHoveringVolume = isOpen
+    if (isOpen) showControls()
+  }
 
-  muteBtn?.addEventListener('mouseleave', () => {
-    isHoveringVolume = false
-    showControls()
-  })
+  const openVolumePanel = (): void => {
+    setVolumePanelOpen(true)
+  }
 
-  volumeWrap?.addEventListener('focusin', () => {
-    isHoveringVolume = true
-    showControls()
-  })
+  const closeVolumePanel = (): void => {
+    setVolumePanelOpen(false)
+  }
 
-  volumeWrap?.addEventListener('focusout', () => {
-    isHoveringVolume = false
-    showControls()
+  closeVolumePanel()
+
+  muteBtn?.addEventListener('mouseenter', openVolumePanel)
+
+  volumeWrap?.addEventListener('mouseleave', closeVolumePanel)
+
+  volumeWrap?.addEventListener('focusin', openVolumePanel)
+
+  volumeWrap?.addEventListener('focusout', (event: FocusEvent) => {
+    const nextTarget = event.relatedTarget
+    if (nextTarget instanceof Node && volumeWrap.contains(nextTarget)) return
+    closeVolumePanel()
   })
 
   backwardBtn?.addEventListener('click', () => seekBy(-10))
