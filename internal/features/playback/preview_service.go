@@ -20,11 +20,11 @@ import (
 )
 
 const (
-	previewFrameWidth      = 160
-	previewFrameHeight     = 90
-	previewGridColumns     = 10
-	previewGridRows        = 10
-	previewFrameInterval   = 10
+	previewFrameWidth      = 128
+	previewFrameHeight     = 72
+	previewGridColumns     = 8
+	previewGridRows        = 8
+	previewFrameInterval   = 15
 	previewFrameLimit      = previewGridColumns * previewGridRows
 	previewGenerationLimit = 120 * time.Second
 	previewFailureTTL      = 2 * time.Minute
@@ -366,10 +366,15 @@ func generatePreviewSprite(ctx context.Context, ffmpegPath string, source string
 	}
 
 	args = append(args,
+		"-threads", "1",
 		"-i", source,
+		"-map", "0:v:0",
+		"-an",
+		"-sn",
+		"-dn",
 		"-vf", filter,
 		"-frames:v", "1",
-		"-q:v", "5",
+		"-q:v", "8",
 		"-update", "1",
 		outputPath,
 	)
