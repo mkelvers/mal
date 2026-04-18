@@ -18,6 +18,73 @@ interface SkipSegment {
   end: number
 }
 
+interface PreviewCue {
+  start: number
+  end: number
+  sprite: string
+  x: number
+  y: number
+  width: number
+  height: number
+}
+
+interface PreviewMap {
+  width: number
+  height: number
+  columns: number
+  rows: number
+  interval: number
+  duration: number
+  cues: PreviewCue[]
+}
+
+interface PreviewPayload {
+  spriteURL: string
+  map: PreviewMap
+}
+
+interface PreviewMapResponse {
+  sprite_url: string
+  map: PreviewMap
+}
+
+const isObjectRecord = (value: unknown): value is Record<string, unknown> => {
+  return typeof value === 'object' && value !== null
+}
+
+const isPreviewCue = (value: unknown): value is PreviewCue => {
+  if (!isObjectRecord(value)) return false
+  return Number.isFinite(value.start)
+    && Number.isFinite(value.end)
+    && typeof value.sprite === 'string'
+    && Number.isFinite(value.x)
+    && Number.isFinite(value.y)
+    && Number.isFinite(value.width)
+    && Number.isFinite(value.height)
+}
+
+const isPreviewMap = (value: unknown): value is PreviewMap => {
+  if (!isObjectRecord(value)) return false
+  if (!Array.isArray(value.cues)) return false
+  if (!value.cues.every((cue: unknown) => isPreviewCue(cue))) return false
+  return Number.isFinite(value.width)
+    && Number.isFinite(value.height)
+    && Number.isFinite(value.columns)
+    && Number.isFinite(value.rows)
+    && Number.isFinite(value.interval)
+    && Number.isFinite(value.duration)
+}
+
+const parsePreviewMapResponse = (value: unknown): PreviewMapResponse | null => {
+  if (!isObjectRecord(value)) return null
+  if (typeof value.sprite_url !== 'string') return null
+  if (!isPreviewMap(value.map)) return null
+  return {
+    sprite_url: value.sprite_url,
+    map: value.map,
+  }
+}
+
 const initPlayer = (): void => {
   const container = document.querySelector('[data-video-player]')
   if (!container) return
@@ -46,10 +113,18 @@ const initPlayer = (): void => {
   const subtitleText = container.querySelector('[data-subtitle-text]') as HTMLElement
 
   const streamURL = container.getAttribute('data-stream-url') || '/watch/proxy/stream'
+  const previewMapURL = container.getAttribute('data-preview-map-url') || '/watch/proxy/preview-map'
+  const currentEpisode = container.getAttribute('data-current-episode') || '1'
   const modeSources = JSON.parse(container.getAttribute('data-mode-sources') || '{}')
   const availableModes = JSON.parse(container.getAttribute('data-available-modes') || '[]')
   const initialMode = container.getAttribute('data-initial-mode') || 'dub'
   const segments = JSON.parse(container.getAttribute('data-segments') || '[]')
+  const malIDFromPath = (() => {
+    const pathParts = window.location.pathname.split('/').filter(Boolean)
+    if (pathParts.length < 2) return ''
+    if (pathParts[0] !== 'watch') return ''
+    return pathParts[1] || ''
+  })()
 
   const maxIntroStartSeconds = 180
   const minOutroStartRatio = 0.5
@@ -80,6 +155,12 @@ const initPlayer = (): void => {
   let pendingSeekTime: number | null = null
   let activeSkipSegment: { type: string, start: number, end: number } | null = null
   let activeSegments: Array<{ type: string, start: number, end: number }> = []
+  let previewState: { [key: string]: PreviewPayload } = {}
+  let previewRequestToken = 0
+
+  const previewPopover = container.querySelector('[data-preview-popover]') as HTMLElement
+  const previewFrame = container.querySelector('[data-preview-frame]') as HTMLElement
+  const previewTime = container.querySelector('[data-preview-time]') as HTMLElement
 
   const streamUrlForMode = (mode: string): string => {
     const modeParam = encodeURIComponent(mode)
@@ -205,6 +286,131 @@ const initPlayer = (): void => {
     showControls()
   }
 
+  const streamSourceForMode = (mode: string): { url: string, referer: string } | null => {
+    const modeSource = modeSources[mode]
+    if (!modeSource) return null
+    const sourceURL = String(modeSource.url || '').trim()
+    if (sourceURL === '') return null
+    return {
+      url: sourceURL,
+      referer: String(modeSource.referer || ''),
+    }
+  }
+
+  const previewCacheKey = (mode: string, sourceURL: string, sourceReferer: string): string => {
+    const normalizedReferer = sourceReferer.trim()
+    return `${mode}|${sourceURL}|${normalizedReferer}`
+  }
+
+  const hidePreviewPopover = (): void => {
+    if (!previewPopover) return
+    previewPopover.style.left = '0px'
+    previewPopover.classList.remove('block')
+    previewPopover.classList.add('hidden')
+  }
+
+  const showPreviewPopover = (): void => {
+    if (!previewPopover) return
+    previewPopover.classList.remove('hidden')
+    previewPopover.classList.add('block')
+  }
+
+  const cueForTime = (map: PreviewMap, time: number): PreviewCue | null => {
+    if (!map.cues.length) return null
+    const match = map.cues.find((cue: PreviewCue) => time >= cue.start && time < cue.end)
+    if (match) return match
+    const first = map.cues[0]
+    const last = map.cues[map.cues.length - 1]
+    if (time <= first.start) return first
+    if (time >= last.end) return last
+    return null
+  }
+
+  const updatePreviewUI = (ratio: number): void => {
+    if (!progressWrap || !previewPopover || !previewFrame || !previewTime) return
+    if (!video.duration || !Number.isFinite(video.duration)) {
+      hidePreviewPopover()
+      return
+    }
+
+    const targetTime = Math.max(0, Math.min(video.duration, ratio * video.duration))
+    previewTime.textContent = formatTime(targetTime)
+
+    const source = streamSourceForMode(currentMode)
+    if (!source || malIDFromPath === '') {
+      hidePreviewPopover()
+      return
+    }
+
+    const cacheKey = previewCacheKey(currentMode, source.url, source.referer)
+    const cached = previewState[cacheKey]
+    if (!cached || !cached.map || !cached.spriteURL) {
+      hidePreviewPopover()
+      return
+    }
+
+    const cue = cueForTime(cached.map, targetTime)
+    if (!cue) {
+      hidePreviewPopover()
+      return
+    }
+
+    previewFrame.style.width = `${cue.width}px`
+    previewFrame.style.height = `${cue.height}px`
+    previewFrame.style.backgroundImage = `url('${cached.spriteURL}')`
+    previewFrame.style.backgroundRepeat = 'no-repeat'
+    previewFrame.style.backgroundPosition = `-${cue.x}px -${cue.y}px`
+    previewFrame.style.backgroundSize = `${cached.map.columns * cue.width}px ${cached.map.rows * cue.height}px`
+
+    const barWidth = progressWrap.clientWidth
+    const popoverOffset = ratio * barWidth
+    const halfWidth = cue.width / 2
+    const clampedOffset = Math.max(halfWidth, Math.min(barWidth - halfWidth, popoverOffset))
+    previewPopover.style.left = `${clampedOffset}px`
+
+    showPreviewPopover()
+  }
+
+  const loadPreviewMap = async (): Promise<void> => {
+    if (!video.duration || !Number.isFinite(video.duration)) return
+    const source = streamSourceForMode(currentMode)
+    if (!source || malIDFromPath === '') return
+
+    const cacheKey = previewCacheKey(currentMode, source.url, source.referer)
+    if (previewState[cacheKey]) return
+
+    const token = previewRequestToken + 1
+    previewRequestToken = token
+
+    const query = new URLSearchParams({
+      mal_id: malIDFromPath,
+      ep: currentEpisode,
+      mode: currentMode,
+      u: source.url,
+      r: source.referer,
+      d: String(video.duration),
+    })
+
+    try {
+      const response = await fetch(`${previewMapURL}?${query.toString()}`)
+      if (!response.ok) return
+      const payloadRaw: unknown = await response.json()
+      if (token !== previewRequestToken) return
+      const payload = parsePreviewMapResponse(payloadRaw)
+      if (!payload) return
+
+      previewState = {
+        ...previewState,
+        [cacheKey]: {
+          spriteURL: payload.sprite_url,
+          map: payload.map,
+        },
+      }
+    } catch {
+      return
+    }
+  }
+
   const parseVttTime = (raw: string): number => {
     const parts = raw.trim().split(':')
     if (parts.length < 2) return 0
@@ -325,6 +531,8 @@ const initPlayer = (): void => {
     const wasPlaying = !video.paused
     const previousTime = video.currentTime
     currentMode = mode
+    previewRequestToken += 1
+    hidePreviewPopover()
     video.src = streamUrlForMode(currentMode)
     video.load()
     pendingSeekTime = previousTime
@@ -411,6 +619,7 @@ const initPlayer = (): void => {
       }
       updateTimeline(video.currentTime)
       updateSkipButton(video.currentTime)
+      loadPreviewMap()
     })
 
     video.addEventListener('waiting', () => {
@@ -591,6 +800,20 @@ const initPlayer = (): void => {
     updateTimeline(video.currentTime)
     updateSkipButton(video.currentTime)
     showControls()
+  })
+
+  progressWrap?.addEventListener('mouseenter', () => {
+    loadPreviewMap()
+  })
+
+  progressWrap?.addEventListener('mousemove', (event) => {
+    const rect = progressWrap.getBoundingClientRect()
+    const ratio = Math.max(0, Math.min(1, (event.clientX - rect.left) / rect.width))
+    updatePreviewUI(ratio)
+  })
+
+  progressWrap?.addEventListener('mouseleave', () => {
+    hidePreviewPopover()
   })
 
   window.addEventListener('mouseup', () => {
