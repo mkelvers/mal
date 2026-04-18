@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -201,6 +202,99 @@ func (h *Handler) HandleProxySubtitle(w http.ResponseWriter, r *http.Request) {
 	}
 
 	h.proxyUpstream(w, r, targetURL, r.URL.Query().Get("r"))
+}
+
+func (h *Handler) HandleProxyPreviewMap(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	malIDText := strings.TrimSpace(r.URL.Query().Get("mal_id"))
+	malID, err := strconv.Atoi(malIDText)
+	if err != nil || malID <= 0 {
+		http.Error(w, "invalid mal id", http.StatusBadRequest)
+		return
+	}
+
+	episode := strings.TrimSpace(r.URL.Query().Get("ep"))
+	if episode == "" {
+		episode = "1"
+	}
+
+	mode := normalizeMode(r.URL.Query().Get("mode"))
+	if mode == "" {
+		mode = "dub"
+	}
+
+	source := strings.TrimSpace(r.URL.Query().Get("u"))
+	if source == "" {
+		http.Error(w, "missing target url", http.StatusBadRequest)
+		return
+	}
+
+	referer := strings.TrimSpace(r.URL.Query().Get("r"))
+	duration := 0.0
+	durationText := strings.TrimSpace(r.URL.Query().Get("d"))
+	if durationText != "" {
+		parsedDuration, parseErr := strconv.ParseFloat(durationText, 64)
+		if parseErr != nil || parsedDuration <= 0 {
+			http.Error(w, "invalid duration", http.StatusBadRequest)
+			return
+		}
+		duration = parsedDuration
+	}
+
+	mapData, previewKey, previewErr := h.svc.EnsurePreviewMap(r.Context(), PreviewRequest{
+		MalID:    malID,
+		Episode:  episode,
+		Mode:     mode,
+		Source:   source,
+		Referer:  referer,
+		Duration: duration,
+	})
+	if previewErr != nil {
+		log.Printf("preview map error mal_id=%d ep=%s mode=%s: %v", malID, episode, mode, previewErr)
+		http.Error(w, "failed to generate preview map", http.StatusBadGateway)
+		return
+	}
+
+	spriteURL := "/watch/proxy/preview-sprite?k=" + url.QueryEscape(previewKey)
+	response := struct {
+		SpriteURL string     `json:"sprite_url"`
+		Map       PreviewMap `json:"map"`
+	}{
+		SpriteURL: spriteURL,
+		Map:       mapData,
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		log.Printf("preview map encode error mal_id=%d ep=%s mode=%s: %v", malID, episode, mode, err)
+	}
+}
+
+func (h *Handler) HandleProxyPreviewSprite(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	previewKey := strings.TrimSpace(r.URL.Query().Get("k"))
+	spritePath := h.svc.PreviewSpritePath(previewKey)
+	if spritePath == "" {
+		http.Error(w, "invalid preview key", http.StatusBadRequest)
+		return
+	}
+
+	if _, err := os.Stat(spritePath); err != nil {
+		http.Error(w, "preview sprite not found", http.StatusNotFound)
+		return
+	}
+
+	w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+	w.Header().Set("Content-Type", "image/jpeg")
+	http.ServeFile(w, r, spritePath)
 }
 
 func (h *Handler) proxyUpstream(w http.ResponseWriter, r *http.Request, targetURL string, referer string) {

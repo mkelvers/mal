@@ -14,6 +14,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"mal/internal/jikan"
@@ -24,6 +25,9 @@ type Service struct {
 	jikanClient    *jikan.Client
 	httpClient     *http.Client
 	db             database.Querier
+	previewRoot    string
+	previewMu      sync.Mutex
+	previewLocks   map[string]*sync.Mutex
 }
 
 type sourceScore struct {
@@ -41,6 +45,8 @@ func NewService(jikanClient *jikan.Client, db database.Querier) *Service {
 		jikanClient:    jikanClient,
 		httpClient:     &http.Client{Timeout: 12 * time.Second},
 		db:             db,
+		previewRoot:    newPreviewRootDir(),
+		previewLocks:   make(map[string]*sync.Mutex),
 	}
 }
 

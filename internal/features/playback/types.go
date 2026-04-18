@@ -51,3 +51,32 @@ type WatchPageData struct {
 	Episodes        []EpisodeListItem
 	Segments        []SkipSegment
 }
+
+type PreviewRequest struct {
+	MalID    int
+	Episode  string
+	Mode     string
+	Source   string
+	Referer  string
+	Duration float64
+}
+
+type PreviewCue struct {
+	Start  float64 `json:"start"`
+	End    float64 `json:"end"`
+	Sprite string  `json:"sprite"`
+	X      int     `json:"x"`
+	Y      int     `json:"y"`
+	Width  int     `json:"width"`
+	Height int     `json:"height"`
+}
+
+type PreviewMap struct {
+	Width    int          `json:"width"`
+	Height   int          `json:"height"`
+	Columns  int          `json:"columns"`
+	Rows     int          `json:"rows"`
+	Interval float64      `json:"interval"`
+	Duration float64      `json:"duration"`
+	Cues     []PreviewCue `json:"cues"`
+}
