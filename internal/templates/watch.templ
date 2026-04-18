@@ -45,9 +45,10 @@ type SkipSegment struct {
 
 templ WatchPage(anime jikan.Anime, data WatchPageData) {
 	@Layout(fmt.Sprintf("%s - episode %s", anime.DisplayTitle(), data.CurrentEpisode), true) {
-		<div class="flex flex-col lg:flex-row gap-5 max-w-full">
+		<div class="relative left-1/2 w-screen max-w-none -translate-x-1/2 px-4 lg:px-6 2xl:px-8">
+			<div class="mx-auto grid w-full max-w-[1850px] gap-5 lg:grid-cols-[280px_minmax(0,1fr)] 2xl:grid-cols-[300px_minmax(0,1fr)_300px]">
 			<!-- Left sidebar: Episodes -->
-			<aside class="w-full lg:w-[320px] shrink-0">
+			<aside class="w-full shrink-0">
 				<div class="flex flex-col h-full lg:max-h-[800px]">
 					<div class="p-3 flex items-center justify-between">
 						<h3 class="text-sm font-semibold tracking-wide text-(--text)">Episodes</h3>
@@ -97,7 +98,7 @@ templ WatchPage(anime jikan.Anime, data WatchPageData) {
 			</div>
 
 			<!-- Right sidebar: Anime Info -->
-			<aside class="w-full lg:w-[320px] shrink-0 flex flex-col gap-4">
+			<aside class="w-full shrink-0 flex flex-col gap-4 lg:col-span-2 lg:max-w-xl 2xl:col-span-1 2xl:max-w-none">
 				<img src={ anime.Images.Webp.LargeImageURL } alt={ anime.Title } class="w-full object-cover shadow-lg" />
 				<div>
 					<h2 class="text-xl font-bold text-(--text)">{ anime.DisplayTitle() }</h2>
@@ -127,6 +128,7 @@ templ WatchPage(anime jikan.Anime, data WatchPageData) {
 					View detail
 				</a>
 			</aside>
+			</div>
 		</div>
 	}
 }
