@@ -68,13 +68,6 @@ func NewRouter(cfg Config) http.Handler {
 			middleware.RateLimitAuth(middleware.VerifyOrigin(http.HandlerFunc(authHandler.HandleLogin))).ServeHTTP(w, r)
 		}
 	})
-	mux.HandleFunc("/register", func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == http.MethodGet {
-			authHandler.HandleRegisterPage(w, r)
-		} else {
-			middleware.RateLimitAuth(middleware.VerifyOrigin(http.HandlerFunc(authHandler.HandleRegister))).ServeHTTP(w, r)
-		}
-	})
 	mux.HandleFunc("/recover", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodGet {
 			authHandler.HandleRecoverPage(w, r)
@@ -84,13 +77,6 @@ func NewRouter(cfg Config) http.Handler {
 	})
 	mux.HandleFunc("/logout", func(w http.ResponseWriter, r *http.Request) {
 		middleware.VerifyOrigin(http.HandlerFunc(authHandler.HandleLogout)).ServeHTTP(w, r)
-	})
-	mux.HandleFunc("/account", authHandler.HandleAccountPage)
-	mux.HandleFunc("/account/password", func(w http.ResponseWriter, r *http.Request) {
-		middleware.VerifyOrigin(http.HandlerFunc(authHandler.HandleAccountPassword)).ServeHTTP(w, r)
-	})
-	mux.HandleFunc("/account/recovery-key", func(w http.ResponseWriter, r *http.Request) {
-		middleware.VerifyOrigin(http.HandlerFunc(authHandler.HandleAccountRecoveryKey)).ServeHTTP(w, r)
 	})
 
 	// Watchlist Endpoints
