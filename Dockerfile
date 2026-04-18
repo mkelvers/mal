@@ -9,7 +9,7 @@ ENV CGO_ENABLED=1
 RUN go install github.com/a-h/templ/cmd/templ@latest
 
 # Install build dependencies for bun + assets
-RUN apt-get update && apt-get install -y ca-certificates sqlite3 ffmpeg curl unzip && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y ca-certificates sqlite3 curl unzip && rm -rf /var/lib/apt/lists/*
 RUN curl -fsSL https://bun.sh/install | bash
 ENV PATH="/root/.bun/bin:${PATH}"
 
@@ -34,8 +34,8 @@ FROM debian:bullseye-slim
 
 WORKDIR /app
 
-# Required at runtime (sqlite + preview generation)
-RUN apt-get update && apt-get install -y ca-certificates sqlite3 ffmpeg && rm -rf /var/lib/apt/lists/*
+# Required at runtime (sqlite)
+RUN apt-get update && apt-get install -y ca-certificates sqlite3 && rm -rf /var/lib/apt/lists/*
 
 # Create data directory for sqlite
 RUN mkdir -p /app/data

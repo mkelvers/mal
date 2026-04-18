@@ -198,7 +198,6 @@ templ VideoPlayer(data WatchPageData) {
 		data-mal-id={ fmt.Sprintf("%d", data.MalID) }
 		data-video-player
 		data-stream-url="/watch/proxy/stream"
-		data-preview-map-url="/watch/proxy/preview-map"
 		data-current-episode={ data.CurrentEpisode }
 		data-start-time-seconds={ fmt.Sprintf("%.3f", data.StartTimeSeconds) }
 		data-initial-mode={ data.InitialMode }
@@ -225,7 +224,6 @@ templ VideoPlayer(data WatchPageData) {
 				<div data-progress-wrap class="group/progress relative mb-5 h-1 cursor-pointer bg-white/30">
 					<div data-preview-popover class="pointer-events-none absolute bottom-[calc(100%+10px)] left-0 z-40 hidden -translate-x-1/2">
 						<div class="overflow-hidden border border-white/20 bg-black shadow-xl">
-							<div data-preview-frame class="h-[90px] w-[160px] bg-black"></div>
 							<div data-preview-time class="bg-white px-2 py-1 text-center text-xs font-semibold text-black tabular-nums">00:00</div>
 						</div>
 					</div>
