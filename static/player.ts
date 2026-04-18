@@ -93,13 +93,15 @@ const initPlayer = (): void => {
   let transitionEpisode: number | null = null
   let completionSent = false
   let completionAttempts = 0
+  const watchProgressURL = '/api/watch-progress'
 
   const previewPopover = container.querySelector('[data-preview-popover]') as HTMLElement
   const previewTime = container.querySelector('[data-preview-time]') as HTMLElement
+  const encodedModeState = encodeURIComponent(JSON.stringify(modeSources))
 
   const streamUrlForMode = (mode: string): string => {
     const modeParam = encodeURIComponent(mode)
-    const stateParam = encodeURIComponent(JSON.stringify(modeSources))
+    const stateParam = encodedModeState
     return `${streamURL}?mode=${modeParam}&state=${stateParam}`
   }
 
@@ -261,6 +263,24 @@ const initPlayer = (): void => {
     previewPopover.style.left = `${clampedOffset}px`
   }
 
+  const buildWatchProgressPayload = (episodeNumber: number, timeSeconds: number): string => {
+    return JSON.stringify({
+      mal_id: malID,
+      episode: episodeNumber,
+      time_seconds: timeSeconds,
+    })
+  }
+
+  const sendWatchProgressBeacon = (payload: string): boolean => {
+    if (!navigator.sendBeacon) {
+      return false
+    }
+
+    const blob = new Blob([payload], { type: 'application/json' })
+    navigator.sendBeacon(watchProgressURL, blob)
+    return true
+  }
+
   const saveProgress = async (): Promise<void> => {
     if (!Number.isInteger(malID) || malID <= 0) return
     if (!video.duration || !Number.isFinite(video.duration)) return
@@ -272,17 +292,15 @@ const initPlayer = (): void => {
       return
     }
 
+    const payload = buildWatchProgressPayload(episodeNumber, safeTime)
+
     try {
-      const response = await fetch('/api/watch-progress', {
+      const response = await fetch(watchProgressURL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          mal_id: malID,
-          episode: episodeNumber,
-          time_seconds: safeTime,
-        }),
+        body: payload,
       })
       if (!response.ok) return
       lastSavedProgress = {
@@ -326,20 +344,13 @@ const initPlayer = (): void => {
     if (!Number.isInteger(episodeNumber) || episodeNumber <= 0) return
 
     transitionEpisode = episodeNumber
+    const payload = buildWatchProgressPayload(episodeNumber, 0)
 
-    const payload = JSON.stringify({
-      mal_id: malID,
-      episode: episodeNumber,
-      time_seconds: 0,
-    })
-
-    if (navigator.sendBeacon) {
-      const blob = new Blob([payload], { type: 'application/json' })
-      navigator.sendBeacon('/api/watch-progress', blob)
+    if (sendWatchProgressBeacon(payload)) {
       return
     }
 
-    fetch('/api/watch-progress', {
+    fetch(watchProgressURL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -400,19 +411,22 @@ const initPlayer = (): void => {
     }
   }
 
+  const hideSubtitleText = (): void => {
+    if (!subtitleText) return
+    subtitleText.textContent = ''
+    subtitleText.classList.remove('block')
+    subtitleText.classList.add('hidden')
+  }
+
   const updateSubtitleRender = (currentTime: number): void => {
     if (!subtitleText) return
     if (!activeSubtitles.length) {
-      subtitleText.textContent = ''
-      subtitleText.classList.remove('block')
-      subtitleText.classList.add('hidden')
+      hideSubtitleText()
       return
     }
     const cue = activeSubtitles.find(item => currentTime >= item.start && currentTime <= item.end)
     if (!cue) {
-      subtitleText.textContent = ''
-      subtitleText.classList.remove('block')
-      subtitleText.classList.add('hidden')
+      hideSubtitleText()
       return
     }
     subtitleText.textContent = cue.text
@@ -437,11 +451,7 @@ const initPlayer = (): void => {
     })
     subtitleSelect.style.display = currentSubtitleTracks.length > 0 ? 'block' : 'none'
     activeSubtitles = []
-    if (subtitleText) {
-      subtitleText.textContent = ''
-      subtitleText.classList.remove('block')
-      subtitleText.classList.add('hidden')
-    }
+    hideSubtitleText()
   }
 
   const modeDub = container.querySelector('[data-mode-dub]') as HTMLButtonElement
@@ -537,13 +547,29 @@ const initPlayer = (): void => {
     }, 2000)
   }
 
+  const togglePlayPause = (): void => {
+    if (video.paused) {
+      video.play()
+      return
+    }
+
+    video.pause()
+  }
+
+  const toggleFullscreen = (): void => {
+    if (document.fullscreenElement) {
+      document.exitFullscreen()
+      return
+    }
+
+    container.requestFullscreen()
+  }
+
   // Initialize
   updateSubtitleOptions()
   updateModeButtons(currentMode)
 
   if (video) {
-    video.src = streamUrlForMode(currentMode)
-
     video.addEventListener('loadedmetadata', () => {
       if (loading) loading.style.display = 'none'
       resolveActiveSegments()
@@ -608,15 +634,15 @@ const initPlayer = (): void => {
     if (pathParts.length < 4) return
 
     const animeID = pathParts[2]
-    const currentEpisode = Number.parseInt(pathParts[3], 10)
-    if (Number.isNaN(currentEpisode)) return
+    const currentEpisodeNumber = Number.parseInt(pathParts[3], 10)
+    if (Number.isNaN(currentEpisodeNumber)) return
 
-    if (Number.isInteger(totalEpisodes) && totalEpisodes > 0 && currentEpisode >= totalEpisodes) {
-      completeAnime(currentEpisode)
+    if (Number.isInteger(totalEpisodes) && totalEpisodes > 0 && currentEpisodeNumber >= totalEpisodes) {
+      completeAnime(currentEpisodeNumber)
       return
     }
 
-    const nextEpisode = currentEpisode + 1
+    const nextEpisode = currentEpisodeNumber + 1
     markEpisodeTransition(nextEpisode)
     const nextUrl = `/watch/${animeID}/${nextEpisode}`
 
@@ -698,20 +724,12 @@ const initPlayer = (): void => {
   }
 
   playPause?.addEventListener('click', () => {
-    if (video.paused) {
-      video.play()
-    } else {
-      video.pause()
-    }
+    togglePlayPause()
     showControls()
   })
 
   video.addEventListener('click', () => {
-    if (video.paused) {
-      video.play()
-    } else {
-      video.pause()
-    }
+    togglePlayPause()
     showControls()
   })
 
@@ -774,11 +792,7 @@ const initPlayer = (): void => {
   forwardBtn?.addEventListener('click', () => seekBy(10))
 
   fullscreenBtn?.addEventListener('click', () => {
-    if (document.fullscreenElement) {
-      document.exitFullscreen()
-    } else {
-      container.requestFullscreen()
-    }
+    toggleFullscreen()
     showControls()
   })
 
@@ -802,11 +816,7 @@ const initPlayer = (): void => {
     const selected = subtitleSelect.value
     if (selected === 'none') {
       activeSubtitles = []
-      if (subtitleText) {
-        subtitleText.textContent = ''
-        subtitleText.classList.remove('block')
-        subtitleText.classList.add('hidden')
-      }
+      hideSubtitleText()
       return
     }
     const idx = Number(selected)
@@ -840,13 +850,19 @@ const initPlayer = (): void => {
     hidePreviewPopover()
   })
 
-  container.querySelectorAll('a[href]').forEach((element: Element) => {
-    element.addEventListener('click', (event: Event) => {
-      if (!(event.currentTarget instanceof HTMLAnchorElement)) return
-      const nextEpisode = parseEpisodeFromWatchHref(event.currentTarget.href)
-      if (nextEpisode === null) return
-      markEpisodeTransition(nextEpisode)
-    })
+  container.addEventListener('click', (event: Event) => {
+    const target = event.target
+    if (!(target instanceof Node)) return
+
+    const targetElement = target instanceof Element ? target : target.parentElement
+    if (!targetElement) return
+
+    const anchor = targetElement.closest('a[href]')
+    if (!(anchor instanceof HTMLAnchorElement)) return
+
+    const nextEpisode = parseEpisodeFromWatchHref(anchor.href)
+    if (nextEpisode === null) return
+    markEpisodeTransition(nextEpisode)
   })
 
   window.addEventListener('mouseup', () => {
@@ -870,21 +886,13 @@ const initPlayer = (): void => {
   document.addEventListener('keydown', (event) => {
     if (event.code === 'Space') {
       event.preventDefault()
-      if (video.paused) {
-        video.play()
-      } else {
-        video.pause()
-      }
+      togglePlayPause()
     }
     if (event.code === 'ArrowLeft') seekBy(-10)
     if (event.code === 'ArrowRight') seekBy(10)
     if (event.code === 'KeyM') video.muted = !video.muted
     if (event.code === 'KeyF') {
-      if (document.fullscreenElement) {
-        document.exitFullscreen()
-      } else {
-        container.requestFullscreen()
-      }
+      toggleFullscreen()
     }
     showControls()
   })
@@ -897,15 +905,8 @@ const initPlayer = (): void => {
     const episodeNumber = Number.parseInt(currentEpisode, 10)
     if (!Number.isInteger(episodeNumber) || episodeNumber <= 0) return
     const safeTime = Math.max(0, Math.min(video.currentTime, video.duration))
-    const payload = JSON.stringify({
-      mal_id: malID,
-      episode: episodeNumber,
-      time_seconds: safeTime,
-    })
-    if (navigator.sendBeacon) {
-      const blob = new Blob([payload], { type: 'application/json' })
-      navigator.sendBeacon('/api/watch-progress', blob)
-    }
+    const payload = buildWatchProgressPayload(episodeNumber, safeTime)
+    sendWatchProgressBeacon(payload)
   })
 
   updatePlayPauseIcons(false)
