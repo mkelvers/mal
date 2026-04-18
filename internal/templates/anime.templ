@@ -5,7 +5,7 @@ import "mal/internal/shared/ui"
 import "fmt"
 import "strings"
 
-templ AnimeDetails(anime jikan.Anime, currentStatus string) {
+templ AnimeDetails(anime jikan.Anime, currentStatus string, nextEpisode int) {
 	@Layout("mal - " + anime.DisplayTitle(), true) {
 		<div class="grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_300px]">
 			<div class="grid min-w-0 gap-8">
@@ -40,7 +40,7 @@ templ AnimeDetails(anime jikan.Anime, currentStatus string) {
 						<div class="flex flex-wrap items-center gap-2">
 							@WatchlistDropdown(anime.MalID, anime.Title, anime.TitleEnglish, anime.TitleJapanese, anime.ImageURL(), currentStatus, anime.Airing)
 						<a
-							href={ templ.URL(fmt.Sprintf("/watch/%d/1", anime.MalID)) }
+							href={ templ.URL(fmt.Sprintf("/watch/%d/%d", anime.MalID, watchTargetEpisode(currentStatus, nextEpisode))) }
 							class="inline-flex h-8 items-center bg-(--panel-soft) px-2 text-xs text-(--text) no-underline hover:text-(--text) hover:no-underline"
 						>Watch</a>
 						</div>
@@ -165,6 +165,14 @@ templ AnimeDetails(anime jikan.Anime, currentStatus string) {
 			</aside>
 		</div>
 	}
+}
+
+func watchTargetEpisode(currentStatus string, nextEpisode int) int {
+	if currentStatus == "watching" && nextEpisode > 0 {
+		return nextEpisode
+	}
+
+	return 1
 }
 
 templ AnimePending(id int) {

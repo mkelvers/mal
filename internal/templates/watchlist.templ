@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"mal/internal/database"
 	"mal/internal/shared/ui"
+	"math"
 )
 
 templ Watchlist(entries []database.GetUserWatchListRow, layout string, currentStatus string, sortBy string, sortOrder string) {
@@ -50,11 +51,15 @@ templ Watchlist(entries []database.GetUserWatchListRow, layout string, currentSt
 				<div class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:gap-4 lg:grid-cols-4 xl:grid-cols-5">
 					for _, entry := range entries {
 						<div class="group relative min-w-0" id={ fmt.Sprintf("watchlist-entry-%d", entry.AnimeID) }>
-							@ui.AnimeCard(ui.AnimeCardProps{
-								ID:       int(entry.AnimeID),
-								Title:    entry.DisplayTitle(),
-								ImageURL: entry.ImageUrl,
-							})
+							<a href={ templ.URL(watchURL(entry)) } class="flex flex-col bg-transparent text-inherit no-underline">
+								<div class="flex w-full aspect-2/3 justify-center overflow-hidden">
+									<img src={ entry.ImageUrl } alt={ entry.DisplayTitle() } class="block w-full object-cover object-center" loading="lazy"/>
+								</div>
+								<div class="mt-2 line-clamp-2 text-sm leading-snug text-(--text)">
+									{ entry.DisplayTitle() }
+								</div>
+								@ifHasProgress(entry)
+							</a>
 							<button
 								class="absolute right-2 top-2 h-6 w-6 cursor-pointer border-0 bg-(--overlay-subtle) text-(--text-muted) opacity-0 transition-opacity duration-150 group-hover:opacity-100 hover:text-(--danger)"
 								hx-delete={ string(templ.URL(fmt.Sprintf("/api/watchlist/%d?from=watchlist", entry.AnimeID))) }
@@ -77,14 +82,15 @@ templ Watchlist(entries []database.GetUserWatchListRow, layout string, currentSt
 						for _, entry := range entries {
 							<tr class="hover:bg-(--panel-soft)" id={ fmt.Sprintf("watchlist-entry-%d", entry.AnimeID) }>
 								<td class="p-2.5">
-									<a href={ templ.SafeURL(fmt.Sprintf("/anime/%d", entry.AnimeID)) }>
+									<a href={ templ.URL(watchURL(entry)) }>
 										<img src={ entry.ImageUrl } alt={ entry.DisplayTitle() } class="aspect-2/3 w-9 object-cover" loading="lazy"/>
 									</a>
 								</td>
 								<td class="p-2.5 font-medium">
-									<a href={ templ.SafeURL(fmt.Sprintf("/anime/%d", entry.AnimeID)) }>
+									<a href={ templ.URL(watchURL(entry)) }>
 										{ entry.DisplayTitle() }
 									</a>
+									@ifHasProgress(entry)
 								</td>
 								<td class="w-24 p-2.5">
 									<button
@@ -101,6 +107,37 @@ templ Watchlist(entries []database.GetUserWatchListRow, layout string, currentSt
 			}
 		}
 	}
+}
+
+templ ifHasProgress(entry database.GetUserWatchListRow) {
+	if entry.CurrentEpisode.Valid && entry.CurrentEpisode.Int64 > 0 {
+		<p class="m-0 mt-1 text-xs text-(--text-faint)">
+			Continue ep { fmt.Sprintf("%d", entry.CurrentEpisode.Int64) }
+			if entry.CurrentTimeSeconds > 0 {
+				{ fmt.Sprintf(" · %s", formatProgressTime(entry.CurrentTimeSeconds)) }
+			}
+		</p>
+	}
+}
+
+func watchURL(entry database.GetUserWatchListRow) string {
+	episode := 1
+	if entry.CurrentEpisode.Valid && entry.CurrentEpisode.Int64 > 0 {
+		episode = int(entry.CurrentEpisode.Int64)
+	}
+
+	return fmt.Sprintf("/watch/%d/%d", entry.AnimeID, episode)
+}
+
+func formatProgressTime(seconds float64) string {
+	total := int(math.Round(seconds))
+	if total < 0 {
+		total = 0
+	}
+
+	minutes := total / 60
+	remainingSeconds := total % 60
+	return fmt.Sprintf("%02d:%02d", minutes, remainingSeconds)
 }
 
 func tabClass(active bool) string {

@@ -54,22 +54,23 @@ func (s *Service) GetUpcomingAnime(ctx context.Context, page int) (jikan.TopAnim
 	return s.jikanClient.GetSeasonsUpcoming(ctx, page)
 }
 
-func (s *Service) GetAnimeDetails(ctx context.Context, id int, userID string) (jikan.Anime, string, error) {
+func (s *Service) GetAnimeDetails(ctx context.Context, id int, userID string) (jikan.Anime, string, int, error) {
 	anime, err := s.jikanClient.GetAnimeByID(ctx, id)
 	if err != nil {
 		if jikan.IsNotFoundError(err) {
-			return jikan.Anime{}, "", err
+			return jikan.Anime{}, "", 1, err
 		}
 
 		s.jikanClient.EnqueueAnimeFetchRetry(ctx, id, err)
 		if jikan.IsRetryableError(err) {
-			return jikan.Anime{}, "", ErrAnimePendingFetch
+			return jikan.Anime{}, "", 1, ErrAnimePendingFetch
 		}
 
-		return jikan.Anime{}, "", fmt.Errorf("failed to fetch anime details: %w", err)
+		return jikan.Anime{}, "", 1, fmt.Errorf("failed to fetch anime details: %w", err)
 	}
 
 	currentStatus := ""
+	nextEpisode := 1
 	if userID != "" {
 		entry, err := s.db.GetWatchListEntry(ctx, database.GetWatchListEntryParams{
 			UserID:  userID,
@@ -77,10 +78,16 @@ func (s *Service) GetAnimeDetails(ctx context.Context, id int, userID string) (j
 		})
 		if err == nil {
 			currentStatus = entry.Status
+			if entry.CurrentEpisode.Valid {
+				value := int(entry.CurrentEpisode.Int64)
+				if value > 0 {
+					nextEpisode = value
+				}
+			}
 		}
 	}
 
-	return anime, currentStatus, nil
+	return anime, currentStatus, nextEpisode, nil
 }
 
 func (s *Service) GetRelations(ctx context.Context, id int) ([]jikan.RelationEntry, error) {

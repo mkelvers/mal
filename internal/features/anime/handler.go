@@ -155,7 +155,7 @@ func (h *Handler) HandleAnimeDetails(w http.ResponseWriter, r *http.Request) {
 
 	userID := userIDFromRequest(r)
 
-	anime, currentStatus, err := h.svc.GetAnimeDetails(r.Context(), id, userID)
+	anime, currentStatus, nextEpisode, err := h.svc.GetAnimeDetails(r.Context(), id, userID)
 	if err != nil {
 		if errors.Is(err, ErrAnimePendingFetch) {
 			templates.AnimePending(id).Render(r.Context(), w)
@@ -172,7 +172,7 @@ func (h *Handler) HandleAnimeDetails(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	templates.AnimeDetails(anime, currentStatus).Render(r.Context(), w)
+	templates.AnimeDetails(anime, currentStatus, nextEpisode).Render(r.Context(), w)
 }
 
 func (h *Handler) HandleAPIAnime(w http.ResponseWriter, r *http.Request) {
