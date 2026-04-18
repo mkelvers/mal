@@ -26,14 +26,6 @@ type SubtitleItem struct {
 	Referer string `json:"referer"`
 }
 
-type EpisodeListItem struct {
-	Number string `json:"number"`
-	Title  string `json:"title"`
-	Filler bool   `json:"filler"`
-	Recap  bool   `json:"recap"`
-	Order  int    `json:"order"`
-}
-
 type SkipSegment struct {
 	Type  string  `json:"type"`
 	Start float64 `json:"start"`
@@ -41,14 +33,13 @@ type SkipSegment struct {
 }
 
 type WatchPageData struct {
-	MalID           int
-	Title           string
-	CurrentEpisode  string
+	MalID            int
+	Title            string
+	CurrentEpisode   string
 	StartTimeSeconds float64
-	CurrentStatus   string
-	InitialMode     string
-	AvailableModes  []string
-	ModeSources     map[string]ModeSource
-	Episodes        []EpisodeListItem
-	Segments        []SkipSegment
+	CurrentStatus    string
+	InitialMode      string
+	AvailableModes   []string
+	ModeSources      map[string]ModeSource
+	Segments         []SkipSegment
 }

@@ -28,7 +28,7 @@ func NewRouter(cfg Config) http.Handler {
 
 	animeSvc := anime.NewService(cfg.JikanClient, cfg.DB)
 	animeHandler := anime.NewHandler(animeSvc)
-	playbackSvc := playback.NewService(cfg.JikanClient, cfg.DB)
+	playbackSvc := playback.NewService(cfg.DB)
 	playbackHandler := playback.NewHandler(playbackSvc, cfg.JikanClient)
 
 	// Serve static files
