@@ -121,12 +121,7 @@ templ ifHasProgress(entry database.GetUserWatchListRow) {
 }
 
 func watchURL(entry database.GetUserWatchListRow) string {
-	episode := 1
-	if entry.CurrentEpisode.Valid && entry.CurrentEpisode.Int64 > 0 {
-		episode = int(entry.CurrentEpisode.Int64)
-	}
-
-	return fmt.Sprintf("/watch/%d/%d", entry.AnimeID, episode)
+	return fmt.Sprintf("/anime/%d", entry.AnimeID)
 }
 
 func formatProgressTime(seconds float64) string {
