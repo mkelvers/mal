@@ -1,6 +1,7 @@
 package watchlist
 
 import (
+	"database/sql"
 	"encoding/json"
 	"errors"
 	"log"
@@ -236,6 +237,17 @@ func (h *Handler) HandleDeleteContinueWatching(w http.ResponseWriter, r *http.Re
 	})
 	if err != nil {
 		log.Printf("continue watching delete failed: user_id=%s anime_id=%d err=%v", user.ID, animeID, err)
+		http.Error(w, "failed to delete continue watching entry", http.StatusInternalServerError)
+		return
+	}
+
+	if err := h.svc.db.SaveWatchProgress(r.Context(), database.SaveWatchProgressParams{
+		CurrentEpisode:     sql.NullInt64{Valid: false},
+		CurrentTimeSeconds: 0,
+		UserID:             user.ID,
+		AnimeID:            animeID,
+	}); err != nil {
+		log.Printf("continue watching delete failed to clear watchlist progress: user_id=%s anime_id=%d err=%v", user.ID, animeID, err)
 		http.Error(w, "failed to delete continue watching entry", http.StatusInternalServerError)
 		return
 	}
