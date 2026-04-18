@@ -79,6 +79,14 @@ func (h *Handler) HandleWatchPage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if anime.Episodes > 0 {
+		episodeNumber, parseErr := strconv.Atoi(episode)
+		if parseErr == nil && episodeNumber > anime.Episodes {
+			http.Redirect(w, r, "/watch/"+strconv.Itoa(malID)+"/"+strconv.Itoa(anime.Episodes), http.StatusFound)
+			return
+		}
+	}
+
 	title := anime.DisplayTitle()
 	userID := watchlistUserIDFromRequest(r)
 	data, err := h.svc.BuildWatchPageData(ctx, malID, title, episode, mode, userID)
