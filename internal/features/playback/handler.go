@@ -12,6 +12,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/google/uuid"
+
 	"mal/internal/database"
 	"mal/internal/jikan"
 	"mal/internal/shared/middleware"
@@ -88,15 +90,15 @@ func (h *Handler) HandleWatchPage(w http.ResponseWriter, r *http.Request) {
 
 	// Convert playback.WatchPageData to templates.WatchPageData
 	pageData := templates.WatchPageData{
-		MalID:          data.MalID,
-		Title:          data.Title,
-		CurrentEpisode: data.CurrentEpisode,
+		MalID:            data.MalID,
+		Title:            data.Title,
+		CurrentEpisode:   data.CurrentEpisode,
 		StartTimeSeconds: data.StartTimeSeconds,
-		CurrentStatus:  data.CurrentStatus,
-		InitialMode:    data.InitialMode,
-		AvailableModes: data.AvailableModes,
-		ModeSources:    convertModeSources(data.ModeSources),
-		Segments:       convertSegments(data.Segments),
+		CurrentStatus:    data.CurrentStatus,
+		InitialMode:      data.InitialMode,
+		AvailableModes:   data.AvailableModes,
+		ModeSources:      convertModeSources(data.ModeSources),
+		Segments:         convertSegments(data.Segments),
 	}
 
 	templates.WatchPage(anime, pageData).Render(r.Context(), w)
@@ -244,21 +246,49 @@ func (h *Handler) HandleSaveProgress(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if _, err := h.svc.db.GetWatchListEntry(r.Context(), database.GetWatchListEntryParams{
-		UserID:  user.ID,
-		AnimeID: int64(payload.MalID),
-	}); err != nil {
-		http.Error(w, "watchlist entry not found", http.StatusNotFound)
-		return
+	animeID := int64(payload.MalID)
+
+	if _, err := h.svc.db.GetAnime(r.Context(), animeID); err != nil {
+		anime, fetchErr := h.jikanClient.GetAnimeByID(r.Context(), payload.MalID)
+		if fetchErr != nil {
+			log.Printf("save progress failed to fetch anime user_id=%s mal_id=%d err=%v", user.ID, payload.MalID, fetchErr)
+			http.Error(w, "failed to save progress", http.StatusInternalServerError)
+			return
+		}
+
+		if _, upsertErr := h.svc.db.UpsertAnime(r.Context(), database.UpsertAnimeParams{
+			ID:            animeID,
+			TitleOriginal: anime.Title,
+			TitleEnglish:  sql.NullString{String: anime.TitleEnglish, Valid: anime.TitleEnglish != ""},
+			TitleJapanese: sql.NullString{String: anime.TitleJapanese, Valid: anime.TitleJapanese != ""},
+			ImageUrl:      anime.ImageURL(),
+			Airing:        sql.NullBool{Bool: anime.Airing, Valid: true},
+		}); upsertErr != nil {
+			log.Printf("save progress failed to upsert anime user_id=%s mal_id=%d err=%v", user.ID, payload.MalID, upsertErr)
+			http.Error(w, "failed to save progress", http.StatusInternalServerError)
+			return
+		}
 	}
 
 	if err := h.svc.db.SaveWatchProgress(r.Context(), database.SaveWatchProgressParams{
 		CurrentEpisode:     sql.NullInt64{Int64: int64(payload.Episode), Valid: true},
 		CurrentTimeSeconds: timeSeconds,
 		UserID:             user.ID,
-		AnimeID:            int64(payload.MalID),
+		AnimeID:            animeID,
 	}); err != nil {
-		log.Printf("save progress failed user_id=%s mal_id=%d err=%v", user.ID, payload.MalID, err)
+		if err.Error() != "sql: no rows in result set" {
+			log.Printf("save watchlist progress skipped user_id=%s mal_id=%d err=%v", user.ID, payload.MalID, err)
+		}
+	}
+
+	if _, err := h.svc.db.UpsertContinueWatchingEntry(r.Context(), database.UpsertContinueWatchingEntryParams{
+		ID:                 uuid.New().String(),
+		UserID:             user.ID,
+		AnimeID:            animeID,
+		CurrentEpisode:     sql.NullInt64{Int64: int64(payload.Episode), Valid: true},
+		CurrentTimeSeconds: timeSeconds,
+	}); err != nil {
+		log.Printf("save continue watching failed user_id=%s mal_id=%d err=%v", user.ID, payload.MalID, err)
 		http.Error(w, "failed to save progress", http.StatusInternalServerError)
 		return
 	}

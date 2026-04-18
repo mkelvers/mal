@@ -62,6 +62,41 @@ SET current_episode = ?,
     updated_at = CURRENT_TIMESTAMP
 WHERE user_id = ? AND anime_id = ?;
 
+-- name: UpsertContinueWatchingEntry :one
+INSERT INTO continue_watching_entry (id, user_id, anime_id, current_episode, current_time_seconds, updated_at)
+VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+ON CONFLICT (user_id, anime_id) DO UPDATE SET
+    current_episode = excluded.current_episode,
+    current_time_seconds = excluded.current_time_seconds,
+    updated_at = CURRENT_TIMESTAMP
+RETURNING *;
+
+-- name: GetContinueWatchingEntry :one
+SELECT * FROM continue_watching_entry
+WHERE user_id = ? AND anime_id = ? LIMIT 1;
+
+-- name: GetContinueWatchingEntries :many
+SELECT
+    c.id,
+    c.user_id,
+    c.anime_id,
+    c.current_episode,
+    c.current_time_seconds,
+    c.created_at,
+    c.updated_at,
+    a.title_original,
+    a.title_english,
+    a.title_japanese,
+    a.image_url
+FROM continue_watching_entry c
+JOIN anime a ON c.anime_id = a.id
+WHERE c.user_id = ?
+ORDER BY c.updated_at DESC;
+
+-- name: DeleteContinueWatchingEntry :exec
+DELETE FROM continue_watching_entry
+WHERE user_id = ? AND anime_id = ?;
+
 -- name: GetWatchListEntry :one
 SELECT * FROM watch_list_entry
 WHERE user_id = ? AND anime_id = ? LIMIT 1;

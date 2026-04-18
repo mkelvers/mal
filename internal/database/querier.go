@@ -13,6 +13,7 @@ type Querier interface {
 	CreateSession(ctx context.Context, arg CreateSessionParams) (Session, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
 	DeleteAnimeFetchRetry(ctx context.Context, animeID int64) error
+	DeleteContinueWatchingEntry(ctx context.Context, arg DeleteContinueWatchingEntryParams) error
 	DeleteExpiredJikanCache(ctx context.Context) error
 	DeleteSession(ctx context.Context, id string) error
 	DeleteUserSessions(ctx context.Context, userID string) error
@@ -20,6 +21,8 @@ type Querier interface {
 	EnqueueAnimeFetchRetry(ctx context.Context, arg EnqueueAnimeFetchRetryParams) error
 	GetAnime(ctx context.Context, id int64) (Anime, error)
 	GetAnimeNeedingRelationSync(ctx context.Context) ([]GetAnimeNeedingRelationSyncRow, error)
+	GetContinueWatchingEntries(ctx context.Context, userID string) ([]GetContinueWatchingEntriesRow, error)
+	GetContinueWatchingEntry(ctx context.Context, arg GetContinueWatchingEntryParams) (ContinueWatchingEntry, error)
 	GetDueAnimeFetchRetries(ctx context.Context, limit int64) ([]AnimeFetchRetry, error)
 	GetJikanCache(ctx context.Context, key string) (string, error)
 	GetJikanCacheStale(ctx context.Context, key string) (string, error)
@@ -39,6 +42,7 @@ type Querier interface {
 	UpdateUserPasswordAndRecoveryKeyHash(ctx context.Context, arg UpdateUserPasswordAndRecoveryKeyHashParams) error
 	UpsertAnime(ctx context.Context, arg UpsertAnimeParams) (Anime, error)
 	UpsertAnimeRelation(ctx context.Context, arg UpsertAnimeRelationParams) error
+	UpsertContinueWatchingEntry(ctx context.Context, arg UpsertContinueWatchingEntryParams) (ContinueWatchingEntry, error)
 	UpsertWatchListEntry(ctx context.Context, arg UpsertWatchListEntryParams) (WatchListEntry, error)
 }
 

@@ -110,6 +110,16 @@ func (s *Service) BuildWatchPageData(ctx context.Context, malID int, title strin
 				startTimeSeconds = entry.CurrentTimeSeconds
 			}
 		}
+
+		if startTimeSeconds <= 0 {
+			continueEntry, continueErr := s.db.GetContinueWatchingEntry(ctx, database.GetContinueWatchingEntryParams{
+				UserID:  userID,
+				AnimeID: int64(malID),
+			})
+			if continueErr == nil && continueEntry.CurrentEpisode.Valid && strconv.FormatInt(continueEntry.CurrentEpisode.Int64, 10) == normalizedEpisode && continueEntry.CurrentTimeSeconds > 0 {
+				startTimeSeconds = continueEntry.CurrentTimeSeconds
+			}
+		}
 	}
 
 	watchTitle := strings.TrimSpace(resolvedTitle)

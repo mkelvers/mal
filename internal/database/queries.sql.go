@@ -89,6 +89,21 @@ func (q *Queries) DeleteAnimeFetchRetry(ctx context.Context, animeID int64) erro
 	return err
 }
 
+const deleteContinueWatchingEntry = `-- name: DeleteContinueWatchingEntry :exec
+DELETE FROM continue_watching_entry
+WHERE user_id = ? AND anime_id = ?
+`
+
+type DeleteContinueWatchingEntryParams struct {
+	UserID  string `json:"user_id"`
+	AnimeID int64  `json:"anime_id"`
+}
+
+func (q *Queries) DeleteContinueWatchingEntry(ctx context.Context, arg DeleteContinueWatchingEntryParams) error {
+	_, err := q.db.ExecContext(ctx, deleteContinueWatchingEntry, arg.UserID, arg.AnimeID)
+	return err
+}
+
 const deleteExpiredJikanCache = `-- name: DeleteExpiredJikanCache :exec
 DELETE FROM jikan_cache WHERE expires_at <= CURRENT_TIMESTAMP
 `
@@ -223,6 +238,99 @@ func (q *Queries) GetAnimeNeedingRelationSync(ctx context.Context) ([]GetAnimeNe
 		return nil, err
 	}
 	return items, nil
+}
+
+const getContinueWatchingEntries = `-- name: GetContinueWatchingEntries :many
+SELECT
+    c.id,
+    c.user_id,
+    c.anime_id,
+    c.current_episode,
+    c.current_time_seconds,
+    c.created_at,
+    c.updated_at,
+    a.title_original,
+    a.title_english,
+    a.title_japanese,
+    a.image_url
+FROM continue_watching_entry c
+JOIN anime a ON c.anime_id = a.id
+WHERE c.user_id = ?
+ORDER BY c.updated_at DESC
+`
+
+type GetContinueWatchingEntriesRow struct {
+	ID                 string         `json:"id"`
+	UserID             string         `json:"user_id"`
+	AnimeID            int64          `json:"anime_id"`
+	CurrentEpisode     sql.NullInt64  `json:"current_episode"`
+	CurrentTimeSeconds float64        `json:"current_time_seconds"`
+	CreatedAt          time.Time      `json:"created_at"`
+	UpdatedAt          time.Time      `json:"updated_at"`
+	TitleOriginal      string         `json:"title_original"`
+	TitleEnglish       sql.NullString `json:"title_english"`
+	TitleJapanese      sql.NullString `json:"title_japanese"`
+	ImageUrl           string         `json:"image_url"`
+}
+
+func (q *Queries) GetContinueWatchingEntries(ctx context.Context, userID string) ([]GetContinueWatchingEntriesRow, error) {
+	rows, err := q.db.QueryContext(ctx, getContinueWatchingEntries, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetContinueWatchingEntriesRow
+	for rows.Next() {
+		var i GetContinueWatchingEntriesRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.UserID,
+			&i.AnimeID,
+			&i.CurrentEpisode,
+			&i.CurrentTimeSeconds,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.TitleOriginal,
+			&i.TitleEnglish,
+			&i.TitleJapanese,
+			&i.ImageUrl,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getContinueWatchingEntry = `-- name: GetContinueWatchingEntry :one
+SELECT id, user_id, anime_id, current_episode, current_time_seconds, created_at, updated_at FROM continue_watching_entry
+WHERE user_id = ? AND anime_id = ? LIMIT 1
+`
+
+type GetContinueWatchingEntryParams struct {
+	UserID  string `json:"user_id"`
+	AnimeID int64  `json:"anime_id"`
+}
+
+func (q *Queries) GetContinueWatchingEntry(ctx context.Context, arg GetContinueWatchingEntryParams) (ContinueWatchingEntry, error) {
+	row := q.db.QueryRowContext(ctx, getContinueWatchingEntry, arg.UserID, arg.AnimeID)
+	var i ContinueWatchingEntry
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.AnimeID,
+		&i.CurrentEpisode,
+		&i.CurrentTimeSeconds,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
 }
 
 const getDueAnimeFetchRetries = `-- name: GetDueAnimeFetchRetries :many
@@ -777,6 +885,45 @@ type UpsertAnimeRelationParams struct {
 func (q *Queries) UpsertAnimeRelation(ctx context.Context, arg UpsertAnimeRelationParams) error {
 	_, err := q.db.ExecContext(ctx, upsertAnimeRelation, arg.AnimeID, arg.RelatedAnimeID, arg.RelationType)
 	return err
+}
+
+const upsertContinueWatchingEntry = `-- name: UpsertContinueWatchingEntry :one
+INSERT INTO continue_watching_entry (id, user_id, anime_id, current_episode, current_time_seconds, updated_at)
+VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+ON CONFLICT (user_id, anime_id) DO UPDATE SET
+    current_episode = excluded.current_episode,
+    current_time_seconds = excluded.current_time_seconds,
+    updated_at = CURRENT_TIMESTAMP
+RETURNING id, user_id, anime_id, current_episode, current_time_seconds, created_at, updated_at
+`
+
+type UpsertContinueWatchingEntryParams struct {
+	ID                 string        `json:"id"`
+	UserID             string        `json:"user_id"`
+	AnimeID            int64         `json:"anime_id"`
+	CurrentEpisode     sql.NullInt64 `json:"current_episode"`
+	CurrentTimeSeconds float64       `json:"current_time_seconds"`
+}
+
+func (q *Queries) UpsertContinueWatchingEntry(ctx context.Context, arg UpsertContinueWatchingEntryParams) (ContinueWatchingEntry, error) {
+	row := q.db.QueryRowContext(ctx, upsertContinueWatchingEntry,
+		arg.ID,
+		arg.UserID,
+		arg.AnimeID,
+		arg.CurrentEpisode,
+		arg.CurrentTimeSeconds,
+	)
+	var i ContinueWatchingEntry
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.AnimeID,
+		&i.CurrentEpisode,
+		&i.CurrentTimeSeconds,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
 }
 
 const upsertWatchListEntry = `-- name: UpsertWatchListEntry :one
