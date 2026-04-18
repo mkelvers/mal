@@ -156,6 +156,18 @@ type TopAnimeResponse struct {
 	Pagination Pagination `json:"pagination"`
 }
 
+type Episode struct {
+	MalID  int    `json:"mal_id"`
+	Title  string `json:"title"`
+	Filler bool   `json:"filler"`
+	Recap  bool   `json:"recap"`
+}
+
+type EpisodesResponse struct {
+	Data       []Episode  `json:"data"`
+	Pagination Pagination `json:"pagination"`
+}
+
 type JikanRelationEntry struct {
 	MalID int    `json:"mal_id"`
 	Type  string `json:"type"`

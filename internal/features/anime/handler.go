@@ -207,9 +207,39 @@ func (h *Handler) HandleAPIAnime(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		templates.AnimeRecommendations(recs).Render(r.Context(), w)
+	case "episodes":
+		currentEpisode := r.URL.Query().Get("current")
+		episodes, err := h.svc.GetEpisodes(r.Context(), id)
+		if err != nil {
+			log.Printf("episodes error for %d: %v", id, err)
+			writeInlineLoadError(w, "Failed to load episodes.")
+			return
+		}
+		templates.EpisodeList(episodes, currentEpisode, id).Render(r.Context(), w)
 	default:
 		renderNotFoundPage(r, w)
 	}
+}
+
+func (h *Handler) HandleAPIEpisodes(w http.ResponseWriter, r *http.Request) {
+	path := r.URL.Path[len("/api/episodes/"):]
+	path = strings.Trim(path, "/")
+
+	id, err := strconv.Atoi(path)
+	if err != nil || id <= 0 {
+		http.Error(w, "invalid id", http.StatusBadRequest)
+		return
+	}
+
+	currentEpisode := r.URL.Query().Get("current")
+	episodes, err := h.svc.GetEpisodes(r.Context(), id)
+	if err != nil {
+		log.Printf("episodes error for %d: %v", id, err)
+		writeInlineLoadError(w, "Failed to load episodes.")
+		return
+	}
+
+	templates.EpisodeList(episodes, currentEpisode, id).Render(r.Context(), w)
 }
 
 func (h *Handler) HandleQuickSearch(w http.ResponseWriter, r *http.Request) {

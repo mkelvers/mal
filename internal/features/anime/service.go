@@ -144,3 +144,28 @@ func (s *Service) GetAnimeByProducer(ctx context.Context, producerID int, page i
 func (s *Service) GetProducerByID(ctx context.Context, producerID int) (jikan.ProducerResponse, error) {
 	return s.jikanClient.GetProducerByID(ctx, producerID)
 }
+
+func (s *Service) GetEpisodes(ctx context.Context, animeID int) ([]jikan.Episode, error) {
+	var allEpisodes []jikan.Episode
+	page := 1
+
+	for page <= 20 {
+		result, err := s.jikanClient.GetEpisodes(ctx, animeID, page)
+		if err != nil {
+			if jikan.IsRetryableError(err) && len(allEpisodes) > 0 {
+				// Return what we have if we're getting rate limited
+				return allEpisodes, nil
+			}
+			return nil, err
+		}
+
+		allEpisodes = append(allEpisodes, result.Data...)
+
+		if !result.Pagination.HasNextPage {
+			break
+		}
+		page++
+	}
+
+	return allEpisodes, nil
+}
