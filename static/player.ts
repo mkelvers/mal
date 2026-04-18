@@ -161,6 +161,7 @@ const initPlayer = (): void => {
   let previewRequestToken = 0
   let lastSavedProgress = { episode: currentEpisode, seconds: -1 }
   let progressSaveTimer: number | undefined
+  let transitionEpisode: number | null = null
 
   const previewPopover = container.querySelector('[data-preview-popover]') as HTMLElement
   const previewFrame = container.querySelector('[data-preview-frame]') as HTMLElement
@@ -456,6 +457,53 @@ const initPlayer = (): void => {
     }, 1500)
   }
 
+  const parseEpisodeFromWatchHref = (href: string): number | null => {
+    if (!Number.isInteger(malID) || malID <= 0) return null
+
+    try {
+      const targetURL = new URL(href, window.location.origin)
+      const pathParts = targetURL.pathname.split('/').filter(Boolean)
+      if (pathParts.length < 3 || pathParts[0] !== 'watch') return null
+
+      const targetMalID = Number.parseInt(pathParts[1] || '', 10)
+      const targetEpisode = Number.parseInt(pathParts[2] || '', 10)
+      if (!Number.isInteger(targetMalID) || targetMalID !== malID) return null
+      if (!Number.isInteger(targetEpisode) || targetEpisode <= 0) return null
+
+      return targetEpisode
+    } catch {
+      return null
+    }
+  }
+
+  const markEpisodeTransition = (episodeNumber: number): void => {
+    if (!Number.isInteger(malID) || malID <= 0) return
+    if (!Number.isInteger(episodeNumber) || episodeNumber <= 0) return
+
+    transitionEpisode = episodeNumber
+
+    const payload = JSON.stringify({
+      mal_id: malID,
+      episode: episodeNumber,
+      time_seconds: 0,
+    })
+
+    if (navigator.sendBeacon) {
+      const blob = new Blob([payload], { type: 'application/json' })
+      navigator.sendBeacon('/api/watch-progress', blob)
+      return
+    }
+
+    fetch('/api/watch-progress', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      keepalive: true,
+      body: payload,
+    }).catch(() => {})
+  }
+
   const parseVttTime = (raw: string): number => {
     const parts = raw.trim().split(':')
     if (parts.length < 2) return 0
@@ -721,6 +769,7 @@ const initPlayer = (): void => {
     if (Number.isNaN(currentEpisode)) return
 
     const nextEpisode = currentEpisode + 1
+    markEpisodeTransition(nextEpisode)
     const nextUrl = `/watch/${animeID}/${nextEpisode}`
 
     window.location.href = nextUrl
@@ -873,6 +922,15 @@ const initPlayer = (): void => {
     hidePreviewPopover()
   })
 
+  container.querySelectorAll('a[href]').forEach((element: Element) => {
+    element.addEventListener('click', (event: Event) => {
+      if (!(event.currentTarget instanceof HTMLAnchorElement)) return
+      const nextEpisode = parseEpisodeFromWatchHref(event.currentTarget.href)
+      if (nextEpisode === null) return
+      markEpisodeTransition(nextEpisode)
+    })
+  })
+
   window.addEventListener('mouseup', () => {
     isScrubbing = false
     saveProgress()
@@ -914,6 +972,7 @@ const initPlayer = (): void => {
   })
 
   window.addEventListener('beforeunload', () => {
+    if (transitionEpisode !== null) return
     if (!Number.isInteger(malID) || malID <= 0) return
     if (!video.duration || !Number.isFinite(video.duration)) return
     const episodeNumber = Number.parseInt(currentEpisode, 10)
