@@ -501,12 +501,14 @@ const initPlayer = (): void => {
     showControls()
   })
 
-  volumeWrap?.addEventListener('mouseenter', () => {
+  muteBtn?.addEventListener('mouseenter', () => {
+    volumeWrap?.classList.add('show-volume')
     isHoveringVolume = true
     showControls()
   })
 
-  volumeWrap?.addEventListener('mouseleave', () => {
+  muteBtn?.addEventListener('mouseleave', () => {
+    volumeWrap?.classList.remove('show-volume')
     isHoveringVolume = false
     showControls()
   })

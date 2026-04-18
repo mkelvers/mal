@@ -84,7 +84,7 @@
   height: 130px;
 }
 
-.volume-wrap:hover .volume-panel,
+.volume-wrap.show-volume .volume-panel,
 .volume-wrap:focus-within .volume-panel,
 .volume-panel:hover,
 .volume-panel:focus-within {
@@ -93,7 +93,7 @@
   pointer-events: auto;
 }
 
-.volume-wrap:hover .volume-underline,
+.volume-wrap.show-volume .volume-underline,
 .volume-wrap:focus-within .volume-underline {
   opacity: 1;
 }
