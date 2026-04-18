@@ -97,3 +97,12 @@
 .volume-wrap:focus-within .volume-underline {
   opacity: 1;
 }
+
+.watch-episodes-scroll {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.watch-episodes-scroll::-webkit-scrollbar {
+  display: none;
+}

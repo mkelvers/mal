@@ -299,6 +299,26 @@ const initPlayer = (): void => {
     }
   }
 
+  const modeDub = container.querySelector('[data-mode-dub]') as HTMLButtonElement
+  const modeSub = container.querySelector('[data-mode-sub]') as HTMLButtonElement
+
+  const updateModeButtons = (mode: string): void => {
+    if (modeDub) {
+      modeDub.disabled = !availableModes.includes('dub')
+      modeDub.classList.toggle('text-white', mode !== 'dub')
+      modeDub.classList.toggle('text-yellow-400', mode === 'dub')
+      modeDub.classList.toggle('opacity-50', !availableModes.includes('dub'))
+      modeDub.classList.toggle('cursor-not-allowed', !availableModes.includes('dub'))
+    }
+    if (modeSub) {
+      modeSub.disabled = !availableModes.includes('sub')
+      modeSub.classList.toggle('text-white', mode !== 'sub')
+      modeSub.classList.toggle('text-yellow-400', mode === 'sub')
+      modeSub.classList.toggle('opacity-50', !availableModes.includes('sub'))
+      modeSub.classList.toggle('cursor-not-allowed', !availableModes.includes('sub'))
+    }
+  }
+
   const switchMode = (mode: string): void => {
     if (!availableModes.includes(mode) || mode === currentMode) return
     const wasPlaying = !video.paused
@@ -309,6 +329,7 @@ const initPlayer = (): void => {
     pendingSeekTime = previousTime
     if (wasPlaying) video.play().catch(() => {})
     updateSubtitleOptions()
+    updateModeButtons(currentMode)
   }
 
   const updatePlayPauseIcons = (isPlaying: boolean): void => {
@@ -372,6 +393,7 @@ const initPlayer = (): void => {
 
   // Initialize
   updateSubtitleOptions()
+  updateModeButtons(currentMode)
 
   if (video) {
     video.src = streamUrlForMode(currentMode)
@@ -524,8 +546,6 @@ const initPlayer = (): void => {
     showControls()
   })
 
-  const modeDub = container.querySelector('[data-mode-dub]') as HTMLButtonElement
-  const modeSub = container.querySelector('[data-mode-sub]') as HTMLButtonElement
   modeDub?.addEventListener('click', toggleDub)
   modeSub?.addEventListener('click', toggleSub)
 
