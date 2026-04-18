@@ -55,12 +55,6 @@ templ AnimeDetails(anime jikan.Anime, currentStatus string) {
 					</div>
 				</div>
 			<section>
-				<h3 class="mb-3 text-lg font-semibold tracking-wide text-(--text)">Episodes</h3>
-				<div hx-get={ string(templ.URL(fmt.Sprintf("/api/anime/%d/episodes", anime.MalID))) } hx-trigger="load">
-					@ui.LoadingIndicator("Loading episodes")
-				</div>
-			</section>
-			<section>
 				<h3 class="mb-3 text-lg font-semibold tracking-wide text-(--text)">Related</h3>
 				<div hx-get={ string(templ.URL(fmt.Sprintf("/api/anime/%d/relations", anime.MalID))) } hx-trigger="load">
 					@ui.LoadingIndicator("Loading relations")
