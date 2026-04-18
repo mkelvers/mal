@@ -605,6 +605,7 @@ const initPlayer = (): void => {
     if (Number.isNaN(currentEpisode)) return
 
     if (Number.isInteger(totalEpisodes) && totalEpisodes > 0 && currentEpisode >= totalEpisodes) {
+      completeAnime(currentEpisode)
       return
     }
 
@@ -613,6 +614,26 @@ const initPlayer = (): void => {
     const nextUrl = `/watch/${animeID}/${nextEpisode}`
 
     window.location.href = nextUrl
+  }
+
+  const completeAnime = async (episodeNumber: number): Promise<void> => {
+    if (!Number.isInteger(malID) || malID <= 0) return
+    if (!Number.isInteger(episodeNumber) || episodeNumber <= 0) return
+
+    try {
+      await fetch('/api/watch-complete', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          mal_id: malID,
+          episode: episodeNumber,
+        }),
+      })
+    } catch {
+      return
+    }
   }
 
   playPause?.addEventListener('click', () => {

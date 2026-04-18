@@ -297,6 +297,83 @@ func (h *Handler) HandleSaveProgress(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
+func (h *Handler) HandleCompleteAnime(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	user := middleware.GetUser(r.Context())
+	if user == nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	type completeAnimeRequest struct {
+		MalID   int `json:"mal_id"`
+		Episode int `json:"episode"`
+	}
+
+	var payload completeAnimeRequest
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+		http.Error(w, "invalid payload", http.StatusBadRequest)
+		return
+	}
+
+	if payload.MalID <= 0 || payload.Episode <= 0 {
+		http.Error(w, "invalid payload", http.StatusBadRequest)
+		return
+	}
+
+	animeID := int64(payload.MalID)
+
+	if _, err := h.svc.db.GetAnime(r.Context(), animeID); err != nil {
+		anime, fetchErr := h.jikanClient.GetAnimeByID(r.Context(), payload.MalID)
+		if fetchErr != nil {
+			log.Printf("complete anime failed to fetch anime user_id=%s mal_id=%d err=%v", user.ID, payload.MalID, fetchErr)
+			http.Error(w, "failed to mark anime completed", http.StatusInternalServerError)
+			return
+		}
+
+		if _, upsertErr := h.svc.db.UpsertAnime(r.Context(), database.UpsertAnimeParams{
+			ID:            animeID,
+			TitleOriginal: anime.Title,
+			TitleEnglish:  sql.NullString{String: anime.TitleEnglish, Valid: anime.TitleEnglish != ""},
+			TitleJapanese: sql.NullString{String: anime.TitleJapanese, Valid: anime.TitleJapanese != ""},
+			ImageUrl:      anime.ImageURL(),
+			Airing:        sql.NullBool{Bool: anime.Airing, Valid: true},
+		}); upsertErr != nil {
+			log.Printf("complete anime failed to upsert anime user_id=%s mal_id=%d err=%v", user.ID, payload.MalID, upsertErr)
+			http.Error(w, "failed to mark anime completed", http.StatusInternalServerError)
+			return
+		}
+	}
+
+	if _, err := h.svc.db.UpsertWatchListEntry(r.Context(), database.UpsertWatchListEntryParams{
+		ID:                 uuid.New().String(),
+		UserID:             user.ID,
+		AnimeID:            animeID,
+		Status:             "completed",
+		CurrentEpisode:     sql.NullInt64{Int64: int64(payload.Episode), Valid: true},
+		CurrentTimeSeconds: 0,
+	}); err != nil {
+		log.Printf("complete anime failed to upsert watchlist user_id=%s mal_id=%d err=%v", user.ID, payload.MalID, err)
+		http.Error(w, "failed to mark anime completed", http.StatusInternalServerError)
+		return
+	}
+
+	if err := h.svc.db.DeleteContinueWatchingEntry(r.Context(), database.DeleteContinueWatchingEntryParams{
+		UserID:  user.ID,
+		AnimeID: animeID,
+	}); err != nil {
+		log.Printf("complete anime failed to delete continue entry user_id=%s mal_id=%d err=%v", user.ID, payload.MalID, err)
+		http.Error(w, "failed to mark anime completed", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
+
 func (h *Handler) proxyUpstream(w http.ResponseWriter, r *http.Request, targetURL string, referer string) {
 	parsed, err := url.Parse(targetURL)
 	if err != nil || (parsed.Scheme != "http" && parsed.Scheme != "https") {
