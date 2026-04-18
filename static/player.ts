@@ -128,24 +128,93 @@ const initPlayer = (): void => {
 
   const skipLabel = (segmentType: string): string => segmentType === 'ed' ? 'Skip outro' : 'Skip intro'
 
+  const timelineBounds = (): { start: number, end: number, duration: number } => {
+    const duration = Number.isFinite(video.duration) && video.duration > 0 ? video.duration : 0
+
+    let start = 0
+    if (video.seekable.length > 0) {
+      const seekableStart = video.seekable.start(0)
+      if (Number.isFinite(seekableStart) && seekableStart > 0) {
+        start = seekableStart
+      }
+    }
+
+    if (duration > start) {
+      return {
+        start,
+        end: duration,
+        duration: duration - start,
+      }
+    }
+
+    if (video.seekable.length > 0) {
+      const seekableEnd = video.seekable.end(video.seekable.length - 1)
+      if (Number.isFinite(seekableEnd) && seekableEnd > start) {
+        return {
+          start,
+          end: seekableEnd,
+          duration: seekableEnd - start,
+        }
+      }
+    }
+
+    return {
+      start: 0,
+      end: duration,
+      duration,
+    }
+  }
+
+  const displayTimeFromAbsolute = (absoluteTime: number): number => {
+    const bounds = timelineBounds()
+    if (!Number.isFinite(absoluteTime) || bounds.duration <= 0) {
+      return 0
+    }
+
+    const safeAbsoluteTime = Math.max(bounds.start, Math.min(bounds.end, absoluteTime))
+    return safeAbsoluteTime - bounds.start
+  }
+
+  const absoluteTimeFromDisplay = (displayTime: number): number => {
+    const bounds = timelineBounds()
+    if (!Number.isFinite(displayTime) || bounds.duration <= 0) {
+      return 0
+    }
+
+    const safeDisplayTime = Math.max(0, Math.min(bounds.duration, displayTime))
+    return bounds.start + safeDisplayTime
+  }
+
+  const absoluteTimeFromRatio = (ratio: number): number => {
+    const bounds = timelineBounds()
+    if (!Number.isFinite(ratio) || bounds.duration <= 0) {
+      return 0
+    }
+
+    const safeRatio = Math.max(0, Math.min(1, ratio))
+    return bounds.start + (safeRatio * bounds.duration)
+  }
+
   const resolveActiveSegments = (): void => {
-    if (!Number.isFinite(video.duration) || video.duration <= 0) {
+    const bounds = timelineBounds()
+    if (bounds.duration <= 0) {
       activeSegments = []
       return
     }
+
     activeSegments = parsedSegments.filter((segment: { start: number, end: number, type: string }) => {
       const start = segment.start
       const end = segment.end
       const segmentDuration = end - start
       if (segmentDuration < minSegmentDurationSeconds || segmentDuration > maxSegmentDurationSeconds) return false
-      if (start < 0 || end <= start || end > video.duration + 1) return false
+      if (start < 0 || end <= start || end > bounds.duration + 1) return false
       if (segment.type === 'op') {
         if (start > maxIntroStartSeconds) return false
-        if (start > video.duration * 0.5) return false
+        if (start > bounds.duration * 0.5) return false
         return true
       }
       if (segment.type === 'ed') {
-        return start >= video.duration * minOutroStartRatio
+        return start >= bounds.duration * minOutroStartRatio
       }
       return false
     })
@@ -159,9 +228,10 @@ const initPlayer = (): void => {
   }
 
   const updateSkipButton = (currentTime: number): void => {
+    const currentDisplayTime = displayTimeFromAbsolute(currentTime)
     const segment = activeSegments.find((item: { start: number, end: number }) => {
       const activationTime = skipActivationTime(item)
-      return currentTime >= activationTime && currentTime < item.end
+      return currentDisplayTime >= activationTime && currentDisplayTime < item.end
     })
     if (!segment) {
       activeSkipSegment = null
@@ -181,10 +251,13 @@ const initPlayer = (): void => {
   const renderSegments = (): void => {
     if (!segmentsTrack) return
     segmentsTrack.innerHTML = ''
-    if (!video.duration || !Number.isFinite(video.duration)) return
+
+    const bounds = timelineBounds()
+    if (bounds.duration <= 0) return
+
     activeSegments.forEach((segment: { start: number, end: number }) => {
-      const left = (segment.start / video.duration) * 100
-      const width = ((segment.end - segment.start) / video.duration) * 100
+      const left = (segment.start / bounds.duration) * 100
+      const width = ((segment.end - segment.start) / bounds.duration) * 100
       const bar = document.createElement('div')
       bar.className = 'absolute top-0 h-full bg-yellow-400'
       bar.style.left = `${left}%`
@@ -202,21 +275,27 @@ const initPlayer = (): void => {
 
   const updateTimeline = (currentTime: number): void => {
     if (!timeDisplay || !progress) return
-    if (!video.duration || !Number.isFinite(video.duration)) {
+
+    const bounds = timelineBounds()
+    if (bounds.duration <= 0) {
       progress.style.width = '0%'
       if (scrubber) scrubber.style.left = '0%'
       timeDisplay.textContent = `00:00 / 00:00`
       return
     }
-    const pct = Math.max(0, Math.min(100, (currentTime / video.duration) * 100))
+
+    const currentDisplayTime = displayTimeFromAbsolute(currentTime)
+    const pct = Math.max(0, Math.min(100, (currentDisplayTime / bounds.duration) * 100))
     progress.style.width = `${pct}%`
     if (scrubber) scrubber.style.left = `${pct}%`
-    timeDisplay.textContent = `${formatTime(currentTime)} / ${formatTime(video.duration)}`
+    timeDisplay.textContent = `${formatTime(currentDisplayTime)} / ${formatTime(bounds.duration)}`
   }
 
   const seekBy = (delta: number): void => {
-    if (!Number.isFinite(video.duration)) return
-    const next = Math.max(0, Math.min(video.duration, video.currentTime + delta))
+    const bounds = timelineBounds()
+    if (bounds.duration <= 0) return
+
+    const next = Math.max(bounds.start, Math.min(bounds.end, video.currentTime + delta))
     video.currentTime = next
     updateTimeline(video.currentTime)
     updateSkipButton(video.currentTime)
@@ -238,12 +317,14 @@ const initPlayer = (): void => {
 
   const updatePreviewUI = (ratio: number): void => {
     if (!progressWrap || !previewPopover || !previewTime) return
-    if (!video.duration || !Number.isFinite(video.duration)) {
+
+    const bounds = timelineBounds()
+    if (bounds.duration <= 0) {
       hidePreviewPopover()
       return
     }
 
-    const targetTime = Math.max(0, Math.min(video.duration, ratio * video.duration))
+    const targetTime = Math.max(0, Math.min(bounds.duration, ratio * bounds.duration))
     previewTime.textContent = formatTime(targetTime)
     const barWidth = progressWrap.clientWidth
     if (barWidth <= 0) {
@@ -283,11 +364,14 @@ const initPlayer = (): void => {
 
   const saveProgress = async (): Promise<void> => {
     if (!Number.isInteger(malID) || malID <= 0) return
-    if (!video.duration || !Number.isFinite(video.duration)) return
+
+    const bounds = timelineBounds()
+    if (bounds.duration <= 0) return
+
     const episodeNumber = Number.parseInt(currentEpisode, 10)
     if (!Number.isInteger(episodeNumber) || episodeNumber <= 0) return
 
-    const safeTime = Math.max(0, Math.min(video.currentTime, video.duration))
+    const safeTime = displayTimeFromAbsolute(video.currentTime)
     if (lastSavedProgress.episode === currentEpisode && Math.abs(lastSavedProgress.seconds - safeTime) < 2) {
       return
     }
@@ -477,7 +561,7 @@ const initPlayer = (): void => {
   const switchMode = (mode: string): void => {
     if (!availableModes.includes(mode) || mode === currentMode) return
     const wasPlaying = !video.paused
-    const previousTime = video.currentTime
+    const previousTime = displayTimeFromAbsolute(video.currentTime)
     currentMode = mode
     hidePreviewPopover()
     video.src = streamUrlForMode(currentMode)
@@ -574,8 +658,10 @@ const initPlayer = (): void => {
       if (loading) loading.style.display = 'none'
       resolveActiveSegments()
       renderSegments()
-      if (Number.isFinite(startTimeSeconds) && startTimeSeconds > 0 && video.currentTime === 0) {
-        const nextStart = Math.min(startTimeSeconds, Math.max(0, video.duration - 0.5))
+
+      const currentDisplayTime = displayTimeFromAbsolute(video.currentTime)
+      if (Number.isFinite(startTimeSeconds) && startTimeSeconds > 0 && currentDisplayTime <= 0.5) {
+        const nextStart = absoluteTimeFromDisplay(startTimeSeconds)
         if (nextStart > 0) {
           try {
             video.currentTime = nextStart
@@ -584,7 +670,7 @@ const initPlayer = (): void => {
       }
       if (pendingSeekTime !== null && Number.isFinite(pendingSeekTime)) {
         try {
-          video.currentTime = pendingSeekTime
+          video.currentTime = absoluteTimeFromDisplay(pendingSeekTime)
         } catch {}
         pendingSeekTime = null
       }
@@ -602,7 +688,7 @@ const initPlayer = (): void => {
 
     video.addEventListener('timeupdate', () => {
       updateTimeline(video.currentTime)
-      updateSubtitleRender(video.currentTime)
+      updateSubtitleRender(displayTimeFromAbsolute(video.currentTime))
       updateSkipButton(video.currentTime)
       scheduleProgressSave()
     })
@@ -798,12 +884,10 @@ const initPlayer = (): void => {
 
   skipSegmentBtn?.addEventListener('click', () => {
     if (!activeSkipSegment) return
-    const target = activeSkipSegment.end + 0.01
-    if (Number.isFinite(video.duration)) {
-      video.currentTime = Math.min(video.duration, target)
-    } else {
-      video.currentTime = target
-    }
+
+    const target = absoluteTimeFromDisplay(activeSkipSegment.end + 0.01)
+    video.currentTime = target
+
     updateTimeline(video.currentTime)
     updateSkipButton(video.currentTime)
     showControls()
@@ -832,9 +916,9 @@ const initPlayer = (): void => {
     isScrubbing = true
     const rect = progressWrap.getBoundingClientRect()
     const ratio = Math.max(0, Math.min(1, ((event as MouseEvent).clientX - rect.left) / rect.width))
-    if (Number.isFinite(video.duration)) {
-      video.currentTime = ratio * video.duration
-    }
+
+    video.currentTime = absoluteTimeFromRatio(ratio)
+
     updateTimeline(video.currentTime)
     updateSkipButton(video.currentTime)
     showControls()
@@ -874,9 +958,9 @@ const initPlayer = (): void => {
     if (!isScrubbing || !progressWrap) return
     const rect = progressWrap.getBoundingClientRect()
     const ratio = Math.max(0, Math.min(1, (event.clientX - rect.left) / rect.width))
-    if (Number.isFinite(video.duration)) {
-      video.currentTime = ratio * video.duration
-    }
+
+    video.currentTime = absoluteTimeFromRatio(ratio)
+
     updateTimeline(video.currentTime)
     updateSkipButton(video.currentTime)
   })
@@ -901,10 +985,14 @@ const initPlayer = (): void => {
     if (transitionEpisode !== null) return
     if (completionSent) return
     if (!Number.isInteger(malID) || malID <= 0) return
-    if (!video.duration || !Number.isFinite(video.duration)) return
+
+    const bounds = timelineBounds()
+    if (bounds.duration <= 0) return
+
     const episodeNumber = Number.parseInt(currentEpisode, 10)
     if (!Number.isInteger(episodeNumber) || episodeNumber <= 0) return
-    const safeTime = Math.max(0, Math.min(video.currentTime, video.duration))
+
+    const safeTime = displayTimeFromAbsolute(video.currentTime)
     const payload = buildWatchProgressPayload(episodeNumber, safeTime)
     sendWatchProgressBeacon(payload)
   })
