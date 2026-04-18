@@ -85,6 +85,7 @@
 }
 
 .volume-wrap.show-volume .volume-panel,
+.volume-wrap.show-volume::before,
 .volume-wrap:focus-within .volume-panel,
 .volume-panel:hover,
 .volume-panel:focus-within {
