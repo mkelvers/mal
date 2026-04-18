@@ -93,6 +93,7 @@ func (h *Handler) HandleWatchPage(w http.ResponseWriter, r *http.Request) {
 		MalID:            data.MalID,
 		Title:            data.Title,
 		CurrentEpisode:   data.CurrentEpisode,
+		TotalEpisodes:    anime.Episodes,
 		StartTimeSeconds: data.StartTimeSeconds,
 		CurrentStatus:    data.CurrentStatus,
 		InitialMode:      data.InitialMode,

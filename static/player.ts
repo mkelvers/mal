@@ -48,6 +48,7 @@ const initPlayer = (): void => {
   const streamURL = container.getAttribute('data-stream-url') || '/watch/proxy/stream'
   const currentEpisode = container.getAttribute('data-current-episode') || '1'
   const malID = Number.parseInt(container.getAttribute('data-mal-id') || '', 10)
+  const totalEpisodes = Number.parseInt(container.getAttribute('data-total-episodes') || '0', 10)
   const startTimeSeconds = Number.parseFloat(container.getAttribute('data-start-time-seconds') || '0')
   const modeSources = JSON.parse(container.getAttribute('data-mode-sources') || '{}')
   const availableModes = JSON.parse(container.getAttribute('data-available-modes') || '[]')
@@ -602,6 +603,10 @@ const initPlayer = (): void => {
     const animeID = pathParts[2]
     const currentEpisode = Number.parseInt(pathParts[3], 10)
     if (Number.isNaN(currentEpisode)) return
+
+    if (Number.isInteger(totalEpisodes) && totalEpisodes > 0 && currentEpisode >= totalEpisodes) {
+      return
+    }
 
     const nextEpisode = currentEpisode + 1
     markEpisodeTransition(nextEpisode)
