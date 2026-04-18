@@ -49,6 +49,11 @@ const initPlayer = (): void => {
   const currentEpisode = container.getAttribute('data-current-episode') || '1'
   const malID = Number.parseInt(container.getAttribute('data-mal-id') || '', 10)
   const totalEpisodes = Number.parseInt(container.getAttribute('data-total-episodes') || '0', 10)
+  const animeTitle = container.getAttribute('data-anime-title') || ''
+  const animeTitleEnglish = container.getAttribute('data-anime-title-english') || ''
+  const animeTitleJapanese = container.getAttribute('data-anime-title-japanese') || ''
+  const animeImage = container.getAttribute('data-anime-image') || ''
+  const animeAiring = (container.getAttribute('data-anime-airing') || '').toLowerCase() === 'true'
   const startTimeSeconds = Number.parseFloat(container.getAttribute('data-start-time-seconds') || '0')
   const modeSources = JSON.parse(container.getAttribute('data-mode-sources') || '{}')
   const availableModes = JSON.parse(container.getAttribute('data-available-modes') || '[]')
@@ -86,6 +91,8 @@ const initPlayer = (): void => {
   let lastSavedProgress = { episode: currentEpisode, seconds: -1 }
   let progressSaveTimer: number | undefined
   let transitionEpisode: number | null = null
+  let completionSent = false
+  let completionAttempts = 0
 
   const previewPopover = container.querySelector('[data-preview-popover]') as HTMLElement
   const previewTime = container.querySelector('[data-preview-time]') as HTMLElement
@@ -617,21 +624,75 @@ const initPlayer = (): void => {
   }
 
   const completeAnime = async (episodeNumber: number): Promise<void> => {
+    if (completionSent) return
     if (!Number.isInteger(malID) || malID <= 0) return
     if (!Number.isInteger(episodeNumber) || episodeNumber <= 0) return
 
+    completionSent = true
+
     try {
-      await fetch('/api/watch-complete', {
+      const response = await fetch('/api/watch-complete', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
+        keepalive: true,
         body: JSON.stringify({
           mal_id: malID,
           episode: episodeNumber,
         }),
       })
+
+      if (!response.ok) {
+        completionSent = false
+        if (completionAttempts < 2) {
+          completionAttempts += 1
+          window.setTimeout(() => {
+            completeAnime(episodeNumber)
+          }, 1000)
+        }
+        return
+      }
+
+      const dropdownTrigger = document.querySelector('[data-dropdown-trigger]') as HTMLButtonElement | null
+      if (dropdownTrigger) {
+        dropdownTrigger.innerHTML = 'Completed <span class="text-xs">▾</span>'
+      }
+
+      const watchStatusDropdown = document.getElementById('watch-status-dropdown')
+      if (watchStatusDropdown) {
+        const payload = {
+          anime_id: String(malID),
+          anime_title: animeTitle,
+          anime_title_english: animeTitleEnglish,
+          anime_title_japanese: animeTitleJapanese,
+          anime_image: animeImage,
+          status: 'completed',
+          airing: animeAiring,
+        }
+
+        fetch('/api/watchlist', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'HX-Request': 'true',
+          },
+          body: `anime_id=${encodeURIComponent(payload.anime_id)}&anime_title=${encodeURIComponent(payload.anime_title)}&anime_title_english=${encodeURIComponent(payload.anime_title_english)}&anime_title_japanese=${encodeURIComponent(payload.anime_title_japanese)}&anime_image=${encodeURIComponent(payload.anime_image)}&status=${encodeURIComponent(payload.status)}&airing=${encodeURIComponent(String(payload.airing))}`,
+          credentials: 'same-origin',
+        }).then(async (res) => {
+          if (!res.ok) return
+          const html = await res.text()
+          watchStatusDropdown.outerHTML = `<span id="watch-status-dropdown">${html}</span>`
+        }).catch(() => {})
+      }
     } catch {
+      completionSent = false
+      if (completionAttempts < 2) {
+        completionAttempts += 1
+        window.setTimeout(() => {
+          completeAnime(episodeNumber)
+        }, 1000)
+      }
       return
     }
   }
@@ -830,6 +891,7 @@ const initPlayer = (): void => {
 
   window.addEventListener('beforeunload', () => {
     if (transitionEpisode !== null) return
+    if (completionSent) return
     if (!Number.isInteger(malID) || malID <= 0) return
     if (!video.duration || !Number.isFinite(video.duration)) return
     const episodeNumber = Number.parseInt(currentEpisode, 10)

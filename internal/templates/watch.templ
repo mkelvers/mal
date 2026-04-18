@@ -13,6 +13,10 @@ import (
 type WatchPageData struct {
 	MalID          int
 	Title          string
+	TitleEnglish   string
+	TitleJapanese  string
+	ImageURL       string
+	Airing         bool
 	CurrentEpisode string
 	TotalEpisodes  int
 	StartTimeSeconds float64
@@ -88,7 +92,9 @@ templ WatchPage(anime jikan.Anime, data WatchPageData) {
 					} else {
 						<span class="inline-flex h-8 items-center bg-(--panel-soft) px-2 text-xs text-(--text-faint) opacity-50">Next ▶</span>
 					}
-					@WatchlistDropdown(anime.MalID, anime.Title, anime.TitleEnglish, anime.TitleJapanese, anime.ImageURL(), data.CurrentStatus, anime.Airing)
+					<span id="watch-status-dropdown">
+						@WatchlistDropdown(anime.MalID, anime.Title, anime.TitleEnglish, anime.TitleJapanese, anime.ImageURL(), data.CurrentStatus, anime.Airing)
+					</span>
 				</div>
 				<section>
 					<h3 class="mb-3 text-lg font-semibold tracking-wide text-(--text)">Watch more seasons of this anime</h3>
@@ -201,6 +207,11 @@ templ VideoPlayer(data WatchPageData) {
 		data-video-player
 		data-stream-url="/watch/proxy/stream"
 		data-current-episode={ data.CurrentEpisode }
+		data-anime-title={ data.Title }
+		data-anime-title-english={ data.TitleEnglish }
+		data-anime-title-japanese={ data.TitleJapanese }
+		data-anime-image={ data.ImageURL }
+		data-anime-airing={ fmt.Sprintf("%v", data.Airing) }
 		data-start-time-seconds={ fmt.Sprintf("%.3f", data.StartTimeSeconds) }
 		data-initial-mode={ data.InitialMode }
 		data-available-modes={ toJSON(data.AvailableModes) }

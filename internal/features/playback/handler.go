@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"io"
 	"log"
 	"net/http"
@@ -100,6 +101,10 @@ func (h *Handler) HandleWatchPage(w http.ResponseWriter, r *http.Request) {
 	pageData := templates.WatchPageData{
 		MalID:            data.MalID,
 		Title:            data.Title,
+		TitleEnglish:     anime.TitleEnglish,
+		TitleJapanese:    anime.TitleJapanese,
+		ImageURL:         anime.ImageURL(),
+		Airing:           anime.Airing,
 		CurrentEpisode:   data.CurrentEpisode,
 		TotalEpisodes:    anime.Episodes,
 		StartTimeSeconds: data.StartTimeSeconds,
@@ -279,6 +284,21 @@ func (h *Handler) HandleSaveProgress(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	watchListEntry, watchListErr := h.svc.db.GetWatchListEntry(r.Context(), database.GetWatchListEntryParams{
+		UserID:  user.ID,
+		AnimeID: animeID,
+	})
+	if watchListErr == nil && watchListEntry.Status == "completed" {
+		if err := h.svc.db.DeleteContinueWatchingEntry(r.Context(), database.DeleteContinueWatchingEntryParams{
+			UserID:  user.ID,
+			AnimeID: animeID,
+		}); err != nil {
+			log.Printf("save progress failed to clear continue entry user_id=%s mal_id=%d err=%v", user.ID, payload.MalID, err)
+		}
+		w.WriteHeader(http.StatusNoContent)
+		return
+	}
+
 	if err := h.svc.db.SaveWatchProgress(r.Context(), database.SaveWatchProgressParams{
 		CurrentEpisode:     sql.NullInt64{Int64: int64(payload.Episode), Valid: true},
 		CurrentTimeSeconds: timeSeconds,
@@ -377,6 +397,30 @@ func (h *Handler) HandleCompleteAnime(w http.ResponseWriter, r *http.Request) {
 		log.Printf("complete anime failed to delete continue entry user_id=%s mal_id=%d err=%v", user.ID, payload.MalID, err)
 		http.Error(w, "failed to mark anime completed", http.StatusInternalServerError)
 		return
+	}
+
+	if _, err := h.svc.db.GetContinueWatchingEntry(r.Context(), database.GetContinueWatchingEntryParams{
+		UserID:  user.ID,
+		AnimeID: animeID,
+	}); err == nil {
+		log.Printf("complete anime failed to clear continue entry user_id=%s mal_id=%d", user.ID, payload.MalID)
+		http.Error(w, "failed to mark anime completed", http.StatusInternalServerError)
+		return
+	} else if !errors.Is(err, sql.ErrNoRows) {
+		log.Printf("complete anime failed to verify continue clear user_id=%s mal_id=%d err=%v", user.ID, payload.MalID, err)
+		http.Error(w, "failed to mark anime completed", http.StatusInternalServerError)
+		return
+	}
+
+	if err := h.svc.db.SaveWatchProgress(r.Context(), database.SaveWatchProgressParams{
+		CurrentEpisode:     sql.NullInt64{Int64: int64(payload.Episode), Valid: true},
+		CurrentTimeSeconds: 0,
+		UserID:             user.ID,
+		AnimeID:            animeID,
+	}); err != nil {
+		if err.Error() != "sql: no rows in result set" {
+			log.Printf("complete anime failed to reset watchlist progress user_id=%s mal_id=%d err=%v", user.ID, payload.MalID, err)
+		}
 	}
 
 	w.WriteHeader(http.StatusNoContent)
