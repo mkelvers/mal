@@ -51,6 +51,7 @@ func NewRouter(cfg Config) http.Handler {
 	mux.HandleFunc("/studios/", animeHandler.HandleStudioDetails)
 	mux.HandleFunc("/api/studios/", animeHandler.HandleAPIStudioAnime)
 
+	mux.HandleFunc("/api/episodes/", animeHandler.HandleAPIEpisodes)
 	// Auth Endpoints
 	mux.HandleFunc("/login", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodGet {
