@@ -1,7 +1,6 @@
 package auth
 
 import (
-	"errors"
 	"net/http"
 
 	"mal/internal/templates"
@@ -65,36 +64,4 @@ func (h *Handler) HandleLogout(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) HandleLoginPage(w http.ResponseWriter, r *http.Request) {
 	templates.Login(rateLimitErrorFromQuery(r), "").Render(r.Context(), w)
-}
-
-func (h *Handler) HandleRecoverPage(w http.ResponseWriter, r *http.Request) {
-	templates.Recover(rateLimitErrorFromQuery(r), "", "").Render(r.Context(), w)
-}
-
-func (h *Handler) HandleRecover(w http.ResponseWriter, r *http.Request) {
-	if err := r.ParseForm(); err != nil {
-		templates.Recover("Something went wrong. Please try again.", "", "").Render(r.Context(), w)
-		return
-	}
-
-	username := r.FormValue("username")
-	recoveryKey := r.FormValue("recovery_key")
-	newPassword := r.FormValue("new_password")
-
-	if username == "" || recoveryKey == "" || newPassword == "" {
-		templates.Recover("Unable to recover account with those details.", username, recoveryKey).Render(r.Context(), w)
-		return
-	}
-
-	newRecoveryKey, err := h.authService.RecoverAccount(r.Context(), username, recoveryKey, newPassword)
-	if err != nil {
-		if errors.Is(err, ErrInvalidRecoveryKey) || errors.Is(err, ErrInvalidPassword) {
-			templates.Recover("Unable to recover account with those details.", username, recoveryKey).Render(r.Context(), w)
-			return
-		}
-		templates.Recover("Something went wrong. Please try again.", username, recoveryKey).Render(r.Context(), w)
-		return
-	}
-
-	templates.RecoveryComplete(newRecoveryKey).Render(r.Context(), w)
 }

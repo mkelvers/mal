@@ -20,62 +20,6 @@ templ Login(formError string, username string) {
 						<p class="mt-2 text-xs text-(--danger)" role="alert" aria-live="polite">{ formError }</p>
 					}
 				</form>
-				<p class="mt-5 mb-0 text-center text-sm text-(--text-muted)">
-					Lost access? <a class="text-(--accent)" href="/recover">Recover account</a>
-				</p>
-			</div>
-		</div>
-	}
-}
-
-
-templ Recover(formError string, username string, recoveryKey string) {
-	@Layout("Recover account", false) {
-		<div class="w-full max-w-xl">
-			<div class="mx-auto w-full bg-(--panel) p-6">
-				<h2 class="m-0 text-2xl">Recover account</h2>
-				<p class="my-3 mb-5 text-sm text-(--text-muted)">Enter your username, recovery key, and a new password.</p>
-				<form action="/recover" method="POST" class="grid gap-4">
-					<div class="grid gap-1">
-						<label for="username">Username / Email</label>
-						<input class="h-10 border border-transparent bg-(--surface-search) px-3 text-(--text) transition-colors duration-120 focus:border-(--surface-search-focus-border) focus:outline-none" type="text" id="username" name="username" required placeholder="you@example.com" value={ username }/>
-					</div>
-					<div class="grid gap-1">
-						<label for="recovery_key">Recovery key</label>
-						<input class="h-10 border border-transparent bg-(--surface-search) px-3 text-(--text) transition-colors duration-120 focus:border-(--surface-search-focus-border) focus:outline-none" type="text" id="recovery_key" name="recovery_key" required value={ recoveryKey }/>
-					</div>
-					<div class="grid gap-1">
-						<label for="new_password">New password</label>
-						<input class="h-10 border border-transparent bg-(--surface-search) px-3 text-(--text) transition-colors duration-120 focus:border-(--surface-search-focus-border) focus:outline-none" type="password" id="new_password" name="new_password" required placeholder="Minimum 12 chars"/>
-					</div>
-					<button type="submit" class="h-10 cursor-pointer border-0 bg-(--accent) text-sm font-semibold text-(--text-on-accent) hover:brightness-95">Reset password</button>
-					if formError != "" {
-						<p class="mt-2 text-xs text-(--danger)" role="alert" aria-live="polite">{ formError }</p>
-					}
-				</form>
-				<p class="mt-5 mb-0 text-center text-sm text-(--text-muted)">
-					Remembered your password? <a class="text-(--accent)" href="/login">Sign in</a>
-				</p>
-			</div>
-		</div>
-	}
-}
-
-templ RecoveryComplete(newRecoveryKey string) {
-	@Layout("Recovery complete", false) {
-		<div class="w-full max-w-xl">
-			<div class="mx-auto w-full bg-(--panel) p-6">
-				<h2>Account recovered</h2>
-				<p class="my-3 mb-5 text-sm text-(--text-muted)">Your password was reset and your recovery key was rotated.</p>
-				<div class="grid gap-2">
-					<p class="m-0 break-all border border-(--surface-search-focus-border) bg-(--surface-search) p-3 text-sm text-(--text)" id="recovery-complete-key">{ newRecoveryKey }</p>
-					<button type="button" class="min-w-0 justify-self-start border border-(--surface-search-focus-border) bg-(--surface-search) px-3 py-1.5 text-xs leading-none text-(--text) hover:bg-(--surface-input-focus)" onclick="copyRecoveryKey('recovery-complete-key', 'recovery-complete-feedback')">Copy key</button>
-				</div>
-				<p class="mt-2 min-h-5 text-xs leading-normal text-(--text-faint)" id="recovery-complete-feedback" aria-live="polite"></p>
-				<p class="m-0 text-xs leading-normal text-(--text-faint)">Replace your old recovery key with this one.</p>
-				<p class="mt-5 mb-0 text-center text-sm text-(--text-muted)">
-					<a href="/login" class="inline-flex min-h-10 items-center justify-center border border-(--surface-search-focus-border) bg-(--surface-search) px-4 text-(--text) no-underline hover:bg-(--panel-soft) hover:no-underline">Go to login</a>
-				</p>
 			</div>
 		</div>
 	}
