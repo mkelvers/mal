@@ -138,10 +138,6 @@ go test ./...
 
 There is currently no CI workflow in this repository, so validation is local.
 
-## Contributing
-
-This is primarily a personal project, so development priorities are driven by my own use and preferences. That said, if you spot a bug or have a focused improvement, feel free to open an issue or pull request. Please read `CONTRIBUTING.md` first so expectations around scope, validation, and security handling are clear.
-
 ## Security
 
 Keep secrets out of version control, do not publish real credentials in documentation or screenshots, and report security issues privately before public disclosure.
