@@ -71,9 +71,6 @@ func NewRouter(cfg Config) http.Handler {
 			middleware.RateLimitAuth(middleware.VerifyOrigin(http.HandlerFunc(authHandler.HandleLogin))).ServeHTTP(w, r)
 		}
 	})
-	mux.HandleFunc("/logout", func(w http.ResponseWriter, r *http.Request) {
-		middleware.VerifyOrigin(http.HandlerFunc(authHandler.HandleLogout)).ServeHTTP(w, r)
-	})
 
 	// Watchlist Endpoints
 	mux.HandleFunc("/api/watchlist/export", watchlistHandler.HandleExportWatchlist)

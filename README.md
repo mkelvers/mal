@@ -33,7 +33,9 @@ Technically, I also wanted to prove that a small, server-rendered Go app could s
 
 ## What the application offers
 
-For my own workflow, MyAnimeList combines catalog browsing, seasonal discovery, quick search, detail pages with recommendations and relations, and full watchlist management in one server-rendered interface. It also includes account flows such as registration, login, recovery, and recovery-key rotation. The notifications area is tuned for practical tracking, including sequel visibility derived from watchlist context.
+For my own workflow, MyAnimeList combines catalog browsing, seasonal discovery, quick search, detail pages with recommendations and relations, full watchlist management, continue-watching, and in-app playback in one server-rendered interface.
+
+Authentication in the web UI is login-only.
 
 ## Technical approach
 
@@ -49,19 +51,24 @@ Instead of treating the repository as one flat service, the codebase is organize
 | --- | --- |
 | `cmd/server` | Application entrypoint and process lifecycle setup |
 | `internal/server` | Route registration and middleware composition |
-| `internal/features/anime` | Anime browsing, discovery, search, detail, and notifications logic |
-| `internal/features/watchlist` | Watchlist updates, retrieval, import, and export |
-| `internal/features/auth` | Authentication, sessions, account recovery, and account settings |
+| `internal/features/anime` | Catalog, discovery, search, details, recommendations, and relations |
+| `internal/features/watchlist` | Watchlist updates, retrieval, import/export, and continue-watching |
+| `internal/features/playback` | Watch page, stream/subtitle proxying, and watch progress APIs |
+| `internal/features/auth` | Login/session handling and auth service logic |
 | `internal/jikan` | Upstream API client, caching, and retry-aware fetch behavior |
 | `internal/worker` | Background relation sync, retry processing, and cache cleanup |
 | `internal/database` | Migration runner, generated query layer, and DB models |
 | `internal/templates` | Server-rendered page and partial templates |
+| `internal/watchorder` | Watch-order scraping and parsing helpers |
 | `migrations` | Schema evolution and operational DB changes |
-| `static` | CSS, JavaScript, and static assets |
+| `static` | Source CSS, TypeScript, and static assets |
+| `dist` | Built frontend assets served at `/dist/*` |
 
 ## Runtime behavior
 
-On startup, the server opens SQLite using `DATABASE_FILE` (defaulting to `mal.db`), runs migrations automatically, initializes core services, starts the background worker, and then serves HTTP traffic on `PORT` (defaulting to `3000`). A request enters the router, passes through global middleware for origin and authentication boundaries, reaches a feature handler, and then resolves through service logic that combines database access with upstream data where needed before rendering HTML.
+On startup, the server opens SQLite using `DATABASE_FILE` (defaulting to `mal.db`), runs migrations automatically, initializes core services, starts the background worker, and then serves HTTP traffic on `PORT` (defaulting to `3000`). A request enters the router, passes through global middleware for origin and auth boundaries, reaches a feature handler, and then resolves through service logic that combines database access with upstream data where needed before rendering HTML.
+
+Public access is intentionally limited. `/`, `/login`, `/search`, `/api/search`, `/api/search-quick`, and static asset routes are available without auth; most other routes require a valid session.
 
 The background worker continuously maintains relation data for sequel awareness, processes queued retryable anime fetches, and periodically removes expired cache records. This keeps user-facing pages stable even when data collection has to happen in multiple phases.
 
@@ -73,7 +80,7 @@ There are still honest limits. Metadata quality still depends partly on external
 
 ## Getting started
 
-For local development, install Go `1.24+`, SQLite, Bun, and the `templ` CLI, then generate templates, build frontend assets, and run the server.
+For local development, install Go `1.24+`, Bun, and the `templ` CLI, then generate templates, build frontend assets, and run the server.
 
 ```bash
 go install github.com/a-h/templ/cmd/templ@latest
@@ -87,11 +94,25 @@ The frontend pipeline uses a single source stylesheet (`static/style.css`) and T
 
 When the server starts, the app is available at `http://localhost:3000`.
 
-For containerized usage, the included `Dockerfile` uses a multi-stage build that generates templates, compiles `cmd/server`, and ships a slim runtime image with SQLite support.
+Important notes:
+- Environment variables are read directly from the process environment (`PORT`, `DATABASE_FILE`, `ENV`); `.env` is not auto-loaded.
+- The web app currently exposes a login route only. If your database has no users yet, create the first user outside the web UI.
+
+For containerized usage, the included `Dockerfile` uses a multi-stage build that installs Bun + templ, builds assets, generates templates, compiles `cmd/server`, and ships a slim runtime image with SQLite support.
 
 ```bash
 docker build -t myanimelist .
 docker run --rm -p 3000:3000 myanimelist
+```
+
+For persistent data in containers, set `DATABASE_FILE` to `/app/data/mal.db` and mount a volume:
+
+```bash
+docker run --rm \
+  -p 3000:3000 \
+  -e DATABASE_FILE=/app/data/mal.db \
+  -v "$(pwd)/data:/app/data" \
+  myanimelist
 ```
 
 ## Configuration
@@ -104,13 +125,15 @@ docker run --rm -p 3000:3000 myanimelist
 
 ## Database and testing
 
-Migrations run at startup, so schema changes are applied automatically before the server begins accepting traffic. Migration history includes the initial auth and watchlist schema, anime metadata expansion, relation tracking, Jikan cache persistence, indexing updates, recovery key support, and retry-queue support for failed fetches.
+Migrations run at startup, so schema changes are applied automatically before the server begins accepting traffic. Migration history includes the initial auth and watchlist schema, anime metadata expansion, relation tracking, Jikan cache persistence, indexing updates, and retry-queue support for failed fetches.
 
-Tests are available for watchlist behavior, relation helpers, auth middleware boundaries, and watch-order parsing. Run the full test suite with:
+Current automated tests are unit-focused and cover watchlist behavior, relation helpers, auth middleware boundaries, and watch-order parsing. Run the full test suite with:
 
 ```bash
 go test ./...
 ```
+
+There is currently no CI workflow in this repository, so validation is local.
 
 ## Contributing
 

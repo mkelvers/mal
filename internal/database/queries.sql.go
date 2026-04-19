@@ -49,32 +49,25 @@ func (q *Queries) CreateSession(ctx context.Context, arg CreateSessionParams) (S
 }
 
 const createUser = `-- name: CreateUser :one
-INSERT INTO user (id, username, password_hash, recovery_key_hash)
-VALUES (?, ?, ?, ?)
-RETURNING id, username, password_hash, created_at, recovery_key_hash
+INSERT INTO user (id, username, password_hash)
+VALUES (?, ?, ?)
+RETURNING id, username, password_hash, created_at
 `
 
 type CreateUserParams struct {
-	ID              string `json:"id"`
-	Username        string `json:"username"`
-	PasswordHash    string `json:"password_hash"`
-	RecoveryKeyHash string `json:"recovery_key_hash"`
+	ID           string `json:"id"`
+	Username     string `json:"username"`
+	PasswordHash string `json:"password_hash"`
 }
 
 func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, error) {
-	row := q.db.QueryRowContext(ctx, createUser,
-		arg.ID,
-		arg.Username,
-		arg.PasswordHash,
-		arg.RecoveryKeyHash,
-	)
+	row := q.db.QueryRowContext(ctx, createUser, arg.ID, arg.Username, arg.PasswordHash)
 	var i User
 	err := row.Scan(
 		&i.ID,
 		&i.Username,
 		&i.PasswordHash,
 		&i.CreatedAt,
-		&i.RecoveryKeyHash,
 	)
 	return i, err
 }
@@ -499,7 +492,7 @@ func (q *Queries) GetUpcomingSeasons(ctx context.Context, userID string) ([]GetU
 }
 
 const getUser = `-- name: GetUser :one
-SELECT id, username, password_hash, created_at, recovery_key_hash FROM user WHERE id = ? LIMIT 1
+SELECT id, username, password_hash, created_at FROM user WHERE id = ? LIMIT 1
 `
 
 func (q *Queries) GetUser(ctx context.Context, id string) (User, error) {
@@ -510,13 +503,12 @@ func (q *Queries) GetUser(ctx context.Context, id string) (User, error) {
 		&i.Username,
 		&i.PasswordHash,
 		&i.CreatedAt,
-		&i.RecoveryKeyHash,
 	)
 	return i, err
 }
 
 const getUserByUsername = `-- name: GetUserByUsername :one
-SELECT id, username, password_hash, created_at, recovery_key_hash FROM user WHERE username = ? LIMIT 1
+SELECT id, username, password_hash, created_at FROM user WHERE username = ? LIMIT 1
 `
 
 func (q *Queries) GetUserByUsername(ctx context.Context, username string) (User, error) {
@@ -527,29 +519,6 @@ func (q *Queries) GetUserByUsername(ctx context.Context, username string) (User,
 		&i.Username,
 		&i.PasswordHash,
 		&i.CreatedAt,
-		&i.RecoveryKeyHash,
-	)
-	return i, err
-}
-
-const getUserByUsernameAndRecoveryKeyHash = `-- name: GetUserByUsernameAndRecoveryKeyHash :one
-SELECT id, username, password_hash, created_at, recovery_key_hash FROM user WHERE username = ? AND recovery_key_hash = ? LIMIT 1
-`
-
-type GetUserByUsernameAndRecoveryKeyHashParams struct {
-	Username        string `json:"username"`
-	RecoveryKeyHash string `json:"recovery_key_hash"`
-}
-
-func (q *Queries) GetUserByUsernameAndRecoveryKeyHash(ctx context.Context, arg GetUserByUsernameAndRecoveryKeyHashParams) (User, error) {
-	row := q.db.QueryRowContext(ctx, getUserByUsernameAndRecoveryKeyHash, arg.Username, arg.RecoveryKeyHash)
-	var i User
-	err := row.Scan(
-		&i.ID,
-		&i.Username,
-		&i.PasswordHash,
-		&i.CreatedAt,
-		&i.RecoveryKeyHash,
 	)
 	return i, err
 }
@@ -804,23 +773,6 @@ type UpdateAnimeStatusParams struct {
 
 func (q *Queries) UpdateAnimeStatus(ctx context.Context, arg UpdateAnimeStatusParams) error {
 	_, err := q.db.ExecContext(ctx, updateAnimeStatus, arg.Status, arg.ID)
-	return err
-}
-
-const updateUserPasswordAndRecoveryKeyHash = `-- name: UpdateUserPasswordAndRecoveryKeyHash :exec
-UPDATE user
-SET password_hash = ?, recovery_key_hash = ?
-WHERE id = ?
-`
-
-type UpdateUserPasswordAndRecoveryKeyHashParams struct {
-	PasswordHash    string `json:"password_hash"`
-	RecoveryKeyHash string `json:"recovery_key_hash"`
-	ID              string `json:"id"`
-}
-
-func (q *Queries) UpdateUserPasswordAndRecoveryKeyHash(ctx context.Context, arg UpdateUserPasswordAndRecoveryKeyHashParams) error {
-	_, err := q.db.ExecContext(ctx, updateUserPasswordAndRecoveryKeyHash, arg.PasswordHash, arg.RecoveryKeyHash, arg.ID)
 	return err
 }
 

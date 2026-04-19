@@ -51,17 +51,6 @@ func (h *Handler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/", http.StatusFound)
 }
 
-func (h *Handler) HandleLogout(w http.ResponseWriter, r *http.Request) {
-	cookie, err := r.Cookie("session_id")
-	if err == nil {
-		_ = h.authService.Logout(r.Context(), cookie.Value)
-	}
-
-	ClearSessionCookie(w)
-	w.Header().Set("HX-Redirect", "/")
-	http.Redirect(w, r, "/", http.StatusFound)
-}
-
 func (h *Handler) HandleLoginPage(w http.ResponseWriter, r *http.Request) {
 	templates.Login(rateLimitErrorFromQuery(r), "").Render(r.Context(), w)
 }

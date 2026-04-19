@@ -1,2 +1,0 @@
-ALTER TABLE user
-ADD COLUMN recovery_key_hash TEXT NOT NULL DEFAULT '';

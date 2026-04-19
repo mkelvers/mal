@@ -28,8 +28,6 @@ func Auth(authService *auth.Service) func(http.Handler) http.Handler {
 			user, err := authService.ValidateSession(r.Context(), cookie.Value)
 			if err != nil {
 				// Invalid session, proceed as unauthenticated
-				// Might also want to clear the invalid cookie here
-				auth.ClearSessionCookie(w)
 				next.ServeHTTP(w, r)
 				return
 			}

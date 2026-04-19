@@ -30,7 +30,6 @@ type Querier interface {
 	GetUpcomingSeasons(ctx context.Context, userID string) ([]GetUpcomingSeasonsRow, error)
 	GetUser(ctx context.Context, id string) (User, error)
 	GetUserByUsername(ctx context.Context, username string) (User, error)
-	GetUserByUsernameAndRecoveryKeyHash(ctx context.Context, arg GetUserByUsernameAndRecoveryKeyHashParams) (User, error)
 	GetUserWatchList(ctx context.Context, userID string) ([]GetUserWatchListRow, error)
 	GetWatchListEntry(ctx context.Context, arg GetWatchListEntryParams) (WatchListEntry, error)
 	GetWatchingAnime(ctx context.Context, userID string) ([]GetWatchingAnimeRow, error)
@@ -39,7 +38,6 @@ type Querier interface {
 	SaveWatchProgress(ctx context.Context, arg SaveWatchProgressParams) error
 	SetJikanCache(ctx context.Context, arg SetJikanCacheParams) error
 	UpdateAnimeStatus(ctx context.Context, arg UpdateAnimeStatusParams) error
-	UpdateUserPasswordAndRecoveryKeyHash(ctx context.Context, arg UpdateUserPasswordAndRecoveryKeyHashParams) error
 	UpsertAnime(ctx context.Context, arg UpsertAnimeParams) (Anime, error)
 	UpsertAnimeRelation(ctx context.Context, arg UpsertAnimeRelationParams) error
 	UpsertContinueWatchingEntry(ctx context.Context, arg UpsertContinueWatchingEntryParams) (ContinueWatchingEntry, error)

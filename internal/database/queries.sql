@@ -5,17 +5,9 @@ SELECT * FROM user WHERE id = ? LIMIT 1;
 SELECT * FROM user WHERE username = ? LIMIT 1;
 
 -- name: CreateUser :one
-INSERT INTO user (id, username, password_hash, recovery_key_hash)
-VALUES (?, ?, ?, ?)
+INSERT INTO user (id, username, password_hash)
+VALUES (?, ?, ?)
 RETURNING *;
-
--- name: GetUserByUsernameAndRecoveryKeyHash :one
-SELECT * FROM user WHERE username = ? AND recovery_key_hash = ? LIMIT 1;
-
--- name: UpdateUserPasswordAndRecoveryKeyHash :exec
-UPDATE user
-SET password_hash = ?, recovery_key_hash = ?
-WHERE id = ?;
 
 -- name: CreateSession :one
 INSERT INTO session (id, user_id, expires_at)

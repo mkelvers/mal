@@ -76,11 +76,10 @@ type Session struct {
 }
 
 type User struct {
-	ID              string    `json:"id"`
-	Username        string    `json:"username"`
-	PasswordHash    string    `json:"password_hash"`
-	CreatedAt       time.Time `json:"created_at"`
-	RecoveryKeyHash string    `json:"recovery_key_hash"`
+	ID           string    `json:"id"`
+	Username     string    `json:"username"`
+	PasswordHash string    `json:"password_hash"`
+	CreatedAt    time.Time `json:"created_at"`
 }
 
 type WatchListEntry struct {
