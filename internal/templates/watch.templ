@@ -200,6 +200,8 @@ templ EpisodeItem(episode jikan.Episode, currentEpisode string, animeID int) {
 
 templ VideoPlayer(data WatchPageData) {
 	{{ streamURL := buildStreamURL(data.InitialMode, data.ModeSources) }}
+	{{ hasDub := modeAvailable(data.AvailableModes, "dub") }}
+	{{ hasSub := modeAvailable(data.AvailableModes, "sub") }}
 	<div
 		class="flex flex-col gap-4 w-full"
 		data-mal-id={ fmt.Sprintf("%d", data.MalID) }
@@ -286,12 +288,28 @@ templ VideoPlayer(data WatchPageData) {
 						<span data-time class="text-base text-white tabular-nums">00:00 / 00:00</span>
 					</div>
 					<div class="flex items-center gap-3">
-						<button data-mode-dub class="flex h-10 w-10 items-center justify-center text-white" title="Dub">
+						<button
+							data-mode-dub
+							class={
+								"flex h-10 w-10 items-center justify-center text-white",
+								templ.KV("opacity-50 cursor-not-allowed", !hasDub),
+							}
+							title={ modeButtonTitle("Dub", hasDub) }
+							disabled?={ !hasDub }
+						>
 							<svg class="h-6 w-6" viewBox="0 0 24 24" aria-hidden="true">
 								<path d="M6 9h6M6 15h4M12 9v6M17 7.5c2.2 2 2.2 7 0 9M19.2 5.5c3.4 3.2 3.4 10 0 13" stroke="white" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
 							</svg>
 						</button>
-						<button data-mode-sub class="flex h-10 w-10 items-center justify-center text-white" title="Sub">
+						<button
+							data-mode-sub
+							class={
+								"flex h-10 w-10 items-center justify-center text-white",
+								templ.KV("opacity-50 cursor-not-allowed", !hasSub),
+							}
+							title={ modeButtonTitle("Sub", hasSub) }
+							disabled?={ !hasSub }
+						>
 							<svg class="h-6 w-6" viewBox="0 0 24 24" aria-hidden="true">
 								<rect x="3.5" y="5.5" width="17" height="13" rx="2" stroke="white" stroke-width="1.85" fill="none"/>
 								<path d="M8 11.5h8M8 14.5h5" stroke="white" stroke-width="1.85" stroke-linecap="round"/>
@@ -360,4 +378,22 @@ func canGoNextEpisode(currentEpisode string, totalEpisodes int) bool {
 		return false
 	}
 	return episodeID < totalEpisodes
+}
+
+func modeAvailable(modes []string, mode string) bool {
+	for _, value := range modes {
+		if value == mode {
+			return true
+		}
+	}
+
+	return false
+}
+
+func modeButtonTitle(label string, enabled bool) string {
+	if enabled {
+		return label
+	}
+
+	return label + " unavailable for this episode"
 }

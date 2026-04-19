@@ -93,7 +93,7 @@ func NewService(db database.Querier) *Service {
 	}
 }
 
-func (s *Service) BuildWatchPageData(ctx context.Context, malID int, title string, episode string, mode string, userID string) (WatchPageData, error) {
+func (s *Service) BuildWatchPageData(ctx context.Context, malID int, titleCandidates []string, episode string, mode string, userID string) (WatchPageData, error) {
 	if malID <= 0 {
 		return WatchPageData{}, errors.New("invalid mal id")
 	}
@@ -113,7 +113,7 @@ func (s *Service) BuildWatchPageData(ctx context.Context, malID int, title strin
 	cacheKey := playbackDataCacheKey(malID, normalizedEpisode)
 	baseData, cacheHit := s.getPlaybackBaseDataCache(cacheKey)
 	if !cacheHit {
-		showID, resolvedTitle, err := s.resolveShowCached(ctx, malID, title)
+		showID, resolvedTitle, err := s.resolveShowCached(ctx, malID, titleCandidates)
 		if err != nil {
 			return WatchPageData{}, err
 		}
@@ -125,7 +125,7 @@ func (s *Service) BuildWatchPageData(ctx context.Context, malID int, title strin
 
 		watchTitle := strings.TrimSpace(resolvedTitle)
 		if watchTitle == "" {
-			watchTitle = strings.TrimSpace(title)
+			watchTitle = firstNonEmptyTitle(titleCandidates)
 		}
 		if watchTitle == "" {
 			watchTitle = fmt.Sprintf("MAL #%d", malID)
@@ -233,7 +233,7 @@ func (s *Service) setPlaybackBaseDataCache(key string, data playbackBaseData) {
 	s.cacheMu.Unlock()
 }
 
-func (s *Service) resolveShowCached(ctx context.Context, malID int, title string) (string, string, error) {
+func (s *Service) resolveShowCached(ctx context.Context, malID int, titleCandidates []string) (string, string, error) {
 	now := time.Now()
 
 	s.cacheMu.RLock()
@@ -244,7 +244,7 @@ func (s *Service) resolveShowCached(ctx context.Context, malID int, title string
 		return item.ShowID, item.Title, nil
 	}
 
-	showID, resolvedTitle, err := s.resolveShow(ctx, malID, title)
+	showID, resolvedTitle, err := s.resolveShow(ctx, malID, titleCandidates)
 	if err != nil {
 		return "", "", err
 	}
@@ -365,43 +365,22 @@ func cloneSegments(segments []SkipSegment) []SkipSegment {
 	return cloned
 }
 
-func (s *Service) resolveShow(ctx context.Context, malID int, title string) (string, string, error) {
+func (s *Service) resolveShow(ctx context.Context, malID int, titleCandidates []string) (string, string, error) {
 	malText := strconv.Itoa(malID)
 	modeCandidates := []string{"sub", "dub"}
+	queries := buildTitleSearchQueries(titleCandidates)
 
-	resultsByMode := make(map[string][]searchResult, len(modeCandidates))
-	searchCh := make(chan searchModeResult, len(modeCandidates))
+	for _, query := range queries {
+		resultsByMode := s.searchShowResultsByMode(ctx, query, modeCandidates)
 
-	var wg sync.WaitGroup
-	for _, mode := range modeCandidates {
-		modeValue := mode
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			results, err := s.allAnimeClient.Search(ctx, title, modeValue)
-			searchCh <- searchModeResult{Mode: modeValue, Results: results, Err: err}
-		}()
-	}
-
-	wg.Wait()
-	close(searchCh)
-
-	for result := range searchCh {
-		if result.Err != nil {
-			continue
-		}
-		resultsByMode[result.Mode] = result.Results
-	}
-
-	for _, mode := range modeCandidates {
-		for _, result := range resultsByMode[mode] {
-			if strings.TrimSpace(result.MalID) == malText && strings.TrimSpace(result.ID) != "" {
-				return result.ID, result.Name, nil
+		for _, mode := range modeCandidates {
+			for _, result := range resultsByMode[mode] {
+				if strings.TrimSpace(result.MalID) == malText && strings.TrimSpace(result.ID) != "" {
+					return result.ID, result.Name, nil
+				}
 			}
 		}
-	}
 
-	if strings.TrimSpace(title) != "" {
 		for _, mode := range modeCandidates {
 			results := resultsByMode[mode]
 			if len(results) == 0 {
@@ -416,6 +395,86 @@ func (s *Service) resolveShow(ctx context.Context, malID int, title string) (str
 	}
 
 	return "", "", errors.New("unable to resolve allanime show")
+}
+
+func (s *Service) searchShowResultsByMode(ctx context.Context, query string, modeCandidates []string) map[string][]searchResult {
+	resultsByMode := make(map[string][]searchResult, len(modeCandidates))
+	searchCh := make(chan searchModeResult, len(modeCandidates))
+
+	var wg sync.WaitGroup
+	for _, mode := range modeCandidates {
+		modeValue := mode
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			results, err := s.allAnimeClient.Search(ctx, query, modeValue)
+			searchCh <- searchModeResult{Mode: modeValue, Results: results, Err: err}
+		}()
+	}
+
+	wg.Wait()
+	close(searchCh)
+
+	for result := range searchCh {
+		if result.Err != nil {
+			continue
+		}
+
+		resultsByMode[result.Mode] = result.Results
+	}
+
+	return resultsByMode
+}
+
+func buildTitleSearchQueries(titleCandidates []string) []string {
+	queries := make([]string, 0, len(titleCandidates)*4)
+	seen := make(map[string]struct{})
+
+	add := func(raw string) {
+		normalized := normalizeSearchQuery(raw)
+		if normalized == "" {
+			return
+		}
+
+		key := strings.ToLower(normalized)
+		if _, exists := seen[key]; exists {
+			return
+		}
+
+		seen[key] = struct{}{}
+		queries = append(queries, normalized)
+	}
+
+	for _, candidate := range titleCandidates {
+		normalized := normalizeSearchQuery(candidate)
+		if normalized == "" {
+			continue
+		}
+
+		add(normalized)
+		add(strings.ReplaceAll(normalized, "+", " "))
+
+		withoutApostrophes := strings.NewReplacer("'", "", "’", "", "`", "").Replace(normalized)
+		add(withoutApostrophes)
+		add(strings.ReplaceAll(withoutApostrophes, "+", " "))
+	}
+
+	return queries
+}
+
+func normalizeSearchQuery(raw string) string {
+	return strings.Join(strings.Fields(strings.TrimSpace(raw)), " ")
+}
+
+func firstNonEmptyTitle(values []string) string {
+	for _, value := range values {
+		normalized := strings.TrimSpace(value)
+		if normalized != "" {
+			return normalized
+		}
+	}
+
+	return ""
 }
 
 func (s *Service) resolveModeSource(ctx context.Context, showID string, episode string, mode string, quality string) (StreamSource, error) {
