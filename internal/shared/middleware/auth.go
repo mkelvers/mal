@@ -56,28 +56,7 @@ func RequireAuth(next http.Handler) http.Handler {
 }
 
 func RequireGlobalAuth(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Allow unauthenticated access to auth pages, search, and static files
-		if r.URL.Path == "/login" ||
-			strings.HasPrefix(r.URL.Path, "/static/") || strings.HasPrefix(r.URL.Path, "/dist/") ||
-			r.URL.Path == "/search" || r.URL.Path == "/api/search" || r.URL.Path == "/api/search-quick" ||
-			r.URL.Path == "/" {
-			next.ServeHTTP(w, r)
-			return
-		}
-
-		user, ok := r.Context().Value(UserContextKey).(*database.User)
-		if !ok || user == nil {
-			if strings.HasPrefix(r.URL.Path, "/api/") || r.Header.Get("HX-Request") == "true" {
-				w.Header().Set("HX-Redirect", "/login")
-				http.Error(w, "Unauthorized", http.StatusUnauthorized)
-			} else {
-				http.Redirect(w, r, "/login", http.StatusFound)
-			}
-			return
-		}
-		next.ServeHTTP(w, r)
-	})
+	return RequireGlobalAuthWithPolicy(NewAccessPolicy())(next)
 }
 
 func GetUser(ctx context.Context) *database.User {
