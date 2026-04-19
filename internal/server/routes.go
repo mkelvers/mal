@@ -1,6 +1,7 @@
 package server
 
 import (
+	"database/sql"
 	"net/http"
 
 	"mal/internal/database"
@@ -13,9 +14,11 @@ import (
 )
 
 type Config struct {
-	DB          *database.Queries
-	JikanClient *jikan.Client
-	AuthService *auth.Service
+	DB                  *database.Queries
+	SQLDB               *sql.DB
+	JikanClient         *jikan.Client
+	AuthService         *auth.Service
+	PlaybackProxySecret string
 }
 
 func NewRouter(cfg Config) http.Handler {
@@ -23,12 +26,12 @@ func NewRouter(cfg Config) http.Handler {
 
 	authHandler := auth.NewHandler(cfg.AuthService)
 
-	watchlistSvc := watchlist.NewService(cfg.DB)
+	watchlistSvc := watchlist.NewService(cfg.DB, cfg.SQLDB)
 	watchlistHandler := watchlist.NewHandler(watchlistSvc)
 
 	animeSvc := anime.NewService(cfg.JikanClient, cfg.DB)
 	animeHandler := anime.NewHandler(animeSvc)
-	playbackSvc := playback.NewService(cfg.DB)
+	playbackSvc := playback.NewService(cfg.DB, cfg.SQLDB, playback.Config{ProxyTokenSecret: cfg.PlaybackProxySecret})
 	playbackHandler := playback.NewHandler(playbackSvc, cfg.JikanClient)
 
 	// Serve static files
@@ -83,5 +86,6 @@ func NewRouter(cfg Config) http.Handler {
 	// Wrap mux with global CSRF origin verification and auth checking,
 	// THEN auth context parsing.
 	protectedHandler := middleware.RequireGlobalAuth(middleware.VerifyOrigin(mux))
-	return middleware.Auth(cfg.AuthService)(protectedHandler)
+	authenticatedHandler := middleware.Auth(cfg.AuthService)(protectedHandler)
+	return middleware.RequestLogger(authenticatedHandler)
 }

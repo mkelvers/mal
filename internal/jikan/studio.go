@@ -7,7 +7,7 @@ import (
 
 type ProducerResponse struct {
 	Data struct {
-		MalID  int    `json:"mal_id"`
+		MalID  int `json:"mal_id"`
 		Titles []struct {
 			Type  string `json:"type"`
 			Title string `json:"title"`
@@ -40,7 +40,7 @@ func (c *Client) GetAnimeByProducer(ctx context.Context, producerID int, page in
 	}
 
 	var stale StudioAnimeResult
-	hasStale := c.getStaleCache(ctx, cacheKey, &cached)
+	hasStale := c.getStaleCache(ctx, cacheKey, &stale)
 
 	var result SearchResponse
 	reqURL := fmt.Sprintf("%s/anime?producers=%d&page=%d", c.baseURL, producerID, page)
@@ -84,7 +84,7 @@ func (c *Client) GetProducerByID(ctx context.Context, producerID int) (ProducerR
 	}
 
 	var stale ProducerResponse
-	hasStale := c.getStaleCache(ctx, cacheKey, &cached)
+	hasStale := c.getStaleCache(ctx, cacheKey, &stale)
 
 	var result ProducerResponse
 	reqURL := fmt.Sprintf("%s/producers/%d/full", c.baseURL, producerID)

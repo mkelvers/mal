@@ -34,7 +34,7 @@ func TestAddEntry_RejectsInvalidAnimeID(t *testing.T) {
 	t.Parallel()
 
 	q := &fakeQuerier{}
-	svc := NewService(q)
+	svc := NewService(q, nil)
 
 	err := svc.AddEntry(context.Background(), "user-1", AddRequest{
 		AnimeID: 0,
@@ -54,7 +54,7 @@ func TestAddEntry_RejectsInvalidStatus(t *testing.T) {
 	t.Parallel()
 
 	q := &fakeQuerier{}
-	svc := NewService(q)
+	svc := NewService(q, nil)
 
 	err := svc.AddEntry(context.Background(), "user-1", AddRequest{
 		AnimeID: 1,
@@ -101,7 +101,7 @@ func TestExport_UsesDisplayTitleFallbackOrder(t *testing.T) {
 		},
 	}
 
-	svc := NewService(q)
+	svc := NewService(q, nil)
 	export, err := svc.Export(context.Background(), "user-1")
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)

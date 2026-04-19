@@ -1,15 +1,13 @@
 export {}
 
 interface ModeSource {
-  url: string
-  referer: string
+  token: string
   subtitles: SubtitleItem[]
 }
 
 interface SubtitleItem {
   lang: string
-  url: string
-  referer: string
+  token: string
 }
 
 interface SkipSegment {
@@ -46,6 +44,7 @@ const initPlayer = (): void => {
   const subtitleText = container.querySelector('[data-subtitle-text]') as HTMLElement
 
   const streamURL = container.getAttribute('data-stream-url') || '/watch/proxy/stream'
+  const initialStreamToken = container.getAttribute('data-stream-token') || ''
   const currentEpisode = container.getAttribute('data-current-episode') || '1'
   const malID = Number.parseInt(container.getAttribute('data-mal-id') || '', 10)
   const totalEpisodes = Number.parseInt(container.getAttribute('data-total-episodes') || '0', 10)
@@ -79,6 +78,10 @@ const initPlayer = (): void => {
     .sort((a: { start: number }, b: { start: number }) => a.start - b.start)
 
   let currentMode = availableModes.includes(initialMode) ? initialMode : (availableModes[0] || 'dub')
+  const fallbackMode = Object.keys(modeSources).find((mode) => typeof modeSources[mode]?.token === 'string' && modeSources[mode].token !== '')
+  if ((!modeSources[currentMode] || !modeSources[currentMode].token) && fallbackMode) {
+    currentMode = fallbackMode
+  }
   let controlsTimeout: number | undefined
   let isScrubbing = false
   let isHoveringVolume = false
@@ -97,21 +100,18 @@ const initPlayer = (): void => {
 
   const previewPopover = container.querySelector('[data-preview-popover]') as HTMLElement
   const previewTime = container.querySelector('[data-preview-time]') as HTMLElement
-  const encodedModeState = encodeURIComponent(JSON.stringify(modeSources))
-
   const streamUrlForMode = (mode: string): string => {
     const modeParam = encodeURIComponent(mode)
-    const stateParam = encodedModeState
-    return `${streamURL}?mode=${modeParam}&state=${stateParam}`
+    const modeSource = modeSources[mode]
+    const token = modeSource?.token
+    if (!token) return ''
+    const tokenParam = encodeURIComponent(token)
+    return `${streamURL}?mode=${modeParam}&token=${tokenParam}`
   }
 
   const subtitleProxyURL = (track: SubtitleItem): string => {
-    if (!track || !track.url) return ''
-    let proxied = `/watch/proxy/subtitle?u=${encodeURIComponent(track.url)}`
-    if (track.referer) {
-      proxied += `&r=${encodeURIComponent(track.referer)}`
-    }
-    return proxied
+    if (!track || !track.token) return ''
+    return `/watch/proxy/subtitle?token=${encodeURIComponent(track.token)}`
   }
 
   const subtitlesForMode = (mode: string): Array<{ lang: string, label: string, url: string }> => {
@@ -560,11 +560,13 @@ const initPlayer = (): void => {
 
   const switchMode = (mode: string): void => {
     if (!availableModes.includes(mode) || mode === currentMode) return
+    const nextURL = streamUrlForMode(mode)
+    if (!nextURL) return
     const wasPlaying = !video.paused
     const previousTime = displayTimeFromAbsolute(video.currentTime)
     currentMode = mode
     hidePreviewPopover()
-    video.src = streamUrlForMode(currentMode)
+    video.src = nextURL
     video.load()
     pendingSeekTime = previousTime
     if (wasPlaying) video.play().catch(() => {})
@@ -652,6 +654,13 @@ const initPlayer = (): void => {
   // Initialize
   updateSubtitleOptions()
   updateModeButtons(currentMode)
+
+  const startingURL = streamUrlForMode(currentMode)
+  if (startingURL) {
+    video.src = startingURL
+  } else if (initialStreamToken) {
+    video.src = `${streamURL}?mode=${encodeURIComponent(currentMode)}&token=${encodeURIComponent(initialStreamToken)}`
+  }
 
   if (video) {
     video.addEventListener('loadedmetadata', () => {

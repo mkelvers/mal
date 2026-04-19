@@ -13,8 +13,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/google/uuid"
-
 	"mal/internal/database"
 	"mal/internal/jikan"
 	"mal/internal/shared/middleware"
@@ -162,14 +160,12 @@ func convertModeSources(sources map[string]ModeSource) map[string]templates.Mode
 		subtitles := make([]templates.SubtitleItem, len(v.Subtitles))
 		for i, s := range v.Subtitles {
 			subtitles[i] = templates.SubtitleItem{
-				Lang:    s.Lang,
-				URL:     s.URL,
-				Referer: s.Referer,
+				Lang:  s.Lang,
+				Token: s.Token,
 			}
 		}
 		result[k] = templates.ModeSource{
-			URL:       v.URL,
-			Referer:   v.Referer,
+			Token:     v.Token,
 			Subtitles: subtitles,
 		}
 	}
@@ -199,25 +195,19 @@ func (h *Handler) HandleProxyStream(w http.ResponseWriter, r *http.Request) {
 		mode = "dub"
 	}
 
-	state := r.URL.Query().Get("state")
-	if strings.TrimSpace(state) == "" {
-		http.Error(w, "missing playback state", http.StatusBadRequest)
+	token := strings.TrimSpace(r.URL.Query().Get("token"))
+	if token == "" {
+		http.Error(w, "missing playback token", http.StatusBadRequest)
 		return
 	}
 
-	modeSources := make(map[string]ModeSource)
-	if err := json.Unmarshal([]byte(state), &modeSources); err != nil {
-		http.Error(w, "invalid playback state", http.StatusBadRequest)
+	targetURL, referer, err := h.svc.resolveProxyToken(r.Context(), token, proxyScopeStream)
+	if err != nil {
+		http.Error(w, "invalid stream token", http.StatusBadRequest)
 		return
 	}
 
-	source, ok := modeSources[mode]
-	if !ok || strings.TrimSpace(source.URL) == "" {
-		http.Error(w, "stream mode unavailable", http.StatusBadRequest)
-		return
-	}
-
-	h.proxyUpstream(w, r, source.URL, source.Referer)
+	h.proxyUpstream(w, r, targetURL, referer)
 }
 
 func (h *Handler) HandleProxySegment(w http.ResponseWriter, r *http.Request) {
@@ -226,13 +216,19 @@ func (h *Handler) HandleProxySegment(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	targetURL := r.URL.Query().Get("u")
-	if strings.TrimSpace(targetURL) == "" {
-		http.Error(w, "missing target url", http.StatusBadRequest)
+	token := strings.TrimSpace(r.URL.Query().Get("token"))
+	if token == "" {
+		http.Error(w, "missing segment token", http.StatusBadRequest)
 		return
 	}
 
-	h.proxyUpstream(w, r, targetURL, r.URL.Query().Get("r"))
+	targetURL, referer, err := h.svc.resolveProxyToken(r.Context(), token, proxyScopeSegment)
+	if err != nil {
+		http.Error(w, "invalid segment token", http.StatusBadRequest)
+		return
+	}
+
+	h.proxyUpstream(w, r, targetURL, referer)
 }
 
 func (h *Handler) HandleProxySubtitle(w http.ResponseWriter, r *http.Request) {
@@ -241,13 +237,19 @@ func (h *Handler) HandleProxySubtitle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	targetURL := r.URL.Query().Get("u")
-	if strings.TrimSpace(targetURL) == "" {
-		http.Error(w, "missing target url", http.StatusBadRequest)
+	token := strings.TrimSpace(r.URL.Query().Get("token"))
+	if token == "" {
+		http.Error(w, "missing subtitle token", http.StatusBadRequest)
 		return
 	}
 
-	h.proxyUpstream(w, r, targetURL, r.URL.Query().Get("r"))
+	targetURL, referer, err := h.svc.resolveProxyToken(r.Context(), token, proxyScopeSubtitle)
+	if err != nil {
+		http.Error(w, "invalid subtitle token", http.StatusBadRequest)
+		return
+	}
+
+	h.proxyUpstream(w, r, targetURL, referer)
 }
 
 func (h *Handler) HandleSaveProgress(w http.ResponseWriter, r *http.Request) {
@@ -291,62 +293,15 @@ func (h *Handler) HandleSaveProgress(w http.ResponseWriter, r *http.Request) {
 
 	animeID := int64(payload.MalID)
 
-	if _, err := h.svc.db.GetAnime(r.Context(), animeID); err != nil {
-		anime, fetchErr := h.jikanClient.GetAnimeByID(r.Context(), payload.MalID)
-		if fetchErr != nil {
-			log.Printf("save progress failed to fetch anime user_id=%s mal_id=%d err=%v", user.ID, payload.MalID, fetchErr)
-			http.Error(w, "failed to save progress", http.StatusInternalServerError)
-			return
-		}
-
-		if _, upsertErr := h.svc.db.UpsertAnime(r.Context(), database.UpsertAnimeParams{
-			ID:            animeID,
-			TitleOriginal: anime.Title,
-			TitleEnglish:  sql.NullString{String: anime.TitleEnglish, Valid: anime.TitleEnglish != ""},
-			TitleJapanese: sql.NullString{String: anime.TitleJapanese, Valid: anime.TitleJapanese != ""},
-			ImageUrl:      anime.ImageURL(),
-			Airing:        sql.NullBool{Bool: anime.Airing, Valid: true},
-		}); upsertErr != nil {
-			log.Printf("save progress failed to upsert anime user_id=%s mal_id=%d err=%v", user.ID, payload.MalID, upsertErr)
-			http.Error(w, "failed to save progress", http.StatusInternalServerError)
-			return
-		}
-	}
-
-	watchListEntry, watchListErr := h.svc.db.GetWatchListEntry(r.Context(), database.GetWatchListEntryParams{
-		UserID:  user.ID,
-		AnimeID: animeID,
-	})
-	if watchListErr == nil && watchListEntry.Status == "completed" {
-		if err := h.svc.db.DeleteContinueWatchingEntry(r.Context(), database.DeleteContinueWatchingEntryParams{
-			UserID:  user.ID,
-			AnimeID: animeID,
-		}); err != nil {
-			log.Printf("save progress failed to clear continue entry user_id=%s mal_id=%d err=%v", user.ID, payload.MalID, err)
-		}
-		w.WriteHeader(http.StatusNoContent)
+	animeSeed, err := h.ensureAnimeSeed(r.Context(), payload.MalID)
+	if err != nil {
+		log.Printf("save progress failed to resolve anime user_id=%s mal_id=%d err=%v", user.ID, payload.MalID, err)
+		http.Error(w, "failed to save progress", http.StatusInternalServerError)
 		return
 	}
 
-	if err := h.svc.db.SaveWatchProgress(r.Context(), database.SaveWatchProgressParams{
-		CurrentEpisode:     sql.NullInt64{Int64: int64(payload.Episode), Valid: true},
-		CurrentTimeSeconds: timeSeconds,
-		UserID:             user.ID,
-		AnimeID:            animeID,
-	}); err != nil {
-		if err.Error() != "sql: no rows in result set" {
-			log.Printf("save watchlist progress skipped user_id=%s mal_id=%d err=%v", user.ID, payload.MalID, err)
-		}
-	}
-
-	if _, err := h.svc.db.UpsertContinueWatchingEntry(r.Context(), database.UpsertContinueWatchingEntryParams{
-		ID:                 uuid.New().String(),
-		UserID:             user.ID,
-		AnimeID:            animeID,
-		CurrentEpisode:     sql.NullInt64{Int64: int64(payload.Episode), Valid: true},
-		CurrentTimeSeconds: timeSeconds,
-	}); err != nil {
-		log.Printf("save continue watching failed user_id=%s mal_id=%d err=%v", user.ID, payload.MalID, err)
+	if err := h.svc.SaveProgress(r.Context(), user.ID, animeID, payload.Episode, timeSeconds, animeSeed); err != nil {
+		log.Printf("save progress failed user_id=%s mal_id=%d err=%v", user.ID, payload.MalID, err)
 		http.Error(w, "failed to save progress", http.StatusInternalServerError)
 		return
 	}
@@ -383,89 +338,41 @@ func (h *Handler) HandleCompleteAnime(w http.ResponseWriter, r *http.Request) {
 	}
 
 	animeID := int64(payload.MalID)
-	watchListEntry, watchListErr := h.svc.db.GetWatchListEntry(r.Context(), database.GetWatchListEntryParams{
-		UserID:  user.ID,
-		AnimeID: animeID,
-	})
-	if watchListErr != nil && !errors.Is(watchListErr, sql.ErrNoRows) {
-		log.Printf("complete anime failed to load watchlist user_id=%s mal_id=%d err=%v", user.ID, payload.MalID, watchListErr)
+	animeSeed, err := h.ensureAnimeSeed(r.Context(), payload.MalID)
+	if err != nil {
+		log.Printf("complete anime failed to resolve anime user_id=%s mal_id=%d err=%v", user.ID, payload.MalID, err)
 		http.Error(w, "failed to mark anime completed", http.StatusInternalServerError)
 		return
 	}
 
-	alreadyCompleted := watchListErr == nil && watchListEntry.Status == "completed"
-
-	if !alreadyCompleted {
-		if _, err := h.svc.db.GetAnime(r.Context(), animeID); err != nil {
-			anime, fetchErr := h.jikanClient.GetAnimeByID(r.Context(), payload.MalID)
-			if fetchErr != nil {
-				log.Printf("complete anime failed to fetch anime user_id=%s mal_id=%d err=%v", user.ID, payload.MalID, fetchErr)
-				http.Error(w, "failed to mark anime completed", http.StatusInternalServerError)
-				return
-			}
-
-			if _, upsertErr := h.svc.db.UpsertAnime(r.Context(), database.UpsertAnimeParams{
-				ID:            animeID,
-				TitleOriginal: anime.Title,
-				TitleEnglish:  sql.NullString{String: anime.TitleEnglish, Valid: anime.TitleEnglish != ""},
-				TitleJapanese: sql.NullString{String: anime.TitleJapanese, Valid: anime.TitleJapanese != ""},
-				ImageUrl:      anime.ImageURL(),
-				Airing:        sql.NullBool{Bool: anime.Airing, Valid: true},
-			}); upsertErr != nil {
-				log.Printf("complete anime failed to upsert anime user_id=%s mal_id=%d err=%v", user.ID, payload.MalID, upsertErr)
-				http.Error(w, "failed to mark anime completed", http.StatusInternalServerError)
-				return
-			}
-		}
-
-		if _, err := h.svc.db.UpsertWatchListEntry(r.Context(), database.UpsertWatchListEntryParams{
-			ID:                 uuid.New().String(),
-			UserID:             user.ID,
-			AnimeID:            animeID,
-			Status:             "completed",
-			CurrentEpisode:     sql.NullInt64{Int64: int64(payload.Episode), Valid: true},
-			CurrentTimeSeconds: 0,
-		}); err != nil {
-			log.Printf("complete anime failed to upsert watchlist user_id=%s mal_id=%d err=%v", user.ID, payload.MalID, err)
-			http.Error(w, "failed to mark anime completed", http.StatusInternalServerError)
-			return
-		}
-	}
-
-	if err := h.svc.db.DeleteContinueWatchingEntry(r.Context(), database.DeleteContinueWatchingEntryParams{
-		UserID:  user.ID,
-		AnimeID: animeID,
-	}); err != nil {
-		log.Printf("complete anime failed to delete continue entry user_id=%s mal_id=%d err=%v", user.ID, payload.MalID, err)
+	if err := h.svc.CompleteAnime(r.Context(), user.ID, animeID, payload.Episode, animeSeed); err != nil {
+		log.Printf("complete anime failed user_id=%s mal_id=%d err=%v", user.ID, payload.MalID, err)
 		http.Error(w, "failed to mark anime completed", http.StatusInternalServerError)
 		return
-	}
-
-	if _, err := h.svc.db.GetContinueWatchingEntry(r.Context(), database.GetContinueWatchingEntryParams{
-		UserID:  user.ID,
-		AnimeID: animeID,
-	}); err == nil {
-		log.Printf("complete anime failed to clear continue entry user_id=%s mal_id=%d", user.ID, payload.MalID)
-		http.Error(w, "failed to mark anime completed", http.StatusInternalServerError)
-		return
-	} else if !errors.Is(err, sql.ErrNoRows) {
-		log.Printf("complete anime failed to verify continue clear user_id=%s mal_id=%d err=%v", user.ID, payload.MalID, err)
-		http.Error(w, "failed to mark anime completed", http.StatusInternalServerError)
-		return
-	}
-
-	if err := h.svc.db.SaveWatchProgress(r.Context(), database.SaveWatchProgressParams{
-		CurrentEpisode:     sql.NullInt64{Int64: int64(payload.Episode), Valid: true},
-		CurrentTimeSeconds: 0,
-		UserID:             user.ID,
-		AnimeID:            animeID,
-	}); err != nil {
-		if !errors.Is(err, sql.ErrNoRows) {
-			log.Printf("complete anime failed to reset watchlist progress user_id=%s mal_id=%d err=%v", user.ID, payload.MalID, err)
-		}
 	}
 
 	w.WriteHeader(http.StatusNoContent)
+}
+
+func (h *Handler) ensureAnimeSeed(ctx context.Context, malID int) (*database.UpsertAnimeParams, error) {
+	animeID := int64(malID)
+	if _, err := h.svc.db.GetAnime(ctx, animeID); err == nil {
+		return nil, nil
+	}
+
+	anime, err := h.jikanClient.GetAnimeByID(ctx, malID)
+	if err != nil {
+		return nil, err
+	}
+
+	return &database.UpsertAnimeParams{
+		ID:            animeID,
+		TitleOriginal: anime.Title,
+		TitleEnglish:  sql.NullString{String: anime.TitleEnglish, Valid: anime.TitleEnglish != ""},
+		TitleJapanese: sql.NullString{String: anime.TitleJapanese, Valid: anime.TitleJapanese != ""},
+		ImageUrl:      anime.ImageURL(),
+		Airing:        sql.NullBool{Bool: anime.Airing, Valid: true},
+	}, nil
 }
 
 func (h *Handler) proxyUpstream(w http.ResponseWriter, r *http.Request, targetURL string, referer string) {

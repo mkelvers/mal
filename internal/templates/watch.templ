@@ -29,16 +29,14 @@ type WatchPageData struct {
 
 // ModeSource represents a stream source for a specific mode (dub/sub)
 type ModeSource struct {
-	URL       string         `json:"url"`
-	Referer   string         `json:"referer"`
+	Token     string         `json:"token"`
 	Subtitles []SubtitleItem `json:"subtitles"`
 }
 
 // SubtitleItem represents a subtitle track
 type SubtitleItem struct {
 	Lang    string `json:"lang"`
-	URL     string `json:"url"`
-	Referer string `json:"referer"`
+	Token   string `json:"token"`
 }
 
 // SkipSegment represents a skippable segment (intro/outro)
@@ -199,7 +197,7 @@ templ EpisodeItem(episode jikan.Episode, currentEpisode string, animeID int) {
 }
 
 templ VideoPlayer(data WatchPageData) {
-	{{ streamURL := buildStreamURL(data.InitialMode, data.ModeSources) }}
+	{{ streamToken := modeToken(data.InitialMode, data.ModeSources) }}
 	{{ hasDub := modeAvailable(data.AvailableModes, "dub") }}
 	{{ hasSub := modeAvailable(data.AvailableModes, "sub") }}
 	<div
@@ -216,6 +214,7 @@ templ VideoPlayer(data WatchPageData) {
 		data-anime-airing={ fmt.Sprintf("%v", data.Airing) }
 		data-start-time-seconds={ fmt.Sprintf("%.3f", data.StartTimeSeconds) }
 		data-initial-mode={ data.InitialMode }
+		data-stream-token={ streamToken }
 		data-available-modes={ toJSON(data.AvailableModes) }
 		data-mode-sources={ toJSON(data.ModeSources) }
 		data-segments={ toJSON(data.Segments) }
@@ -226,7 +225,7 @@ templ VideoPlayer(data WatchPageData) {
 				preload="metadata"
 				crossorigin="anonymous"
 				playsinline
-				src={ streamURL }
+				src={ buildStreamURL(data.InitialMode, streamToken) }
 			></video>
 			<div data-loading class="absolute inset-0 flex items-center justify-center bg-black/50">
 				<div class="h-8 w-8 animate-spin border-2 border-(--panel-soft) border-t-(--accent)"></div>
@@ -339,9 +338,35 @@ templ VideoPlayer(data WatchPageData) {
 	</div>
 }
 
-func buildStreamURL(mode string, modeSources map[string]ModeSource) string {
-	stateJSON, _ := json.Marshal(modeSources)
-	return fmt.Sprintf("/watch/proxy/stream?mode=%s&state=%s", url.QueryEscape(mode), url.QueryEscape(string(stateJSON)))
+func buildStreamURL(mode string, token string) string {
+	if token == "" {
+		return ""
+	}
+
+	return fmt.Sprintf("/watch/proxy/stream?mode=%s&token=%s", url.QueryEscape(mode), url.QueryEscape(token))
+}
+
+func modeToken(mode string, modeSources map[string]ModeSource) string {
+	normalizedMode := mode
+	if _, ok := modeSources[normalizedMode]; !ok {
+		if _, ok := modeSources["dub"]; ok {
+			normalizedMode = "dub"
+		} else if _, ok := modeSources["sub"]; ok {
+			normalizedMode = "sub"
+		} else {
+			for key := range modeSources {
+				normalizedMode = key
+				break
+			}
+		}
+	}
+
+	source, ok := modeSources[normalizedMode]
+	if !ok {
+		return ""
+	}
+
+	return source.Token
 }
 
 func toJSON(v interface{}) string {

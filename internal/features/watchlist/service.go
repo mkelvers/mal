@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -13,7 +14,8 @@ import (
 )
 
 type Service struct {
-	db database.Querier
+	db    database.Querier
+	sqlDB *sql.DB
 }
 
 var (
@@ -29,8 +31,8 @@ var validStatuses = map[string]struct{}{
 	"plan_to_watch": {},
 }
 
-func NewService(db database.Querier) *Service {
-	return &Service{db: db}
+func NewService(db database.Querier, sqlDB *sql.DB) *Service {
+	return &Service{db: db, sqlDB: sqlDB}
 }
 
 type AddRequest struct {
@@ -66,11 +68,11 @@ func (s *Service) AddEntry(ctx context.Context, userID string, req AddRequest) e
 
 	entryID := uuid.New().String()
 	_, err = s.db.UpsertWatchListEntry(ctx, database.UpsertWatchListEntryParams{
-		ID:             entryID,
-		UserID:         userID,
-		AnimeID:        req.AnimeID,
-		Status:         req.Status,
-		CurrentEpisode: sql.NullInt64{Int64: 0, Valid: false},
+		ID:                 entryID,
+		UserID:             userID,
+		AnimeID:            req.AnimeID,
+		Status:             req.Status,
+		CurrentEpisode:     sql.NullInt64{Int64: 0, Valid: false},
 		CurrentTimeSeconds: 0,
 	})
 	if err != nil {
@@ -107,6 +109,78 @@ func (s *Service) GetUserWatchlist(ctx context.Context, userID string) ([]databa
 		return nil, fmt.Errorf("failed to fetch watchlist: %w", err)
 	}
 	return entries, nil
+}
+
+func (s *Service) GetContinueWatching(ctx context.Context, userID string) ([]database.GetContinueWatchingEntriesRow, error) {
+	if strings.TrimSpace(userID) == "" {
+		return nil, errors.New("invalid user id")
+	}
+
+	entries, err := s.db.GetContinueWatchingEntries(ctx, userID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch continue watching: %w", err)
+	}
+
+	return entries, nil
+}
+
+func (s *Service) DeleteContinueWatching(ctx context.Context, userID string, animeID int64) error {
+	if strings.TrimSpace(userID) == "" {
+		return errors.New("invalid user id")
+	}
+
+	if animeID <= 0 {
+		return ErrInvalidAnimeID
+	}
+
+	if s.sqlDB == nil {
+		if err := s.db.DeleteContinueWatchingEntry(ctx, database.DeleteContinueWatchingEntryParams{
+			UserID:  userID,
+			AnimeID: animeID,
+		}); err != nil {
+			return fmt.Errorf("failed to delete continue watching entry: %w", err)
+		}
+
+		if err := s.db.SaveWatchProgress(ctx, database.SaveWatchProgressParams{
+			CurrentEpisode:     sql.NullInt64{Valid: false},
+			CurrentTimeSeconds: 0,
+			UserID:             userID,
+			AnimeID:            animeID,
+		}); err != nil {
+			return fmt.Errorf("failed to clear watchlist progress: %w", err)
+		}
+
+		return nil
+	}
+
+	tx, err := s.sqlDB.BeginTx(ctx, nil)
+	if err != nil {
+		return fmt.Errorf("failed to begin transaction: %w", err)
+	}
+	defer tx.Rollback()
+
+	txQueries := database.New(tx)
+	if err := txQueries.DeleteContinueWatchingEntry(ctx, database.DeleteContinueWatchingEntryParams{
+		UserID:  userID,
+		AnimeID: animeID,
+	}); err != nil {
+		return fmt.Errorf("failed to delete continue watching entry: %w", err)
+	}
+
+	if err := txQueries.SaveWatchProgress(ctx, database.SaveWatchProgressParams{
+		CurrentEpisode:     sql.NullInt64{Valid: false},
+		CurrentTimeSeconds: 0,
+		UserID:             userID,
+		AnimeID:            animeID,
+	}); err != nil {
+		return fmt.Errorf("failed to clear watchlist progress: %w", err)
+	}
+
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("failed to commit continue watching deletion: %w", err)
+	}
+
+	return nil
 }
 
 type ExportEntry struct {
@@ -161,11 +235,11 @@ func (s *Service) Import(ctx context.Context, userID string, export ExportData) 
 		}
 
 		_, err = s.db.UpsertWatchListEntry(ctx, database.UpsertWatchListEntryParams{
-			ID:             uuid.New().String(),
-			UserID:         userID,
-			AnimeID:        entry.AnimeID,
-			Status:         entry.Status,
-			CurrentEpisode: sql.NullInt64{Int64: 0, Valid: false},
+			ID:                 uuid.New().String(),
+			UserID:             userID,
+			AnimeID:            entry.AnimeID,
+			Status:             entry.Status,
+			CurrentEpisode:     sql.NullInt64{Int64: 0, Valid: false},
 			CurrentTimeSeconds: 0,
 		})
 		if err != nil {

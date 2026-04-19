@@ -15,15 +15,17 @@ type Subtitle struct {
 }
 
 type ModeSource struct {
-	URL       string         `json:"url"`
-	Referer   string         `json:"referer"`
+	URL       string         `json:"url,omitempty"`
+	Referer   string         `json:"referer,omitempty"`
+	Token     string         `json:"token"`
 	Subtitles []SubtitleItem `json:"subtitles"`
 }
 
 type SubtitleItem struct {
 	Lang    string `json:"lang"`
-	URL     string `json:"url"`
-	Referer string `json:"referer"`
+	URL     string `json:"url,omitempty"`
+	Referer string `json:"referer,omitempty"`
+	Token   string `json:"token"`
 }
 
 type SkipSegment struct {

@@ -98,7 +98,7 @@ The frontend pipeline uses a single source stylesheet (`static/style.css`) and T
 When the server starts, the app is available at `http://localhost:3000`.
 
 Important notes:
-- Environment variables are read directly from the process environment (`PORT`, `DATABASE_FILE`, `ENV`); `.env` is not auto-loaded.
+- Environment variables are read directly from the process environment (`PORT`, `DATABASE_FILE`, `ENV`, `PLAYBACK_PROXY_SECRET`); `.env` is not auto-loaded.
 - The web app currently exposes a login route only. If your database has no users yet, create the first user outside the web UI.
 
 For containerized usage, the included `Dockerfile` uses a multi-stage build that installs Bun + templ, builds assets, generates templates, compiles `cmd/server`, and ships a slim runtime image with SQLite support.
@@ -125,6 +125,8 @@ docker run --rm \
 | `PORT` | `3000` | HTTP listen port |
 | `DATABASE_FILE` | `mal.db` | SQLite database file path |
 | `ENV` | _(empty)_ | Set to `production` to enable secure session cookies |
+| `MIGRATIONS_DIR` | _(auto-discovered)_ | Optional explicit path to migration files |
+| `PLAYBACK_PROXY_SECRET` | _(required)_ | HMAC secret for signed playback proxy tokens (min 32 chars) |
 
 ## Database and testing
 

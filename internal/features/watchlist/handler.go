@@ -1,7 +1,6 @@
 package watchlist
 
 import (
-	"database/sql"
 	"encoding/json"
 	"errors"
 	"log"
@@ -202,7 +201,7 @@ func (h *Handler) HandleContinueWatching(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	entries, err := h.svc.db.GetContinueWatchingEntries(r.Context(), user.ID)
+	entries, err := h.svc.GetContinueWatching(r.Context(), user.ID)
 	if err != nil {
 		log.Printf("continue watching fetch failed: user_id=%s err=%v", user.ID, err)
 		http.Error(w, "failed to fetch continue watching", http.StatusInternalServerError)
@@ -231,23 +230,8 @@ func (h *Handler) HandleDeleteContinueWatching(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	err = h.svc.db.DeleteContinueWatchingEntry(r.Context(), database.DeleteContinueWatchingEntryParams{
-		UserID:  user.ID,
-		AnimeID: animeID,
-	})
-	if err != nil {
+	if err := h.svc.DeleteContinueWatching(r.Context(), user.ID, animeID); err != nil {
 		log.Printf("continue watching delete failed: user_id=%s anime_id=%d err=%v", user.ID, animeID, err)
-		http.Error(w, "failed to delete continue watching entry", http.StatusInternalServerError)
-		return
-	}
-
-	if err := h.svc.db.SaveWatchProgress(r.Context(), database.SaveWatchProgressParams{
-		CurrentEpisode:     sql.NullInt64{Valid: false},
-		CurrentTimeSeconds: 0,
-		UserID:             user.ID,
-		AnimeID:            animeID,
-	}); err != nil {
-		log.Printf("continue watching delete failed to clear watchlist progress: user_id=%s anime_id=%d err=%v", user.ID, animeID, err)
 		http.Error(w, "failed to delete continue watching entry", http.StatusInternalServerError)
 		return
 	}
