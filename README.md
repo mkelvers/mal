@@ -67,6 +67,8 @@ Instead of treating the repository as one flat service, the codebase is organize
 | `static` | Source CSS, TypeScript, and static assets |
 | `dist` | Built frontend assets served at `/dist/*` |
 
+`cmd/` structure notes are documented in `cmd/README.md`.
+
 ## Runtime behavior
 
 On startup, the server opens SQLite using `DATABASE_FILE` (defaulting to `mal.db`), runs migrations automatically, initializes core services, starts the background worker, and then serves HTTP traffic on `PORT` (defaulting to `3000`). A request enters the router, passes through global middleware for origin and auth boundaries, reaches a feature handler, and then resolves through service logic that combines database access with upstream data where needed before rendering HTML.
@@ -89,8 +91,8 @@ For local development, install Go `1.24+`, Bun, and the `templ` CLI, then genera
 go install github.com/a-h/templ/cmd/templ@latest
 bun install
 templ generate
-bun run build:assets
-go run ./cmd/server
+./scripts/check.sh
+PLAYBACK_PROXY_SECRET="your-32+char-secret" go run ./cmd/server
 ```
 
 The frontend pipeline uses a single source stylesheet (`static/style.css`) and TypeScript sources in `static/*.ts`, then emits build artifacts into `dist/` (`dist/tailwind.css` and `dist/*.js`) for serving.
@@ -132,10 +134,10 @@ docker run --rm \
 
 Migrations run at startup, so schema changes are applied automatically before the server begins accepting traffic. Migration history includes the initial auth and watchlist schema, anime metadata expansion, relation tracking, Jikan cache persistence, indexing updates, and retry-queue support for failed fetches.
 
-Current automated tests are unit-focused and cover watchlist behavior, relation helpers, auth middleware boundaries, and watch-order parsing. Run the full test suite with:
+Current automated tests are unit-focused and cover watchlist behavior, relation helpers, auth middleware boundaries, and watch-order parsing. Run the full local validation suite with:
 
 ```bash
-go test ./...
+./scripts/check.sh
 ```
 
 There is currently no CI workflow in this repository, so validation is local.
