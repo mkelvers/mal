@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json.schemastore.org/lefthook.json",
+  "pre-push": {
+    "commands": {
+      "go-fmt": {
+        cmd: "go fmt ./..."
+      },
+      "go-vet": {
+        cmd: "go vet ./..."
+      },
+      "go-test": {
+        cmd: "go test ./..."
+      },
+      "ts-typecheck": {
+        cmd: "bunx tsc -p tsconfig.json --noEmit"
+      },
+      "build-assets": {
+        cmd: "bun run build:assets"
+      },
+      "go-build": {
+        cmd: "go build -o server ./cmd/server"
+      }
+    }
+  }
+}
