@@ -142,6 +142,9 @@ Current automated tests are unit-focused and cover watchlist behavior, relation 
 
 There is no CI workflow, so validation is local. Use `just check` to run all checks (lint, test, typecheck, build) or `just install-hooks` to set up the pre-push hook that runs them automatically before each push.
 
+> [!NOTE]
+> [`just`](https://github.com/casey/just) must be installed first (e.g. `brew install just`).
+
 ## Security
 
 Keep secrets out of version control, do not publish real credentials in documentation or screenshots, and report security issues privately before public disclosure.
