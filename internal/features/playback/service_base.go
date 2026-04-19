@@ -259,12 +259,11 @@ func (s *Service) setPlaybackBaseDataCache(key string, data playbackBaseData) {
 }
 
 func (s *Service) resolveShowCached(ctx context.Context, malID int, titleCandidates []string) (string, string, error) {
-	now := time.Now()
-
 	s.cacheMu.RLock()
 	item, ok := s.showResolution[malID]
 	s.cacheMu.RUnlock()
 
+	now := time.Now()
 	if ok && now.Before(item.ExpiresAt) && strings.TrimSpace(item.ShowID) != "" {
 		return item.ShowID, item.Title, nil
 	}
@@ -278,7 +277,7 @@ func (s *Service) resolveShowCached(ctx context.Context, malID int, titleCandida
 	s.showResolution[malID] = showResolutionCacheItem{
 		ShowID:    showID,
 		Title:     resolvedTitle,
-		ExpiresAt: time.Now().Add(showResolutionCacheTTL),
+		ExpiresAt: now.Add(showResolutionCacheTTL),
 	}
 	s.cacheMu.Unlock()
 
@@ -347,7 +346,6 @@ func cloneStringSlice(items []string) []string {
 	if len(items) == 0 {
 		return nil
 	}
-
 	cloned := make([]string, len(items))
 	copy(cloned, items)
 	return cloned
@@ -357,7 +355,6 @@ func cloneModeSources(modeSources map[string]ModeSource) map[string]ModeSource {
 	if len(modeSources) == 0 {
 		return nil
 	}
-
 	cloned := make(map[string]ModeSource, len(modeSources))
 	for mode, source := range modeSources {
 		cloned[mode] = ModeSource{
@@ -366,7 +363,6 @@ func cloneModeSources(modeSources map[string]ModeSource) map[string]ModeSource {
 			Subtitles: cloneSubtitleItems(source.Subtitles),
 		}
 	}
-
 	return cloned
 }
 
@@ -374,7 +370,6 @@ func cloneSubtitleItems(items []SubtitleItem) []SubtitleItem {
 	if len(items) == 0 {
 		return nil
 	}
-
 	cloned := make([]SubtitleItem, len(items))
 	copy(cloned, items)
 	return cloned
@@ -384,7 +379,6 @@ func cloneSegments(segments []SkipSegment) []SkipSegment {
 	if len(segments) == 0 {
 		return nil
 	}
-
 	cloned := make([]SkipSegment, len(segments))
 	copy(cloned, segments)
 	return cloned

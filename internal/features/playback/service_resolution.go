@@ -122,12 +122,7 @@ func firstNonEmptyTitle(values []string) string {
 }
 
 func normalizeMode(raw string) string {
-	lower := strings.ToLower(strings.TrimSpace(raw))
-	if lower == "sub" || lower == "dub" {
-		return lower
-	}
-
-	return lower
+	return strings.ToLower(strings.TrimSpace(raw))
 }
 
 func availableModes(modeSources map[string]ModeSource) []string {

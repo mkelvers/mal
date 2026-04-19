@@ -49,27 +49,33 @@ func (s *Service) ProxyStream(ctx context.Context, targetURL string, referer str
 }
 
 func isM3U8(targetURL string, contentType string) bool {
-	lowerURL := strings.ToLower(targetURL)
-	lowerType := strings.ToLower(contentType)
-	if strings.Contains(lowerURL, ".m3u8") {
+	if strings.Contains(strings.ToLower(targetURL), ".m3u8") {
 		return true
 	}
-
+	lowerType := strings.ToLower(contentType)
 	return strings.Contains(lowerType, "application/vnd.apple.mpegurl") || strings.Contains(lowerType, "application/x-mpegurl")
+}
+
+var hopHeaders = map[string]struct{}{
+	"connection":          {},
+	"transfer-encoding":   {},
+	"keep-alive":          {},
+	"proxy-authenticate":  {},
+	"proxy-authorization": {},
+	"te":                  {},
+	"trailers":            {},
+	"upgrade":             {},
 }
 
 func cloneHeaders(src http.Header) http.Header {
 	dst := make(http.Header)
 	for key, values := range src {
-		lower := strings.ToLower(key)
-		if lower == "connection" || lower == "transfer-encoding" || lower == "keep-alive" || lower == "proxy-authenticate" || lower == "proxy-authorization" || lower == "te" || lower == "trailers" || lower == "upgrade" {
+		if _, ok := hopHeaders[strings.ToLower(key)]; ok {
 			continue
 		}
-
 		for _, value := range values {
 			dst.Add(key, value)
 		}
 	}
-
 	return dst
 }

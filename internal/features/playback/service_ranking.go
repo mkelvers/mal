@@ -189,16 +189,12 @@ func extractDigits(value string) string {
 
 func normalizeSourceTypeFromProbe(source StreamSource, contentType string) StreamSource {
 	lower := strings.ToLower(contentType)
-	if strings.Contains(lower, "video/mp4") {
+	switch {
+	case strings.Contains(lower, "video/mp4"):
 		source.Type = "mp4"
-		return source
-	}
-
-	if strings.Contains(lower, "mpegurl") {
+	case strings.Contains(lower, "mpegurl"):
 		source.Type = "m3u8"
-		return source
 	}
-
 	return source
 }
 

@@ -60,19 +60,16 @@ func (s *Service) choosePlaybackSource(ctx context.Context, ranked []sourceScore
 		return StreamSource{}, "", errors.New("no ranked sources available")
 	}
 
-	embedCandidates := make([]StreamSource, 0)
+	embedCandidates := make([]StreamSource, 0, len(ranked))
 	for _, candidate := range ranked {
 		source := candidate.source
-		sourceType := strings.ToLower(source.Type)
-
-		switch sourceType {
+		switch strings.ToLower(source.Type) {
 		case "mp4", "m3u8":
 			return source, "direct-media", nil
 		case "embed":
 			embedCandidates = append(embedCandidates, source)
 		default:
-			playable, contentType := s.probeDirectMedia(ctx, source)
-			if playable {
+			if playable, contentType := s.probeDirectMedia(ctx, source); playable {
 				return normalizeSourceTypeFromProbe(source, contentType), "probed-media", nil
 			}
 		}
@@ -101,19 +98,16 @@ func (s *Service) choosePlaybackSourceWithCache(
 		return StreamSource{}, "", errors.New("no ranked sources available")
 	}
 
-	embedCandidates := make([]StreamSource, 0)
+	embedCandidates := make([]StreamSource, 0, len(ranked))
 	for _, candidate := range ranked {
 		source := candidate.source
-		sourceType := strings.ToLower(source.Type)
-
-		switch sourceType {
+		switch strings.ToLower(source.Type) {
 		case "mp4", "m3u8":
 			return source, "direct-media", nil
 		case "embed":
 			embedCandidates = append(embedCandidates, source)
 		default:
-			playable, contentType := s.probeDirectMediaCached(ctx, source, probeCache, probeCacheMu)
-			if playable {
+			if playable, contentType := s.probeDirectMediaCached(ctx, source, probeCache, probeCacheMu); playable {
 				return normalizeSourceTypeFromProbe(source, contentType), "probed-media", nil
 			}
 		}
@@ -208,10 +202,10 @@ func (s *Service) probeDirectMedia(ctx context.Context, source StreamSource) (bo
 }
 
 func (s *Service) probeEmbedSource(ctx context.Context, source StreamSource) bool {
-	probeCtx, cancel := context.WithTimeout(ctx, providerProbeTimeout)
+	ctx, cancel := context.WithTimeout(ctx, providerProbeTimeout)
 	defer cancel()
 
-	req, err := http.NewRequestWithContext(probeCtx, http.MethodGet, source.URL, nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, source.URL, nil)
 	if err != nil {
 		return false
 	}
@@ -237,7 +231,7 @@ func (s *Service) probeEmbedSource(ctx context.Context, source StreamSource) boo
 	}
 
 	content := strings.ToLower(string(body))
-	markers := []string{
+	for _, marker := range []string{
 		"file was deleted",
 		"file has been deleted",
 		"video was deleted",
@@ -246,8 +240,7 @@ func (s *Service) probeEmbedSource(ctx context.Context, source StreamSource) boo
 		"file not found",
 		"this file does not exist",
 		"resource unavailable",
-	}
-	for _, marker := range markers {
+	} {
 		if strings.Contains(content, marker) {
 			return false
 		}
