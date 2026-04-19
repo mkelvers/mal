@@ -182,7 +182,7 @@ func (s *Service) BuildWatchPageData(ctx context.Context, malID int, titleCandid
 		InitialMode:      initialMode,
 		AvailableModes:   cloneSlice(baseData.AvailableModes),
 		ModeSources:      clientModeSources,
-		Segments: cloneSlice(baseData.Segments),
+		Segments:         cloneSlice(baseData.Segments),
 	}, nil
 }
 
@@ -365,5 +365,3 @@ func cloneModeSources(modeSources map[string]ModeSource) map[string]ModeSource {
 	}
 	return cloned
 }
-
-
