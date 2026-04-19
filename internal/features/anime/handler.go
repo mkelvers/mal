@@ -28,7 +28,8 @@ func deduplicateAnimes(animes []jikan.Anime) []jikan.Anime {
 }
 
 type Handler struct {
-	svc *Service
+	jikanClient *jikan.Client
+	db          database.Querier
 }
 
 type quickSearchResult struct {
@@ -66,8 +67,8 @@ func userIDFromRequest(r *http.Request) string {
 	return user.ID
 }
 
-func NewHandler(svc *Service) *Handler {
-	return &Handler{svc: svc}
+func NewHandler(jikanClient *jikan.Client, db database.Querier) *Handler {
+	return &Handler{jikanClient: jikanClient, db: db}
 }
 
 func (h *Handler) HandleCatalog(w http.ResponseWriter, r *http.Request) {
@@ -88,7 +89,7 @@ func (h *Handler) HandleSearch(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if r.Header.Get("HX-Request") == "true" {
-		res, err := h.svc.Search(r.Context(), query, 1)
+		res, err := h.jikanClient.Search(r.Context(), query, 1)
 		if err != nil {
 			log.Printf("search error: %v", err)
 			if jikan.IsRetryableError(err) || errors.Is(err, context.Canceled) {
@@ -109,7 +110,7 @@ func (h *Handler) HandleAPISearch(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Query().Get("q")
 	page := parsePageParam(r)
 
-	res, err := h.svc.Search(r.Context(), query, page)
+	res, err := h.jikanClient.Search(r.Context(), query, page)
 	if err != nil {
 		log.Printf("search pagination error: %v", err)
 		if jikan.IsRetryableError(err) || errors.Is(err, context.Canceled) {
@@ -128,21 +129,20 @@ func (h *Handler) HandleAPISearch(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) HandleAPICatalog(w http.ResponseWriter, r *http.Request) {
 	page := parsePageParam(r)
 
-	res, fallbackPlaceholder, err := h.svc.GetTopAnimeWithPlaceholder(r.Context(), page)
-	if err != nil {
-		log.Printf("top anime error: %v", err)
-		http.Error(w, "Failed to fetch top anime", http.StatusInternalServerError)
+	result, err := h.jikanClient.GetTopAnime(r.Context(), page)
+	if err == nil {
+		result.Animes = deduplicateAnimes(result.Animes)
+		templates.CatalogItems(result.Animes, page+1, result.HasNextPage).Render(r.Context(), w)
 		return
 	}
 
-	if fallbackPlaceholder {
+	if jikan.IsRetryableError(err) {
 		templates.CatalogPlaceholderItems(25).Render(r.Context(), w)
 		return
 	}
 
-	res.Animes = deduplicateAnimes(res.Animes)
-
-	templates.CatalogItems(res.Animes, page+1, res.HasNextPage).Render(r.Context(), w)
+	log.Printf("top anime error: %v", err)
+	http.Error(w, "Failed to fetch top anime", http.StatusInternalServerError)
 }
 
 func (h *Handler) HandleAnimeDetails(w http.ResponseWriter, r *http.Request) {
@@ -155,21 +155,40 @@ func (h *Handler) HandleAnimeDetails(w http.ResponseWriter, r *http.Request) {
 
 	userID := userIDFromRequest(r)
 
-	anime, currentStatus, nextEpisode, err := h.svc.GetAnimeDetails(r.Context(), id, userID)
+	anime, err := h.jikanClient.GetAnimeByID(r.Context(), id)
 	if err != nil {
-		if errors.Is(err, ErrAnimePendingFetch) {
-			templates.AnimePending(id).Render(r.Context(), w)
+		if jikan.IsNotFoundError(err) {
+			renderNotFoundPage(r, w)
 			return
 		}
 
-		if jikan.IsNotFoundError(err) {
-			renderNotFoundPage(r, w)
+		h.jikanClient.EnqueueAnimeFetchRetry(r.Context(), id, err)
+		if jikan.IsRetryableError(err) {
+			templates.AnimePending(id).Render(r.Context(), w)
 			return
 		}
 
 		log.Printf("anime fetch error for %d: %v", id, err)
 		http.Error(w, "Failed to fetch anime details", http.StatusInternalServerError)
 		return
+	}
+
+	currentStatus := ""
+	nextEpisode := 1
+	if userID != "" {
+		entry, err := h.db.GetWatchListEntry(r.Context(), database.GetWatchListEntryParams{
+			UserID:  userID,
+			AnimeID: int64(id),
+		})
+		if err == nil {
+			currentStatus = entry.Status
+			if entry.CurrentEpisode.Valid {
+				value := int(entry.CurrentEpisode.Int64)
+				if value > 0 {
+					nextEpisode = value
+				}
+			}
+		}
 	}
 
 	templates.AnimeDetails(anime, currentStatus, nextEpisode).Render(r.Context(), w)
@@ -192,7 +211,7 @@ func (h *Handler) HandleAPIAnime(w http.ResponseWriter, r *http.Request) {
 
 	switch section {
 	case "relations":
-		relations, err := h.svc.GetRelations(r.Context(), id)
+		relations, err := h.jikanClient.GetFullRelations(r.Context(), id)
 		if err != nil {
 			if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
 				return
@@ -203,7 +222,7 @@ func (h *Handler) HandleAPIAnime(w http.ResponseWriter, r *http.Request) {
 		}
 		templates.AnimeRelationsList(relations).Render(r.Context(), w)
 	case "recommendations":
-		recs, err := h.svc.GetRecommendations(r.Context(), id, 12)
+		recs, err := h.jikanClient.GetRecommendations(r.Context(), id, 12)
 		if err != nil {
 			log.Printf("recommendations error for %d: %v", id, err)
 			writeInlineLoadError(w, "Failed to load recommendations.")
@@ -212,7 +231,7 @@ func (h *Handler) HandleAPIAnime(w http.ResponseWriter, r *http.Request) {
 		templates.AnimeRecommendations(recs).Render(r.Context(), w)
 	case "episodes":
 		currentEpisode := r.URL.Query().Get("current")
-		episodes, err := h.svc.GetEpisodes(r.Context(), id)
+		episodes, err := h.getEpisodes(r.Context(), id)
 		if err != nil {
 			log.Printf("episodes error for %d: %v", id, err)
 			writeInlineLoadError(w, "Failed to load episodes.")
@@ -235,14 +254,38 @@ func (h *Handler) HandleAPIEpisodes(w http.ResponseWriter, r *http.Request) {
 	}
 
 	currentEpisode := r.URL.Query().Get("current")
-	episodes, err := h.svc.GetEpisodes(r.Context(), id)
+	episodes, err := h.getEpisodes(r.Context(), id)
 	if err != nil {
-		log.Printf("episodes error for %d: %v", id, err)
+		log.Printf("episodes error: %v", err)
 		writeInlineLoadError(w, "Failed to load episodes.")
 		return
 	}
 
 	templates.EpisodeList(episodes, currentEpisode, id).Render(r.Context(), w)
+}
+
+func (h *Handler) getEpisodes(ctx context.Context, animeID int) ([]jikan.Episode, error) {
+	var allEpisodes []jikan.Episode
+	page := 1
+
+	for page <= 20 {
+		result, err := h.jikanClient.GetEpisodes(ctx, animeID, page)
+		if err != nil {
+			if jikan.IsRetryableError(err) && len(allEpisodes) > 0 {
+				return allEpisodes, nil
+			}
+			return nil, err
+		}
+
+		allEpisodes = append(allEpisodes, result.Data...)
+
+		if !result.Pagination.HasNextPage {
+			break
+		}
+		page++
+	}
+
+	return allEpisodes, nil
 }
 
 func (h *Handler) HandleQuickSearch(w http.ResponseWriter, r *http.Request) {
@@ -255,7 +298,7 @@ func (h *Handler) HandleQuickSearch(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res, err := h.svc.QuickSearch(r.Context(), query, 1, 5)
+	res, err := h.jikanClient.SearchWithLimit(r.Context(), query, 1, 5)
 	if err != nil {
 		log.Printf("quick search error: %v", err)
 		if jikan.IsRetryableError(err) || errors.Is(err, context.Canceled) {
@@ -290,7 +333,7 @@ func (h *Handler) HandleDiscover(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) HandleAPIDiscoverAiring(w http.ResponseWriter, r *http.Request) {
 	page := parsePageParam(r)
 
-	res, err := h.svc.GetAiringAnime(r.Context(), page)
+	res, err := h.jikanClient.GetSeasonsNow(r.Context(), page)
 	if err != nil {
 		log.Printf("airing anime error: %v", err)
 		http.Error(w, "Failed to fetch airing anime", http.StatusInternalServerError)
@@ -305,7 +348,7 @@ func (h *Handler) HandleAPIDiscoverAiring(w http.ResponseWriter, r *http.Request
 func (h *Handler) HandleAPIDiscoverUpcoming(w http.ResponseWriter, r *http.Request) {
 	page := parsePageParam(r)
 
-	res, err := h.svc.GetUpcomingAnime(r.Context(), page)
+	res, err := h.jikanClient.GetSeasonsUpcoming(r.Context(), page)
 	if err != nil {
 		log.Printf("upcoming anime error: %v", err)
 		http.Error(w, "Failed to fetch upcoming anime", http.StatusInternalServerError)
@@ -325,7 +368,7 @@ func (h *Handler) HandleStudioDetails(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	producer, err := h.svc.GetProducerByID(r.Context(), id)
+	producer, err := h.jikanClient.GetProducerByID(r.Context(), id)
 	if err != nil {
 		if jikan.IsNotFoundError(err) {
 			renderNotFoundPage(r, w)
@@ -337,7 +380,7 @@ func (h *Handler) HandleStudioDetails(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	result, err := h.svc.GetAnimeByProducer(r.Context(), id, 1)
+	result, err := h.jikanClient.GetAnimeByProducer(r.Context(), id, 1)
 	if err != nil {
 		log.Printf("studio anime fetch error for %d: %v", id, err)
 		if jikan.IsRetryableError(err) || errors.Is(err, context.Canceled) {
@@ -369,7 +412,7 @@ func (h *Handler) HandleAPIStudioAnime(w http.ResponseWriter, r *http.Request) {
 
 	page := parsePageParam(r)
 
-	result, err := h.svc.GetAnimeByProducer(r.Context(), id, page)
+	result, err := h.jikanClient.GetAnimeByProducer(r.Context(), id, page)
 	if err != nil {
 		log.Printf("studio anime pagination error for %d page %d: %v", id, page, err)
 		if jikan.IsRetryableError(err) || errors.Is(err, context.Canceled) {
