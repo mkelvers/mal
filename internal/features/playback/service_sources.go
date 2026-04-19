@@ -20,7 +20,7 @@ func (s *Service) resolveModeSource(ctx context.Context, showID string, episode 
 		return StreamSource{}, err
 	}
 
-	selected, _, err := s.choosePlaybackSource(ctx, ranked)
+	selected, _, err := s.choosePlaybackSource(ctx, ranked, s.probeDirectMedia)
 	if err != nil {
 		return StreamSource{}, err
 	}
@@ -55,7 +55,11 @@ func (s *Service) resolveModeSourceWithCache(
 	return selected, nil
 }
 
-func (s *Service) choosePlaybackSource(ctx context.Context, ranked []sourceScore) (StreamSource, string, error) {
+func (s *Service) choosePlaybackSource(
+	ctx context.Context,
+	ranked []sourceScore,
+	probeFn func(context.Context, StreamSource) (bool, string),
+) (StreamSource, string, error) {
 	if len(ranked) == 0 {
 		return StreamSource{}, "", errors.New("no ranked sources available")
 	}
@@ -69,7 +73,7 @@ func (s *Service) choosePlaybackSource(ctx context.Context, ranked []sourceScore
 		case "embed":
 			embedCandidates = append(embedCandidates, source)
 		default:
-			if playable, contentType := s.probeDirectMedia(ctx, source); playable {
+			if playable, contentType := probeFn(ctx, source); playable {
 				return normalizeSourceTypeFromProbe(source, contentType), "probed-media", nil
 			}
 		}
@@ -94,36 +98,9 @@ func (s *Service) choosePlaybackSourceWithCache(
 	probeCache map[string]directProbeResult,
 	probeCacheMu *sync.Mutex,
 ) (StreamSource, string, error) {
-	if len(ranked) == 0 {
-		return StreamSource{}, "", errors.New("no ranked sources available")
-	}
-
-	embedCandidates := make([]StreamSource, 0, len(ranked))
-	for _, candidate := range ranked {
-		source := candidate.source
-		switch strings.ToLower(source.Type) {
-		case "mp4", "m3u8":
-			return source, "direct-media", nil
-		case "embed":
-			embedCandidates = append(embedCandidates, source)
-		default:
-			if playable, contentType := s.probeDirectMediaCached(ctx, source, probeCache, probeCacheMu); playable {
-				return normalizeSourceTypeFromProbe(source, contentType), "probed-media", nil
-			}
-		}
-	}
-
-	for _, embed := range embedCandidates {
-		if s.probeEmbedSource(ctx, embed) {
-			return embed, "embed-probed", nil
-		}
-	}
-
-	if len(embedCandidates) > 0 {
-		return embedCandidates[0], "embed-fallback", nil
-	}
-
-	return ranked[0].source, "ranked-fallback", nil
+	return s.choosePlaybackSource(ctx, ranked, func(ctx context.Context, source StreamSource) (bool, string) {
+		return s.probeDirectMediaCached(ctx, source, probeCache, probeCacheMu)
+	})
 }
 
 func (s *Service) probeDirectMediaCached(

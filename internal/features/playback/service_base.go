@@ -180,7 +180,7 @@ func (s *Service) BuildWatchPageData(ctx context.Context, malID int, titleCandid
 		StartTimeSeconds: userState.StartTimeSeconds,
 		CurrentStatus:    userState.CurrentStatus,
 		InitialMode:      initialMode,
-		AvailableModes:   cloneStringSlice(baseData.AvailableModes),
+		AvailableModes:   cloneSlice(baseData.AvailableModes),
 		ModeSources:      clientModeSources,
 		Segments:         cloneSegments(baseData.Segments),
 	}, nil
@@ -336,17 +336,17 @@ func (s *Service) fetchPlaybackSourcesAndSegments(ctx context.Context, showID st
 func clonePlaybackBaseData(data playbackBaseData) playbackBaseData {
 	return playbackBaseData{
 		Title:          data.Title,
-		AvailableModes: cloneStringSlice(data.AvailableModes),
+		AvailableModes: cloneSlice(data.AvailableModes),
 		ModeSources:    cloneModeSources(data.ModeSources),
-		Segments:       cloneSegments(data.Segments),
+		Segments:       cloneSlice(data.Segments),
 	}
 }
 
-func cloneStringSlice(items []string) []string {
+func cloneSlice[T any](items []T) []T {
 	if len(items) == 0 {
 		return nil
 	}
-	cloned := make([]string, len(items))
+	cloned := make([]T, len(items))
 	copy(cloned, items)
 	return cloned
 }
@@ -367,19 +367,9 @@ func cloneModeSources(modeSources map[string]ModeSource) map[string]ModeSource {
 }
 
 func cloneSubtitleItems(items []SubtitleItem) []SubtitleItem {
-	if len(items) == 0 {
-		return nil
-	}
-	cloned := make([]SubtitleItem, len(items))
-	copy(cloned, items)
-	return cloned
+	return cloneSlice(items)
 }
 
 func cloneSegments(segments []SkipSegment) []SkipSegment {
-	if len(segments) == 0 {
-		return nil
-	}
-	cloned := make([]SkipSegment, len(segments))
-	copy(cloned, segments)
-	return cloned
+	return cloneSlice(segments)
 }
