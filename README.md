@@ -3,7 +3,10 @@
 <table align="center">
   <tr>
     <td>
-      <img src="static/favicon.svg" alt="MyAnimeList logo" width="140" />
+      <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="static/readme-logo-dark.svg" />
+        <img src="static/readme-logo-light.svg" alt="MyAnimeList logo" width="140" />
+      </picture>
     </td>
     <td>
       <strong>MyAnimeList</strong><br />
