@@ -133,24 +133,23 @@ func (s *Service) DeleteContinueWatching(ctx context.Context, userID string, ani
 		return ErrInvalidAnimeID
 	}
 
+	params := database.DeleteContinueWatchingEntryParams{
+		UserID:  userID,
+		AnimeID: animeID,
+	}
+
+	clearProgress := database.SaveWatchProgressParams{
+		CurrentEpisode:     sql.NullInt64{Valid: false},
+		CurrentTimeSeconds: 0,
+		UserID:             userID,
+		AnimeID:            animeID,
+	}
+
 	if s.sqlDB == nil {
-		if err := s.db.DeleteContinueWatchingEntry(ctx, database.DeleteContinueWatchingEntryParams{
-			UserID:  userID,
-			AnimeID: animeID,
-		}); err != nil {
+		if err := s.db.DeleteContinueWatchingEntry(ctx, params); err != nil {
 			return fmt.Errorf("failed to delete continue watching entry: %w", err)
 		}
-
-		if err := s.db.SaveWatchProgress(ctx, database.SaveWatchProgressParams{
-			CurrentEpisode:     sql.NullInt64{Valid: false},
-			CurrentTimeSeconds: 0,
-			UserID:             userID,
-			AnimeID:            animeID,
-		}); err != nil {
-			return fmt.Errorf("failed to clear watchlist progress: %w", err)
-		}
-
-		return nil
+		return s.db.SaveWatchProgress(ctx, clearProgress)
 	}
 
 	tx, err := s.sqlDB.BeginTx(ctx, nil)
@@ -160,27 +159,14 @@ func (s *Service) DeleteContinueWatching(ctx context.Context, userID string, ani
 	defer tx.Rollback()
 
 	txQueries := database.New(tx)
-	if err := txQueries.DeleteContinueWatchingEntry(ctx, database.DeleteContinueWatchingEntryParams{
-		UserID:  userID,
-		AnimeID: animeID,
-	}); err != nil {
+	if err := txQueries.DeleteContinueWatchingEntry(ctx, params); err != nil {
 		return fmt.Errorf("failed to delete continue watching entry: %w", err)
 	}
-
-	if err := txQueries.SaveWatchProgress(ctx, database.SaveWatchProgressParams{
-		CurrentEpisode:     sql.NullInt64{Valid: false},
-		CurrentTimeSeconds: 0,
-		UserID:             userID,
-		AnimeID:            animeID,
-	}); err != nil {
+	if err := txQueries.SaveWatchProgress(ctx, clearProgress); err != nil {
 		return fmt.Errorf("failed to clear watchlist progress: %w", err)
 	}
 
-	if err := tx.Commit(); err != nil {
-		return fmt.Errorf("failed to commit continue watching deletion: %w", err)
-	}
-
-	return nil
+	return tx.Commit()
 }
 
 type ExportEntry struct {

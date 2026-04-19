@@ -30,8 +30,8 @@ func rankSources(sources []StreamSource, quality string) ([]sourceScore, error) 
 	targetQuality := normalizeQuality(quality)
 	scored := make([]sourceScore, 0, len(filtered))
 	for _, source := range filtered {
-		typeScore := sourceTypePriority(source.Type)
-		providerScore := providerPriority(source.Provider)
+		typeScore := sourceTypePriorityFn(source.Type)
+		providerScore := providerPriorityFn(source.Provider)
 		qualityScore := sourceQualityPriority(source.Quality, targetQuality)
 		refererScore := 0
 		if source.Referer != "" {
@@ -65,48 +65,43 @@ func normalizeQuality(quality string) string {
 	return lower
 }
 
-func sourceTypePriority(sourceType string) int {
-	switch strings.ToLower(sourceType) {
-	case "mp4":
-		return 500
-	case "m3u8":
-		return 450
-	case "unknown":
-		return 300
-	case "embed":
-		return 100
-	default:
-		return 200
-	}
+var sourceTypePriority = map[string]int{
+	"mp4":     500,
+	"m3u8":    450,
+	"unknown": 300,
+	"embed":   100,
 }
 
-func providerPriority(provider string) int {
-	switch strings.ToLower(provider) {
-	case "s-mp4":
-		return 120
-	case "default":
-		return 115
-	case "luf-mp4":
-		return 110
-	case "vid-mp4":
-		return 105
-	case "yt-mp4":
-		return 100
-	case "mp4":
-		return 95
-	case "uv-mp4":
-		return 90
-	case "hls":
-		return 80
-	case "sw":
-		return 40
-	case "ok":
-		return 35
-	case "ss-hls":
-		return 30
-	default:
-		return 60
+var providerPriority = map[string]int{
+	"s-mp4":   120,
+	"default": 115,
+	"luf-mp4": 110,
+	"vid-mp4": 105,
+	"yt-mp4":  100,
+	"mp4":     95,
+	"uv-mp4":  90,
+	"hls":     80,
+	"sw":      40,
+	"ok":      35,
+	"ss-hls":  30,
+}
+
+var sourceQualityDefaults = map[string]int{
+	"auto": 240,
+}
+
+func sourceTypePriorityFn(sourceType string) int {
+	if p, ok := sourceTypePriority[strings.ToLower(sourceType)]; ok {
+		return p
 	}
+	return 200
+}
+
+func providerPriorityFn(provider string) int {
+	if p, ok := providerPriority[strings.ToLower(provider)]; ok {
+		return p
+	}
+	return 60
 }
 
 func sourceQualityPriority(sourceQuality string, targetQuality string) int {
@@ -126,34 +121,6 @@ func sourceQualityPriority(sourceQuality string, targetQuality string) int {
 	}
 }
 
-func parseQualityValue(rawQuality string) int {
-	lower := strings.ToLower(rawQuality)
-	var digits strings.Builder
-
-	for _, char := range lower {
-		if char >= '0' && char <= '9' {
-			digits.WriteRune(char)
-			continue
-		}
-		if digits.Len() > 0 {
-			break
-		}
-	}
-
-	if digits.Len() > 0 {
-		value, err := strconv.Atoi(digits.String())
-		if err == nil {
-			return value
-		}
-	}
-
-	if lower == "auto" {
-		return 240
-	}
-
-	return 0
-}
-
 func qualityMatches(sourceQuality string, targetQuality string) bool {
 	sourceLower := strings.ToLower(sourceQuality)
 	targetLower := strings.ToLower(targetQuality)
@@ -166,10 +133,25 @@ func qualityMatches(sourceQuality string, targetQuality string) bool {
 		return true
 	}
 
-	sourceDigits := extractDigits(sourceLower)
-	targetDigits := extractDigits(targetLower)
+	return extractDigits(sourceLower) == extractDigits(targetLower)
+}
 
-	return sourceDigits != "" && sourceDigits == targetDigits
+func parseQualityValue(rawQuality string) int {
+	lower := strings.ToLower(rawQuality)
+	if lower == "auto" {
+		return 240
+	}
+
+	digits := extractDigits(lower)
+	if digits == "" {
+		return 0
+	}
+
+	value, err := strconv.Atoi(digits)
+	if err != nil {
+		return 0
+	}
+	return value
 }
 
 func extractDigits(value string) string {
@@ -177,13 +159,10 @@ func extractDigits(value string) string {
 	for _, char := range value {
 		if char >= '0' && char <= '9' {
 			digits.WriteRune(char)
-			continue
-		}
-		if digits.Len() > 0 {
+		} else if digits.Len() > 0 {
 			break
 		}
 	}
-
 	return digits.String()
 }
 

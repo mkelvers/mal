@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -184,15 +185,10 @@ func convertSegments(segments []SkipSegment) []templates.SkipSegment {
 	return result
 }
 
-func (h *Handler) HandleProxyStream(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) HandleProxy(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
-	}
-
-	mode := normalizeMode(r.URL.Query().Get("mode"))
-	if mode == "" {
-		mode = "dub"
 	}
 
 	token := strings.TrimSpace(r.URL.Query().Get("token"))
@@ -201,55 +197,36 @@ func (h *Handler) HandleProxyStream(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	targetURL, referer, err := h.svc.resolveProxyToken(r.Context(), token, proxyScopeStream)
+	scope := proxyScope(strings.TrimPrefix(r.URL.Path, "/watch/proxy/"))
+	scopeLabel := map[proxyScope]string{
+		proxyScopeStream:   "stream",
+		proxyScopeSegment:  "segment",
+		proxyScopeSubtitle: "subtitle",
+	}[scope]
+	if scopeLabel == "" {
+		http.Error(w, "invalid proxy scope", http.StatusBadRequest)
+		return
+	}
+
+	targetURL, referer, err := h.svc.resolveProxyToken(r.Context(), token, scope)
 	if err != nil {
-		http.Error(w, "invalid stream token", http.StatusBadRequest)
+		http.Error(w, fmt.Sprintf("invalid %s token", scopeLabel), http.StatusBadRequest)
 		return
 	}
 
 	h.proxyUpstream(w, r, targetURL, referer)
+}
+
+func (h *Handler) HandleProxyStream(w http.ResponseWriter, r *http.Request) {
+	h.HandleProxy(w, r)
 }
 
 func (h *Handler) HandleProxySegment(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-
-	token := strings.TrimSpace(r.URL.Query().Get("token"))
-	if token == "" {
-		http.Error(w, "missing segment token", http.StatusBadRequest)
-		return
-	}
-
-	targetURL, referer, err := h.svc.resolveProxyToken(r.Context(), token, proxyScopeSegment)
-	if err != nil {
-		http.Error(w, "invalid segment token", http.StatusBadRequest)
-		return
-	}
-
-	h.proxyUpstream(w, r, targetURL, referer)
+	h.HandleProxy(w, r)
 }
 
 func (h *Handler) HandleProxySubtitle(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-
-	token := strings.TrimSpace(r.URL.Query().Get("token"))
-	if token == "" {
-		http.Error(w, "missing subtitle token", http.StatusBadRequest)
-		return
-	}
-
-	targetURL, referer, err := h.svc.resolveProxyToken(r.Context(), token, proxyScopeSubtitle)
-	if err != nil {
-		http.Error(w, "invalid subtitle token", http.StatusBadRequest)
-		return
-	}
-
-	h.proxyUpstream(w, r, targetURL, referer)
+	h.HandleProxy(w, r)
 }
 
 func (h *Handler) HandleSaveProgress(w http.ResponseWriter, r *http.Request) {
