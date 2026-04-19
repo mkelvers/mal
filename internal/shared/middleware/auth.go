@@ -55,10 +55,6 @@ func RequireAuth(next http.Handler) http.Handler {
 	})
 }
 
-func RequireGlobalAuth(next http.Handler) http.Handler {
-	return RequireGlobalAuthWithPolicy(NewAccessPolicy())(next)
-}
-
 func GetUser(ctx context.Context) *database.User {
 	user, ok := ctx.Value(UserContextKey).(*database.User)
 	if !ok {

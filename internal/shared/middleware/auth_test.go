@@ -51,7 +51,7 @@ func TestRequireAuth_AuthenticatedRequestPassesThrough(t *testing.T) {
 func TestRequireGlobalAuth_AllowsPublicRoute(t *testing.T) {
 	t.Parallel()
 
-	h := RequireGlobalAuth(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	h := RequireGlobalAuthWithPolicy(NewAccessPolicy())(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	}))
 
