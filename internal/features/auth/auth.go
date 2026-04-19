@@ -97,13 +97,13 @@ func (s *Service) ValidateSession(ctx context.Context, sessionID string) (*datab
 }
 
 func SetSessionCookie(w http.ResponseWriter, sessionID string, expiresAt time.Time) {
-	isProd := os.Getenv("ENV") == "production"
+	secure := os.Getenv("ENV") == "production" || os.Getenv("FORCE_SECURE_COOKIES") == "true"
 	http.SetCookie(w, &http.Cookie{
 		Name:     "session_id",
 		Value:    sessionID,
 		Expires:  expiresAt,
 		HttpOnly: true,
-		Secure:   isProd,
+		Secure:   secure,
 		SameSite: http.SameSiteStrictMode,
 		Path:     "/",
 	})

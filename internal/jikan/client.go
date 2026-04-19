@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"net"
 	"net/http"
 	"strconv"
@@ -241,9 +242,14 @@ func (c *Client) getWithCache(ctx context.Context, cacheKey string, ttl time.Dur
 
 	if err := c.fetchWithRetry(ctx, url, out); err != nil {
 		if hasStale {
-			staleBytes, _ := json.Marshal(stale)
-			json.Unmarshal(staleBytes, out)
-			return nil
+			staleBytes, marshalErr := json.Marshal(stale)
+			if marshalErr == nil {
+				unmarshalErr := json.Unmarshal(staleBytes, out)
+				if unmarshalErr == nil {
+					return nil
+				}
+			}
+			log.Printf("jikan: stale cache unmarshal failed, falling back to error: %v", err)
 		}
 		return err
 	}

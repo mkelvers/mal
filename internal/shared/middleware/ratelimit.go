@@ -16,22 +16,31 @@ type visitor struct {
 var (
 	visitors = make(map[string]*visitor)
 	mu       sync.Mutex
+	quit     = make(chan struct{})
 )
 
 func init() {
 	go cleanupVisitors()
 }
 
+func StopCleanup() {
+	close(quit)
+}
+
 func cleanupVisitors() {
 	for {
-		time.Sleep(time.Minute)
-		mu.Lock()
-		for ip, v := range visitors {
-			if time.Since(v.lastSeen) > 3*time.Minute {
-				delete(visitors, ip)
+		select {
+		case <-quit:
+			return
+		case <-time.After(time.Minute):
+			mu.Lock()
+			for ip, v := range visitors {
+				if time.Since(v.lastSeen) > 3*time.Minute {
+					delete(visitors, ip)
+				}
 			}
+			mu.Unlock()
 		}
-		mu.Unlock()
 	}
 }
 

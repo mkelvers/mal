@@ -18,6 +18,7 @@ import (
 	"mal/internal/features/auth"
 	"mal/internal/jikan"
 	"mal/internal/server"
+	"mal/internal/shared/middleware"
 	"mal/internal/worker"
 )
 
@@ -101,4 +102,5 @@ func gracefulShutdown(srv *http.Server, ctx context.Context) {
 	if err := srv.Shutdown(shutdownCtx); err != nil {
 		log.Printf("server shutdown failed: %v", err)
 	}
+	middleware.StopCleanup()
 }

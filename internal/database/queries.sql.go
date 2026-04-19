@@ -698,9 +698,9 @@ WHERE anime_id = ?
 `
 
 type MarkAnimeFetchRetryFailedParams struct {
-	Datetime  interface{} `json:"datetime"`
-	LastError string      `json:"last_error"`
-	AnimeID   int64       `json:"anime_id"`
+	Datetime  string `json:"datetime"`
+	LastError string `json:"last_error"`
+	AnimeID   int64  `json:"anime_id"`
 }
 
 func (q *Queries) MarkAnimeFetchRetryFailed(ctx context.Context, arg MarkAnimeFetchRetryFailedParams) error {

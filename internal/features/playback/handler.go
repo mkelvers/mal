@@ -236,7 +236,7 @@ func (h *Handler) HandleSaveProgress(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var payload saveProgressRequest
-	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+	if err := json.NewDecoder(io.LimitReader(r.Body, 4096)).Decode(&payload); err != nil {
 		http.Error(w, "invalid payload", http.StatusBadRequest)
 		return
 	}

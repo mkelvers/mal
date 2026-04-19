@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 )
@@ -19,6 +20,7 @@ const (
 	allAnimeBaseURL  = "https://api.allanime.day"
 	allAnimeReferer  = "https://allmanga.to"
 	defaultUserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/121.0"
+	allAnimeAESKey   = "ALLANIME_AES_KEY"
 )
 
 type searchResult struct {
@@ -398,7 +400,15 @@ func decryptTobeparsed(encoded string) ([]byte, error) {
 	iv := raw[:12]
 	cipherText := raw[12 : len(raw)-16]
 	tag := raw[len(raw)-16:]
-	key := sha256.Sum256([]byte("SimtVuagFbGR2K7P"))
+
+	keyStr := os.Getenv(allAnimeAESKey)
+	if keyStr == "" {
+		keyStr = "SimtVuagFbGR2K7P"
+	}
+	if len(keyStr) < 16 {
+		return nil, fmt.Errorf("ALLANIME_AES_KEY must be at least 16 characters")
+	}
+	key := sha256.Sum256([]byte(keyStr))
 
 	block, err := aes.NewCipher(key[:])
 	if err != nil {
