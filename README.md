@@ -140,7 +140,7 @@ Current automated tests are unit-focused and cover watchlist behavior, relation 
 ./scripts/check.sh
 ```
 
-There is currently no CI workflow in this repository, so validation is local.
+There is no CI workflow, so validation is local. Use `just check` to run all checks (lint, test, typecheck, build) or `just install-hooks` to set up the pre-push hook that runs them automatically before each push.
 
 ## Security
 
