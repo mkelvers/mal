@@ -217,18 +217,6 @@ func (h *Handler) HandleProxy(w http.ResponseWriter, r *http.Request) {
 	h.proxyUpstream(w, r, targetURL, referer)
 }
 
-func (h *Handler) HandleProxyStream(w http.ResponseWriter, r *http.Request) {
-	h.HandleProxy(w, r)
-}
-
-func (h *Handler) HandleProxySegment(w http.ResponseWriter, r *http.Request) {
-	h.HandleProxy(w, r)
-}
-
-func (h *Handler) HandleProxySubtitle(w http.ResponseWriter, r *http.Request) {
-	h.HandleProxy(w, r)
-}
-
 func (h *Handler) HandleSaveProgress(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)

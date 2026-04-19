@@ -203,6 +203,15 @@ func (c *allAnimeClient) GetEpisodes(ctx context.Context, showID string, mode st
 	return episodes, nil
 }
 
+func buildStreamSource(url, sourceType, provider string) StreamSource {
+	return StreamSource{
+		URL:      url,
+		Provider: provider,
+		Type:     sourceType,
+		Referer:  allAnimeReferer,
+	}
+}
+
 func (c *allAnimeClient) GetEpisodeSources(ctx context.Context, showID string, episode string, mode string) ([]StreamSource, error) {
 	graphqlQuery := `query($showId: String!, $translationType: VaildTranslationTypeEnumType!, $episodeString: String!) {
 		episode(showId: $showId, translationType: $translationType, episodeString: $episodeString) {
@@ -254,12 +263,7 @@ func (c *allAnimeClient) GetEpisodeSources(ctx context.Context, showID string, e
 				sourceType = detectEmbedType(target)
 			}
 
-			out = append(out, StreamSource{
-				URL:      target,
-				Provider: ref.Name,
-				Type:     sourceType,
-				Referer:  allAnimeReferer,
-			})
+			out = append(out, buildStreamSource(target, sourceType, ref.Name))
 			continue
 		}
 
@@ -274,12 +278,7 @@ func (c *allAnimeClient) GetEpisodeSources(ctx context.Context, showID string, e
 				sourceType = detectEmbedType(decoded)
 			}
 
-			out = append(out, StreamSource{
-				URL:      decoded,
-				Provider: ref.Name,
-				Type:     sourceType,
-				Referer:  allAnimeReferer,
-			})
+			out = append(out, buildStreamSource(decoded, sourceType, ref.Name))
 			continue
 		}
 

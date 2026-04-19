@@ -17,13 +17,7 @@ func (s *Service) fetchSkipSegments(ctx context.Context, malID int, episode stri
 	}
 
 	endpoint := fmt.Sprintf("https://api.aniskip.com/v1/skip-times/%s/%s?types=op&types=ed", url.PathEscape(strconv.Itoa(malID)), url.PathEscape(episode))
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, endpoint, nil)
-	if err != nil {
-		return nil
-	}
-	req.Header.Set("User-Agent", defaultUserAgent)
-
-	resp, err := s.httpClient.Do(req)
+	resp, err := doProxiedRequest(ctx, s.httpClient, endpoint, "")
 	if err != nil {
 		return nil
 	}

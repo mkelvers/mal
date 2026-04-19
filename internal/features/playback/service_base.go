@@ -182,7 +182,7 @@ func (s *Service) BuildWatchPageData(ctx context.Context, malID int, titleCandid
 		InitialMode:      initialMode,
 		AvailableModes:   cloneSlice(baseData.AvailableModes),
 		ModeSources:      clientModeSources,
-		Segments:         cloneSegments(baseData.Segments),
+		Segments: cloneSlice(baseData.Segments),
 	}, nil
 }
 
@@ -360,16 +360,10 @@ func cloneModeSources(modeSources map[string]ModeSource) map[string]ModeSource {
 		cloned[mode] = ModeSource{
 			URL:       source.URL,
 			Referer:   source.Referer,
-			Subtitles: cloneSubtitleItems(source.Subtitles),
+			Subtitles: cloneSlice(source.Subtitles),
 		}
 	}
 	return cloned
 }
 
-func cloneSubtitleItems(items []SubtitleItem) []SubtitleItem {
-	return cloneSlice(items)
-}
 
-func cloneSegments(segments []SkipSegment) []SkipSegment {
-	return cloneSlice(segments)
-}

@@ -30,8 +30,8 @@ func rankSources(sources []StreamSource, quality string) ([]sourceScore, error) 
 	targetQuality := normalizeQuality(quality)
 	scored := make([]sourceScore, 0, len(filtered))
 	for _, source := range filtered {
-		typeScore := sourceTypePriorityFn(source.Type)
-		providerScore := providerPriorityFn(source.Provider)
+		typeScore := lookupPriority(sourceTypePriority, source.Type, 200)
+		providerScore := lookupPriority(providerPriority, source.Provider, 60)
 		qualityScore := sourceQualityPriority(source.Quality, targetQuality)
 		refererScore := 0
 		if source.Referer != "" {
@@ -90,18 +90,11 @@ var sourceQualityDefaults = map[string]int{
 	"auto": 240,
 }
 
-func sourceTypePriorityFn(sourceType string) int {
-	if p, ok := sourceTypePriority[strings.ToLower(sourceType)]; ok {
+func lookupPriority(m map[string]int, key string, fallback int) int {
+	if p, ok := m[strings.ToLower(key)]; ok {
 		return p
 	}
-	return 200
-}
-
-func providerPriorityFn(provider string) int {
-	if p, ok := providerPriority[strings.ToLower(provider)]; ok {
-		return p
-	}
-	return 60
+	return fallback
 }
 
 func sourceQualityPriority(sourceQuality string, targetQuality string) int {
@@ -155,15 +148,15 @@ func parseQualityValue(rawQuality string) int {
 }
 
 func extractDigits(value string) string {
-	var digits strings.Builder
+	var digits []byte
 	for _, char := range value {
 		if char >= '0' && char <= '9' {
-			digits.WriteRune(char)
-		} else if digits.Len() > 0 {
+			digits = append(digits, byte(char))
+		} else if len(digits) > 0 {
 			break
 		}
 	}
-	return digits.String()
+	return string(digits)
 }
 
 func normalizeSourceTypeFromProbe(source StreamSource, contentType string) StreamSource {

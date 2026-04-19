@@ -17,7 +17,7 @@ func (s *Service) SaveProgress(ctx context.Context, userID string, animeID int64
 		return errors.New("invalid save progress input")
 	}
 
-	txQueries, tx, err := s.beginTx(ctx)
+	txQueries, tx, err := database.BeginTx(ctx, s.sqlDB)
 	if err != nil {
 		return err
 	}
@@ -84,7 +84,7 @@ func (s *Service) CompleteAnime(ctx context.Context, userID string, animeID int6
 		return errors.New("invalid complete anime input")
 	}
 
-	txQueries, tx, err := s.beginTx(ctx)
+	txQueries, tx, err := database.BeginTx(ctx, s.sqlDB)
 	if err != nil {
 		return err
 	}
@@ -141,17 +141,4 @@ func (s *Service) CompleteAnime(ctx context.Context, userID string, animeID int6
 	}
 
 	return nil
-}
-
-func (s *Service) beginTx(ctx context.Context) (*database.Queries, *sql.Tx, error) {
-	if s.sqlDB == nil {
-		return nil, nil, errors.New("database unavailable")
-	}
-
-	tx, err := s.sqlDB.BeginTx(ctx, nil)
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to begin transaction: %w", err)
-	}
-
-	return database.New(tx), tx, nil
 }

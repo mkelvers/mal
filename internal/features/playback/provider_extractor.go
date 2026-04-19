@@ -27,15 +27,7 @@ func newProviderExtractor() *providerExtractor {
 
 func (e *providerExtractor) ExtractVideoLinks(ctx context.Context, providerPath string) ([]StreamSource, error) {
 	endpoint := e.baseURL + providerPath
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, endpoint, nil)
-	if err != nil {
-		return nil, fmt.Errorf("create provider request: %w", err)
-	}
-
-	req.Header.Set("Referer", e.referer)
-	req.Header.Set("User-Agent", defaultUserAgent)
-
-	resp, err := e.httpClient.Do(req)
+	resp, err := doProxiedRequest(ctx, e.httpClient, endpoint, e.referer)
 	if err != nil {
 		return nil, fmt.Errorf("fetch provider response: %w", err)
 	}
@@ -133,17 +125,7 @@ func (e *providerExtractor) parseProviderResponse(ctx context.Context, response 
 }
 
 func (e *providerExtractor) parseM3U8(ctx context.Context, masterURL string, referer string) ([]StreamSource, error) {
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, masterURL, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	if referer != "" {
-		req.Header.Set("Referer", referer)
-	}
-	req.Header.Set("User-Agent", defaultUserAgent)
-
-	resp, err := e.httpClient.Do(req)
+	resp, err := doProxiedRequest(ctx, e.httpClient, masterURL, referer)
 	if err != nil {
 		return nil, err
 	}

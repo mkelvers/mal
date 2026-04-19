@@ -126,12 +126,12 @@ func normalizeMode(raw string) string {
 }
 
 func availableModes(modeSources map[string]ModeSource) []string {
+	preferred := []string{"dub", "sub"}
 	ordered := make([]string, 0, len(modeSources))
-	if _, ok := modeSources["dub"]; ok {
-		ordered = append(ordered, "dub")
-	}
-	if _, ok := modeSources["sub"]; ok {
-		ordered = append(ordered, "sub")
+	for _, mode := range preferred {
+		if _, ok := modeSources[mode]; ok {
+			ordered = append(ordered, mode)
+		}
 	}
 
 	extra := make([]string, 0)

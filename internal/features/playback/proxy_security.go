@@ -162,17 +162,17 @@ func (s *Service) issueProxyToken(targetURL string, referer string, scope proxyS
 	})
 }
 
+var proxyTokenTTLs = map[proxyScope]time.Duration{
+	proxyScopeStream:   proxyStreamTokenTTL,
+	proxyScopeSegment:  proxySegmentTokenTTL,
+	proxyScopeSubtitle: proxySubtitleTokenTTL,
+}
+
 func proxyTokenTTL(scope proxyScope) time.Duration {
-	switch scope {
-	case proxyScopeStream:
-		return proxyStreamTokenTTL
-	case proxyScopeSegment:
-		return proxySegmentTokenTTL
-	case proxyScopeSubtitle:
-		return proxySubtitleTokenTTL
-	default:
-		return proxyStreamTokenTTL
+	if ttl, ok := proxyTokenTTLs[scope]; ok {
+		return ttl
 	}
+	return proxyStreamTokenTTL
 }
 
 func (s *Service) resolveProxyToken(ctx context.Context, token string, scope proxyScope) (string, string, error) {

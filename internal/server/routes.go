@@ -29,8 +29,7 @@ func NewRouter(cfg Config) http.Handler {
 	watchlistSvc := watchlist.NewService(cfg.DB, cfg.SQLDB)
 	watchlistHandler := watchlist.NewHandler(watchlistSvc)
 
-	animeSvc := anime.NewService(cfg.JikanClient, cfg.DB)
-	animeHandler := anime.NewHandler(animeSvc)
+	animeHandler := anime.NewHandler(cfg.JikanClient, cfg.DB)
 	playbackSvc := playback.NewService(cfg.DB, cfg.SQLDB, playback.Config{ProxyTokenSecret: cfg.PlaybackProxySecret})
 	playbackHandler := playback.NewHandler(playbackSvc, cfg.JikanClient)
 
@@ -60,9 +59,9 @@ func NewRouter(cfg Config) http.Handler {
 	mux.HandleFunc("/studios/", animeHandler.HandleStudioDetails)
 	mux.HandleFunc("/api/studios/", animeHandler.HandleAPIStudioAnime)
 	mux.HandleFunc("/watch/", playbackHandler.HandleWatchPage)
-	mux.HandleFunc("/watch/proxy/stream", playbackHandler.HandleProxyStream)
-	mux.HandleFunc("/watch/proxy/segment", playbackHandler.HandleProxySegment)
-	mux.HandleFunc("/watch/proxy/subtitle", playbackHandler.HandleProxySubtitle)
+	mux.HandleFunc("/watch/proxy/stream", playbackHandler.HandleProxy)
+	mux.HandleFunc("/watch/proxy/segment", playbackHandler.HandleProxy)
+	mux.HandleFunc("/watch/proxy/subtitle", playbackHandler.HandleProxy)
 	mux.HandleFunc("/api/watch-progress", playbackHandler.HandleSaveProgress)
 	mux.HandleFunc("/api/watch-complete", playbackHandler.HandleCompleteAnime)
 
@@ -85,7 +84,7 @@ func NewRouter(cfg Config) http.Handler {
 
 	// Wrap mux with global CSRF origin verification and auth checking,
 	// THEN auth context parsing.
-	protectedHandler := middleware.RequireGlobalAuth(middleware.VerifyOrigin(mux))
+	protectedHandler := middleware.RequireGlobalAuthWithPolicy(middleware.NewAccessPolicy())(middleware.VerifyOrigin(mux))
 	authenticatedHandler := middleware.Auth(cfg.AuthService)(protectedHandler)
 	return middleware.RequestLogger(authenticatedHandler)
 }
