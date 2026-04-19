@@ -26,6 +26,7 @@ type RecommendationsResponse struct {
 
 func (c *Client) GetRecommendations(ctx context.Context, animeID int, limit int) ([]Anime, error) {
 	cacheKey := fmt.Sprintf("recs:%d", animeID)
+
 	var cached []Anime
 	if c.getCache(ctx, cacheKey, &cached) {
 		if limit > 0 && len(cached) > limit {
@@ -34,19 +35,17 @@ func (c *Client) GetRecommendations(ctx context.Context, animeID int, limit int)
 		return cached, nil
 	}
 
-	var stale []Anime
-	hasStale := c.getStaleCache(ctx, cacheKey, &stale)
-
 	var result RecommendationsResponse
 	reqURL := fmt.Sprintf("%s/anime/%d/recommendations", c.baseURL, animeID)
+
 	if err := c.fetchWithRetry(ctx, reqURL, &result); err != nil {
-		if hasStale {
+		var stale []Anime
+		if c.getStaleCache(ctx, cacheKey, &stale) {
 			if limit > 0 && len(stale) > limit {
 				return stale[:limit], nil
 			}
 			return stale, nil
 		}
-
 		return nil, err
 	}
 
@@ -59,15 +58,12 @@ func (c *Client) GetRecommendations(ctx context.Context, animeID int, limit int)
 	for i := 0; i < max; i++ {
 		rec := result.Data[i]
 
-		// Try to see if we already have the full anime details in our local cache.
-		// If we do, we can use it to get the English title without making an API call!
 		var fullAnime Anime
 		animeCacheKey := fmt.Sprintf("anime:%d", rec.Entry.MalID)
 
 		if c.getCache(ctx, animeCacheKey, &fullAnime) {
 			animes = append(animes, fullAnime)
 		} else {
-			// Otherwise, map the basic recommendation data directly into an Anime struct.
 			anime := Anime{
 				MalID: rec.Entry.MalID,
 				Title: rec.Entry.Title,

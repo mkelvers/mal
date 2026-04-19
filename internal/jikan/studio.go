@@ -34,6 +34,7 @@ func (c *Client) GetAnimeByProducer(ctx context.Context, producerID int, page in
 	}
 
 	cacheKey := fmt.Sprintf("producer:%d:%d", producerID, page)
+
 	var cached StudioAnimeResult
 	if c.getCache(ctx, cacheKey, &cached) {
 		return cached, nil
@@ -49,11 +50,9 @@ func (c *Client) GetAnimeByProducer(ctx context.Context, producerID int, page in
 		if hasStale {
 			return stale, nil
 		}
-
 		return StudioAnimeResult{}, err
 	}
 
-	// Get producer info for the name
 	producerName := ""
 	var producerRes ProducerResponse
 	producerURL := fmt.Sprintf("%s/producers/%d", c.baseURL, producerID)
@@ -78,25 +77,10 @@ func (c *Client) GetAnimeByProducer(ctx context.Context, producerID int, page in
 
 func (c *Client) GetProducerByID(ctx context.Context, producerID int) (ProducerResponse, error) {
 	cacheKey := fmt.Sprintf("producer:info:%d", producerID)
-	var cached ProducerResponse
-	if c.getCache(ctx, cacheKey, &cached) {
-		return cached, nil
-	}
-
-	var stale ProducerResponse
-	hasStale := c.getStaleCache(ctx, cacheKey, &stale)
 
 	var result ProducerResponse
 	reqURL := fmt.Sprintf("%s/producers/%d/full", c.baseURL, producerID)
 
-	if err := c.fetchWithRetry(ctx, reqURL, &result); err != nil {
-		if hasStale {
-			return stale, nil
-		}
-
-		return ProducerResponse{}, err
-	}
-
-	c.setCache(ctx, cacheKey, result, shortCacheTTL)
-	return result, nil
+	err := c.getWithCache(ctx, cacheKey, shortCacheTTL, reqURL, &result)
+	return result, err
 }

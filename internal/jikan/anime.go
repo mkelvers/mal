@@ -8,21 +8,20 @@ import (
 
 func (c *Client) GetAnimeByID(ctx context.Context, id int) (Anime, error) {
 	cacheKey := fmt.Sprintf("anime:%d", id)
+
 	var cached Anime
 	if c.getCache(ctx, cacheKey, &cached) {
 		return cached, nil
 	}
 
-	var stale Anime
-	hasStale := c.getStaleCache(ctx, cacheKey, &stale)
-
 	var result AnimeResponse
 	reqURL := fmt.Sprintf("%s/anime/%d/full", c.baseURL, id)
+
 	if err := c.fetchWithRetry(ctx, reqURL, &result); err != nil {
-		if hasStale {
+		var stale Anime
+		if c.getStaleCache(ctx, cacheKey, &stale) {
 			return stale, nil
 		}
-
 		return Anime{}, err
 	}
 

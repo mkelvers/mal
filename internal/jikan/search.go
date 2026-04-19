@@ -26,13 +26,6 @@ func (c *Client) search(ctx context.Context, query string, page int, limit int) 
 	}
 
 	cacheKey := fmt.Sprintf("search:%s:%d:%d", query, page, limit)
-	var cached SearchResult
-	if c.getCache(ctx, cacheKey, &cached) {
-		return cached, nil
-	}
-
-	var stale SearchResult
-	hasStale := c.getStaleCache(ctx, cacheKey, &stale)
 
 	var result SearchResponse
 	reqURL := fmt.Sprintf("%s/anime?q=%s&page=%d", c.baseURL, url.QueryEscape(query), page)
@@ -40,7 +33,7 @@ func (c *Client) search(ctx context.Context, query string, page int, limit int) 
 		reqURL = fmt.Sprintf("%s&limit=%d", reqURL, limit)
 	}
 
-	if err := c.fetchWithRetry(ctx, reqURL, &result); err != nil {
+	if err := c.getWithCache(ctx, cacheKey, shortCacheTTL, reqURL, &result); err != nil {
 		if limit > 0 && IsRetryableError(err) {
 			fallbackURL := fmt.Sprintf("%s/anime?q=%s&page=%d", c.baseURL, url.QueryEscape(query), page)
 			if fallbackErr := c.fetchWithRetry(ctx, fallbackURL, &result); fallbackErr == nil {
@@ -53,20 +46,18 @@ func (c *Client) search(ctx context.Context, query string, page int, limit int) 
 			}
 		}
 
-		if hasStale {
+		var stale SearchResult
+		if c.getStaleCache(ctx, cacheKey, &stale) {
 			return stale, nil
 		}
 
 		return SearchResult{}, err
 	}
 
-	res := SearchResult{
+	return SearchResult{
 		Animes:      result.Data,
 		HasNextPage: result.Pagination.HasNextPage,
-	}
-
-	c.setCache(ctx, cacheKey, res, shortCacheTTL)
-	return res, nil
+	}, nil
 }
 
 func (c *Client) GetTopAnime(ctx context.Context, page int) (TopAnimeResult, error) {
@@ -74,30 +65,20 @@ func (c *Client) GetTopAnime(ctx context.Context, page int) (TopAnimeResult, err
 		page = 1
 	}
 	cacheKey := fmt.Sprintf("top:%d", page)
-	var cached TopAnimeResult
-	if c.getCache(ctx, cacheKey, &cached) {
-		return cached, nil
-	}
-
-	var stale TopAnimeResult
-	hasStale := c.getStaleCache(ctx, cacheKey, &stale)
 
 	var result TopAnimeResponse
 	reqURL := fmt.Sprintf("%s/top/anime?page=%d", c.baseURL, page)
 
-	if err := c.fetchWithRetry(ctx, reqURL, &result); err != nil {
-		if hasStale {
+	if err := c.getWithCache(ctx, cacheKey, shortCacheTTL, reqURL, &result); err != nil {
+		var stale TopAnimeResult
+		if c.getStaleCache(ctx, cacheKey, &stale) {
 			return stale, nil
 		}
-
 		return TopAnimeResult{}, err
 	}
 
-	res := TopAnimeResult{
+	return TopAnimeResult{
 		Animes:      result.Data,
 		HasNextPage: result.Pagination.HasNextPage,
-	}
-
-	c.setCache(ctx, cacheKey, res, shortCacheTTL)
-	return res, nil
+	}, nil
 }

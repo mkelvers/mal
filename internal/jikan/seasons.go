@@ -15,31 +15,18 @@ func (c *Client) GetSchedule(ctx context.Context, day string) (ScheduleResult, e
 	day = strings.ToLower(day)
 	cacheKey := fmt.Sprintf("schedule_%s", day)
 
-	var cached ScheduleResult
-	if c.getCache(ctx, cacheKey, &cached) {
-		return cached, nil
-	}
-
-	var stale ScheduleResult
-	hasStale := c.getStaleCache(ctx, cacheKey, &stale)
-
 	var result TopAnimeResponse
 	reqURL := fmt.Sprintf("%s/schedules?filter=%s&sfw=true", c.baseURL, day)
-	if err := c.fetchWithRetry(ctx, reqURL, &result); err != nil {
-		if hasStale {
-			return stale, nil
-		}
 
+	err := c.getWithCache(ctx, cacheKey, shortCacheTTL, reqURL, &result)
+	if err != nil {
 		return ScheduleResult{}, err
 	}
 
-	res := ScheduleResult{
+	return ScheduleResult{
 		Animes:      result.Data,
 		HasNextPage: result.Pagination.HasNextPage,
-	}
-
-	c.setCache(ctx, cacheKey, res, shortCacheTTL)
-	return res, nil
+	}, nil
 }
 
 func (c *Client) GetFullSchedule(ctx context.Context) (map[string][]Anime, error) {
@@ -62,31 +49,19 @@ func (c *Client) GetSeasonsNow(ctx context.Context, page int) (TopAnimeResult, e
 		page = 1
 	}
 	cacheKey := fmt.Sprintf("seasons_now:%d", page)
-	var cached TopAnimeResult
-	if c.getCache(ctx, cacheKey, &cached) {
-		return cached, nil
-	}
-
-	var stale TopAnimeResult
-	hasStale := c.getStaleCache(ctx, cacheKey, &stale)
 
 	var result TopAnimeResponse
 	reqURL := fmt.Sprintf("%s/seasons/now?page=%d", c.baseURL, page)
-	if err := c.fetchWithRetry(ctx, reqURL, &result); err != nil {
-		if hasStale {
-			return stale, nil
-		}
 
+	err := c.getWithCache(ctx, cacheKey, shortCacheTTL, reqURL, &result)
+	if err != nil {
 		return TopAnimeResult{}, err
 	}
 
-	res := TopAnimeResult{
+	return TopAnimeResult{
 		Animes:      result.Data,
 		HasNextPage: result.Pagination.HasNextPage,
-	}
-
-	c.setCache(ctx, cacheKey, res, shortCacheTTL)
-	return res, nil
+	}, nil
 }
 
 func (c *Client) GetSeasonsUpcoming(ctx context.Context, page int) (TopAnimeResult, error) {
@@ -94,29 +69,17 @@ func (c *Client) GetSeasonsUpcoming(ctx context.Context, page int) (TopAnimeResu
 		page = 1
 	}
 	cacheKey := fmt.Sprintf("seasons_upcoming:%d", page)
-	var cached TopAnimeResult
-	if c.getCache(ctx, cacheKey, &cached) {
-		return cached, nil
-	}
-
-	var stale TopAnimeResult
-	hasStale := c.getStaleCache(ctx, cacheKey, &stale)
 
 	var result TopAnimeResponse
 	reqURL := fmt.Sprintf("%s/seasons/upcoming?page=%d", c.baseURL, page)
-	if err := c.fetchWithRetry(ctx, reqURL, &result); err != nil {
-		if hasStale {
-			return stale, nil
-		}
 
+	err := c.getWithCache(ctx, cacheKey, shortCacheTTL, reqURL, &result)
+	if err != nil {
 		return TopAnimeResult{}, err
 	}
 
-	res := TopAnimeResult{
+	return TopAnimeResult{
 		Animes:      result.Data,
 		HasNextPage: result.Pagination.HasNextPage,
-	}
-
-	c.setCache(ctx, cacheKey, res, shortCacheTTL)
-	return res, nil
+	}, nil
 }

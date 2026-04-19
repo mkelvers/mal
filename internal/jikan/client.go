@@ -226,6 +226,32 @@ func (c *Client) setCache(parentCtx context.Context, key string, data any, ttl t
 	})
 }
 
+type cacheResult struct {
+	data     any
+	hasStale bool
+}
+
+func (c *Client) getWithCache(ctx context.Context, cacheKey string, ttl time.Duration, url string, out any) error {
+	if c.getCache(ctx, cacheKey, out) {
+		return nil
+	}
+
+	var stale any
+	hasStale := c.getStaleCache(ctx, cacheKey, &stale)
+
+	if err := c.fetchWithRetry(ctx, url, out); err != nil {
+		if hasStale {
+			staleBytes, _ := json.Marshal(stale)
+			json.Unmarshal(staleBytes, out)
+			return nil
+		}
+		return err
+	}
+
+	c.setCache(ctx, cacheKey, out, ttl)
+	return nil
+}
+
 func (c *Client) fetchWithRetry(ctx context.Context, urlStr string, out any) error {
 	maxRetries := 5
 	for attempt := range maxRetries {
