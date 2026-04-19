@@ -5,7 +5,7 @@ import (
 	"errors"
 	"log"
 	"net/http"
-	"sort"
+	"slices"
 	"strconv"
 
 	"mal/internal/database"
@@ -122,20 +122,13 @@ func (h *Handler) HandleDeleteWatchlist(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	titleEnglish := ""
-	if anime.TitleEnglish.Valid {
-		titleEnglish = anime.TitleEnglish.String
-	}
-	titleJapanese := ""
-	if anime.TitleJapanese.Valid {
-		titleJapanese = anime.TitleJapanese.String
-	}
+	title := database.DisplayTitle(anime.TitleEnglish, anime.TitleJapanese, anime.TitleOriginal)
 	airing := false
 	if anime.Airing.Valid {
 		airing = anime.Airing.Bool
 	}
 
-	templates.WatchlistDropdown(int(animeID), anime.TitleOriginal, titleEnglish, titleJapanese, anime.ImageUrl, "", airing).Render(r.Context(), w)
+	templates.WatchlistDropdown(int(animeID), anime.TitleOriginal, title, "", anime.ImageUrl, "", airing).Render(r.Context(), w)
 }
 
 func (h *Handler) HandleGetWatchlist(w http.ResponseWriter, r *http.Request) {
@@ -301,26 +294,34 @@ func (h *Handler) HandleImportWatchlist(w http.ResponseWriter, r *http.Request) 
 }
 
 func (h *Handler) sortEntries(entries []database.GetUserWatchListRow, sortBy, sortOrder string) {
-	var less func(int, int) bool
+	isAsc := sortOrder == "asc"
 
 	switch sortBy {
 	case "title":
-		less = func(i, j int) bool {
-			cmp := entries[i].TitleOriginal < entries[j].TitleOriginal
-			if sortOrder == "asc" {
-				return cmp
+		slices.SortFunc(entries, func(a, b database.GetUserWatchListRow) int {
+			if a.TitleOriginal < b.TitleOriginal {
+				return -1
 			}
-			return !cmp
+			if a.TitleOriginal > b.TitleOriginal {
+				return 1
+			}
+			return 0
+		})
+		if !isAsc {
+			slices.Reverse(entries)
 		}
-	default: // "date"
-		less = func(i, j int) bool {
-			cmp := entries[i].UpdatedAt.After(entries[j].UpdatedAt)
-			if sortOrder == "asc" {
-				return !cmp
+	case "date":
+		slices.SortFunc(entries, func(a, b database.GetUserWatchListRow) int {
+			if a.UpdatedAt.After(b.UpdatedAt) {
+				return -1
 			}
-			return cmp
+			if a.UpdatedAt.Before(b.UpdatedAt) {
+				return 1
+			}
+			return 0
+		})
+		if !isAsc {
+			slices.Reverse(entries)
 		}
 	}
-
-	sort.SliceStable(entries, less)
 }

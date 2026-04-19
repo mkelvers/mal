@@ -152,13 +152,12 @@ func (s *Service) DeleteContinueWatching(ctx context.Context, userID string, ani
 		return s.db.SaveWatchProgress(ctx, clearProgress)
 	}
 
-	tx, err := s.sqlDB.BeginTx(ctx, nil)
+	txQueries, tx, err := database.BeginTx(ctx, s.sqlDB)
 	if err != nil {
 		return fmt.Errorf("failed to begin transaction: %w", err)
 	}
 	defer tx.Rollback()
 
-	txQueries := database.New(tx)
 	if err := txQueries.DeleteContinueWatchingEntry(ctx, params); err != nil {
 		return fmt.Errorf("failed to delete continue watching entry: %w", err)
 	}
