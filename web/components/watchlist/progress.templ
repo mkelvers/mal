@@ -1,0 +1,17 @@
+package watchlist
+
+import (
+	"fmt"
+	"mal/internal/db"
+)
+
+templ Progress(entry db.GetUserWatchListRow) {
+	if entry.CurrentEpisode.Valid && entry.CurrentEpisode.Int64 > 0 && entry.Status != "completed" {
+		<p class="m-0 mt-1 text-xs text-(--text-faint)">
+			Continue ep { fmt.Sprintf("%d", entry.CurrentEpisode.Int64) }
+			if entry.CurrentTimeSeconds > 0 {
+				{ fmt.Sprintf(" · %s", formatProgressTime(entry.CurrentTimeSeconds)) }
+			}
+		</p>
+	}
+}
