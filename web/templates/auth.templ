@@ -9,15 +9,41 @@ templ Login(formError string, username string) {
 				<form action="/login" method="POST" class="grid gap-4">
 					<div class="grid gap-1">
 						<label for="username">Username / Email</label>
-						<input class="h-10 border border-transparent bg-(--surface-search) px-3 text-(--text) transition-colors duration-120 focus:border-(--surface-search-focus-border) focus:outline-none" type="text" id="username" name="username" required placeholder="you@example.com" value={ username }/>
+						<input
+							class="h-10 border border-transparent bg-(--surface-search) px-3 text-(--text) transition-colors duration-120 focus:border-(--surface-search-focus-border) focus:outline-none"
+							type="text"
+							id="username"
+							name="username"
+							required
+							placeholder="you@example.com"
+							value={ username }
+						/>
 					</div>
 					<div class="grid gap-1">
 						<label for="password">Password</label>
-						<input class="h-10 border border-transparent bg-(--surface-search) px-3 text-(--text) transition-colors duration-120 focus:border-(--surface-search-focus-border) focus:outline-none" type="password" id="password" name="password" required placeholder="Your password"/>
+						<input
+							class="h-10 border border-transparent bg-(--surface-search) px-3 text-(--text) transition-colors duration-120 focus:border-(--surface-search-focus-border) focus:outline-none"
+							type="password"
+							id="password"
+							name="password"
+							required
+							placeholder="Your password"
+						/>
 					</div>
-					<button type="submit" class="h-10 cursor-pointer border-0 bg-(--accent) text-sm font-semibold text-(--text-on-accent) hover:brightness-95">Sign in</button>
+					<button
+						type="submit"
+						class="h-10 cursor-pointer border-0 bg-(--accent) text-sm font-semibold text-(--text-on-accent) hover:brightness-95"
+					>
+						Sign in
+					</button>
 					if formError != "" {
-						<p class="mt-2 text-xs text-(--danger)" role="alert" aria-live="polite">{ formError }</p>
+						<p
+							class="mt-2 text-xs text-(--danger)"
+							role="alert"
+							aria-live="polite"
+						>
+							{ formError }
+						</p>
 					}
 				</form>
 			</div>
