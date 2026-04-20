@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"log"
 	"net/http"
 
 	"mal/web/templates"
@@ -26,7 +27,10 @@ func rateLimitErrorFromQuery(r *http.Request) string {
 
 func (h *Handler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 	if err := r.ParseForm(); err != nil {
-		templates.Login("Something went wrong. Please try again.", "").Render(r.Context(), w)
+		if renderErr := templates.Login("Something went wrong. Please try again.", "").Render(r.Context(), w); renderErr != nil {
+			log.Printf("render error: %v", renderErr)
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		}
 		return
 	}
 
@@ -34,23 +38,34 @@ func (h *Handler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 	password := r.FormValue("password")
 
 	if username == "" || password == "" {
-		templates.Login("The email or password is wrong.", username).Render(r.Context(), w)
+		if renderErr := templates.Login("The email or password is wrong.", username).Render(r.Context(), w); renderErr != nil {
+			log.Printf("render error: %v", renderErr)
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		}
 		return
 	}
 
 	session, err := h.authService.Login(r.Context(), username, password)
 	if err != nil {
-		templates.Login("The email or password is wrong.", username).Render(r.Context(), w)
+		if renderErr := templates.Login("The email or password is wrong.", username).Render(r.Context(), w); renderErr != nil {
+			log.Printf("render error: %v", renderErr)
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		}
 		return
 	}
 
 	SetSessionCookie(w, session.ID, session.ExpiresAt)
 
-	// HTMX-friendly redirect to root or previous page
-	w.Header().Set("HX-Redirect", "/")
+	if r.Header.Get("HX-Request") == "true" {
+		w.Header().Set("HX-Redirect", "/")
+		return
+	}
 	http.Redirect(w, r, "/", http.StatusFound)
 }
 
 func (h *Handler) HandleLoginPage(w http.ResponseWriter, r *http.Request) {
-	templates.Login(rateLimitErrorFromQuery(r), "").Render(r.Context(), w)
+	if err := templates.Login(rateLimitErrorFromQuery(r), "").Render(r.Context(), w); err != nil {
+		log.Printf("render error: %v", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+	}
 }
