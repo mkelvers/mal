@@ -3,6 +3,7 @@ package shared
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"strconv"
 )
 
@@ -66,7 +67,11 @@ func ModeToken(mode string, modeSources map[string]ModeSource) string {
 }
 
 func ToJSON(v interface{}) string {
-	b, _ := json.Marshal(v)
+	b, err := json.Marshal(v)
+	if err != nil {
+		log.Printf("ToJSON error: %v", err)
+		return "{}"
+	}
 	return string(b)
 }
 
