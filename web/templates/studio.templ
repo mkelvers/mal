@@ -90,17 +90,5 @@ templ StudioAnimeItems(animes []jikan.Anime, watchlistStatuses map[int]string, h
 	if hasNext {
 		@StudioLoadMore(studioID, nextPage)
 	}
-	<script data-container="studio-anime-content">
-		const containerId = document.currentScript.getAttribute('data-container');
-		const container = document.getElementById(containerId) || document;
-		const seen = new Set();
-		container.querySelectorAll('[data-id]').forEach(item => {
-			const id = item.getAttribute('data-id');
-			if (id && seen.has(id)) {
-				item.remove();
-			} else if (id) {
-				seen.add(id);
-			}
-		});
-	</script>
+	<script src="/dist/dedupe.js" data-container="studio-anime-content" defer></script>
 }

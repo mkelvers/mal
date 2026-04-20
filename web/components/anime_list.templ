@@ -14,19 +14,7 @@ templ InfiniteAnimeList(animes []jikan.Anime, watchlistStatuses map[int]string, 
 	if hasNext {
 		<div class="col-span-full h-px w-full" hx-get={ nextURL } hx-trigger="revealed" hx-swap="outerHTML"></div>
 	}
-	<script data-container={ containerID }>
-		const containerId = document.currentScript.getAttribute('data-container');
-		const container = document.getElementById(containerId) || document;
-		const seen = new Set();
-		container.querySelectorAll('[data-id]').forEach(item => {
-			const id = item.getAttribute('data-id');
-			if (id && seen.has(id)) {
-				item.remove();
-			} else if (id) {
-				seen.add(id);
-			}
-		});
-	</script>
+	<script src="/dist/dedupe.js" data-container={ containerID } defer></script>
 }
 
 templ CatalogItem(anime jikan.Anime, watchlistStatus string) {
