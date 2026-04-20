@@ -12,6 +12,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/joho/godotenv"
 	_ "github.com/mattn/go-sqlite3"
 
 	"mal/api/auth"
@@ -23,6 +24,8 @@ import (
 )
 
 func main() {
+	_ = godotenv.Load()
+
 	db, err := sql.Open("sqlite3", fmt.Sprintf("file:%s?_foreign_keys=on", dbFile()))
 	if err != nil {
 		log.Fatalf("failed to open db: %v", err)
