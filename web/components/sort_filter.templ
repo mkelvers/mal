@@ -3,7 +3,6 @@ package ui
 type SortFilterOptions struct {
 	Sort   string // "title", "date"
 	Order  string // "asc", "desc"
-	View   string // for watchlist: "grid", "table"
 	Status string // for watchlist: "all", "watching", etc
 }
 
@@ -27,9 +26,6 @@ templ SortFilter(opts SortFilterOptions) {
 	<form id="sort-form" method="get" class="hidden">
 		<input type="hidden" name="sort" id="sort-input" value={ opts.Sort }/>
 		<input type="hidden" name="order" id="order-input" value={ opts.Order }/>
-		if opts.View != "" {
-			<input type="hidden" name="view" value={ opts.View }/>
-		}
 		if opts.Status != "" {
 			<input type="hidden" name="status" value={ opts.Status }/>
 		}

@@ -33,8 +33,8 @@ func FormatEstablishedDate(date string) string {
 }
 
 // WatchlistURL builds the watchlist URL with query parameters
-func WatchlistURL(view string, status string, sortBy string, sortOrder string) string {
-	return fmt.Sprintf("/watchlist?view=%s&status=%s&sort=%s&order=%s", view, status, sortBy, sortOrder)
+func WatchlistURL(status string, sortBy string, sortOrder string) string {
+	return fmt.Sprintf("/watchlist?status=%s&sort=%s&order=%s", status, sortBy, sortOrder)
 }
 
 // AnimeURL builds the anime detail URL

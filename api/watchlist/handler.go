@@ -211,11 +211,6 @@ func (h *Handler) HandleGetWatchlist(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	layout := r.URL.Query().Get("view")
-	if layout != "grid" && layout != "table" {
-		layout = "grid"
-	}
-
 	statusFilter := r.URL.Query().Get("status")
 	sortBy := r.URL.Query().Get("sort")
 	sortOrder := r.URL.Query().Get("order")
@@ -255,7 +250,7 @@ func (h *Handler) HandleGetWatchlist(w http.ResponseWriter, r *http.Request) {
 	// Sort entries
 	h.sortEntries(filteredEntries, sortBy, sortOrder)
 
-	if err := templates.Watchlist(filteredEntries, layout, statusFilter, sortBy, sortOrder).Render(r.Context(), w); err != nil {
+	if err := templates.Watchlist(filteredEntries, statusFilter, sortBy, sortOrder).Render(r.Context(), w); err != nil {
 		log.Printf("render error: %v", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 	}
