@@ -86,7 +86,10 @@ func migrationsDir() string {
 	if dir := os.Getenv("MIGRATIONS_DIR"); dir != "" {
 		return dir
 	}
-	wd, _ := os.Getwd()
+	wd, err := os.Getwd()
+	if err != nil {
+		log.Fatalf("failed to get working directory: %v", err)
+	}
 	return filepath.Join(wd, "migrations")
 }
 
