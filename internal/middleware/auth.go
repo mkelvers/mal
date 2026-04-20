@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"strings"
 
-	"mal/internal/db"
 	"mal/api/auth"
+	"mal/internal/db"
 )
 
 type contextKey string

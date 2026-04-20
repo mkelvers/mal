@@ -4,12 +4,12 @@ import (
 	"database/sql"
 	"net/http"
 
-	"mal/internal/db"
 	"mal/api/anime"
 	"mal/api/auth"
 	"mal/api/playback"
 	"mal/api/watchlist"
 	"mal/integrations/jikan"
+	"mal/internal/db"
 	"mal/internal/middleware"
 	pkgmiddleware "mal/pkg/middleware"
 )

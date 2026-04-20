@@ -14,12 +14,12 @@ import (
 
 	_ "github.com/mattn/go-sqlite3"
 
-	dbpkg "mal/internal/db"
 	"mal/api/auth"
 	"mal/integrations/jikan"
+	dbpkg "mal/internal/db"
 	"mal/internal/server"
-	"mal/pkg/middleware"
 	"mal/internal/worker"
+	"mal/pkg/middleware"
 )
 
 func main() {

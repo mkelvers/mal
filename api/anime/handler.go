@@ -9,8 +9,8 @@ import (
 	"strconv"
 	"strings"
 
-	"mal/internal/db"
 	"mal/integrations/jikan"
+	"mal/internal/db"
 	"mal/internal/middleware"
 	"mal/web/templates"
 )
