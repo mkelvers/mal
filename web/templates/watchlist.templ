@@ -3,8 +3,8 @@ package templates
 import (
 	"fmt"
 	
-	"mal/internal/db"
-	"mal/web/components"
+	db "mal/internal/db"
+	components "mal/web/components"
 	"mal/web/components/watchlist"
 	"mal/web/shared"
 	"mal/web/shared/layout"
@@ -140,7 +140,7 @@ templ Watchlist(
 							id={ fmt.Sprintf("watchlist-entry-%d", entry.AnimeID) }
 						>
 							<a
-								href={ templ.URL(shared.AnimeURL(entry.AnimeID)) }
+								href={ templ.URL(shared.AnimeURL(int(entry.AnimeID))) }
 								class="flex flex-col bg-transparent text-inherit no-underline"
 							>
 								<div class="flex w-full aspect-2/3 justify-center overflow-hidden">
@@ -185,7 +185,7 @@ templ Watchlist(
 								id={ fmt.Sprintf("watchlist-entry-%d", entry.AnimeID) }
 							>
 								<td class="p-2.5">
-									<a href={ templ.URL(shared.AnimeURL(entry.AnimeID)) }>
+								<a href={ templ.URL(shared.AnimeURL(int(entry.AnimeID))) }>
 										<img
 											src={ entry.ImageUrl }
 											alt={ entry.DisplayTitle() }
@@ -195,7 +195,7 @@ templ Watchlist(
 									</a>
 								</td>
 								<td class="p-2.5 font-medium">
-									<a href={ templ.URL(shared.AnimeURL(entry.AnimeID)) }>
+								<a href={ templ.URL(shared.AnimeURL(int(entry.AnimeID))) }>
 										{ entry.DisplayTitle() }
 									</a>
 									@watchlist.Progress(entry)

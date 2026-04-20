@@ -2,7 +2,8 @@ package watchlist
 
 import (
 	"fmt"
-	"mal/internal/db"
+	db "mal/internal/db"
+	"mal/web/shared"
 )
 
 templ Progress(entry db.GetUserWatchListRow) {
@@ -10,7 +11,7 @@ templ Progress(entry db.GetUserWatchListRow) {
 		<p class="m-0 mt-1 text-xs text-(--text-faint)">
 			Continue ep { fmt.Sprintf("%d", entry.CurrentEpisode.Int64) }
 			if entry.CurrentTimeSeconds > 0 {
-				{ fmt.Sprintf(" · %s", formatProgressTime(entry.CurrentTimeSeconds)) }
+				{ fmt.Sprintf(" · %s", shared.FormatProgressTime(entry.CurrentTimeSeconds)) }
 			}
 		</p>
 	}

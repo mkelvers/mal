@@ -10,6 +10,7 @@ import (
 
 	"mal/internal/db"
 	"mal/internal/middleware"
+	"mal/web/components/watchlist"
 	"mal/web/templates"
 )
 
@@ -84,7 +85,7 @@ func (h *Handler) HandleUpdateWatchlist(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	templates.WatchlistDropdown(int(animeID), animeTitle, animeTitleEnglish, animeTitleJapanese, animeImage, status, airing).Render(r.Context(), w)
+	watchlist.WatchlistDropdown(int(animeID), animeTitle, animeTitleEnglish, animeTitleJapanese, animeImage, status, airing).Render(r.Context(), w)
 }
 
 func (h *Handler) HandleDeleteWatchlist(w http.ResponseWriter, r *http.Request) {
@@ -128,7 +129,7 @@ func (h *Handler) HandleDeleteWatchlist(w http.ResponseWriter, r *http.Request) 
 		airing = anime.Airing.Bool
 	}
 
-	templates.WatchlistDropdown(int(animeID), anime.TitleOriginal, title, "", anime.ImageUrl, "", airing).Render(r.Context(), w)
+	watchlist.WatchlistDropdown(int(animeID), anime.TitleOriginal, title, "", anime.ImageUrl, "", airing).Render(r.Context(), w)
 }
 
 func (h *Handler) HandleGetWatchlist(w http.ResponseWriter, r *http.Request) {

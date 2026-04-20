@@ -17,6 +17,7 @@ import (
 	"mal/integrations/jikan"
 	"mal/internal/db"
 	"mal/internal/middleware"
+	"mal/web/shared"
 	"mal/web/templates"
 )
 
@@ -96,8 +97,8 @@ func (h *Handler) HandleWatchPage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Convert playback.WatchPageData to templates.WatchPageData
-	pageData := templates.WatchPageData{
+	// Convert playback.WatchPageData to shared.WatchPageData
+	pageData := shared.WatchPageData{
 		MalID:            data.MalID,
 		Title:            data.Title,
 		TitleEnglish:     anime.TitleEnglish,
@@ -155,17 +156,17 @@ func playbackTitleCandidates(anime jikan.Anime) []string {
 	return out
 }
 
-func convertModeSources(sources map[string]ModeSource) map[string]templates.ModeSource {
-	result := make(map[string]templates.ModeSource, len(sources))
+func convertModeSources(sources map[string]ModeSource) map[string]shared.ModeSource {
+	result := make(map[string]shared.ModeSource, len(sources))
 	for k, v := range sources {
-		subtitles := make([]templates.SubtitleItem, len(v.Subtitles))
+		subtitles := make([]shared.SubtitleItem, len(v.Subtitles))
 		for i, s := range v.Subtitles {
-			subtitles[i] = templates.SubtitleItem{
+			subtitles[i] = shared.SubtitleItem{
 				Lang:  s.Lang,
 				Token: s.Token,
 			}
 		}
-		result[k] = templates.ModeSource{
+		result[k] = shared.ModeSource{
 			Token:     v.Token,
 			Subtitles: subtitles,
 		}
@@ -173,10 +174,10 @@ func convertModeSources(sources map[string]ModeSource) map[string]templates.Mode
 	return result
 }
 
-func convertSegments(segments []SkipSegment) []templates.SkipSegment {
-	result := make([]templates.SkipSegment, len(segments))
+func convertSegments(segments []SkipSegment) []shared.SkipSegment {
+	result := make([]shared.SkipSegment, len(segments))
 	for i, s := range segments {
-		result[i] = templates.SkipSegment{
+		result[i] = shared.SkipSegment{
 			Type:  s.Type,
 			Start: s.Start,
 			End:   s.End,

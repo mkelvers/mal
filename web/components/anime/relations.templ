@@ -1,16 +1,15 @@
 package anime
 
 import (
-	"fmt"
 	"mal/integrations/jikan"
-	"mal/web/components"
+	ui "mal/web/components"
 )
 
 templ RelationsList(relations []jikan.RelationEntry) {
 	if len(relations) > 1 {
 		<div class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:gap-4 lg:grid-cols-4 xl:grid-cols-5" id="relations-grid">
 			for _, rel := range relations {
-				@components.AnimeCard(components.AnimeCardProps{
+				@ui.AnimeCard(ui.AnimeCardProps{
 					ID:          rel.Anime.MalID,
 					Title:       rel.Anime.DisplayTitle(),
 					ImageURL:    rel.Anime.ImageURL(),

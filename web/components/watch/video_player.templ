@@ -2,7 +2,6 @@ package watch
 
 import (
 	"fmt"
-	"mal/web/components"
 	"mal/web/shared"
 )
 
@@ -35,7 +34,7 @@ templ VideoPlayer(data shared.WatchPageData) {
 				preload="metadata"
 				crossorigin="anonymous"
 				playsinline
-				src={ buildStreamURL(data.InitialMode, streamToken) }
+				src={ shared.BuildStreamURL(data.InitialMode, streamToken) }
 			></video>
 			<div
 				data-loading

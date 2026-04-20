@@ -2,8 +2,9 @@ package templates
 
 import (
 	"fmt"
-	"mal/internal/db"
-	"mal/web/components"
+	db "mal/internal/db"
+	ui "mal/web/components"
+	"mal/web/shared"
 	"mal/web/shared/layout"
 )
 
@@ -34,11 +35,11 @@ templ ContinueWatching(entries []db.GetContinueWatchingEntriesRow) {
 										if entry.CurrentEpisode.Valid && entry.CurrentEpisode.Int64 > 0 {
 											<span class="text-xs text-(--text-faint)">Continue ep { fmt.Sprintf("%d", entry.CurrentEpisode.Int64) }</span>
 										}
-										if entry.CurrentTimeSeconds > 0 {
-											<span class="text-xs text-(--text-faint)">{ formatProgressTime(entry.CurrentTimeSeconds) }</span>
-										}
-									</div>
+									if entry.CurrentTimeSeconds > 0 {
+										<span class="text-xs text-(--text-faint)">{ shared.FormatProgressTime(entry.CurrentTimeSeconds) }</span>
+									}
 								</div>
+							</div>
 							}
 							<button
 								class="absolute right-2 top-2 h-6 w-6 cursor-pointer border-0 bg-(--overlay-subtle) text-(--text-muted) opacity-0 transition-opacity duration-150 group-hover:opacity-100 hover:text-(--danger)"

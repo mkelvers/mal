@@ -12,6 +12,8 @@ import (
 	"mal/integrations/jikan"
 	"mal/internal/db"
 	"mal/internal/middleware"
+	animecomponents "mal/web/components/anime"
+	watchcomponents "mal/web/components/watch"
 	"mal/web/templates"
 )
 
@@ -164,7 +166,7 @@ func (h *Handler) HandleAnimeDetails(w http.ResponseWriter, r *http.Request) {
 
 		h.jikanClient.EnqueueAnimeFetchRetry(r.Context(), id, err)
 		if jikan.IsRetryableError(err) {
-			templates.AnimePending(id).Render(r.Context(), w)
+			animecomponents.Pending(id).Render(r.Context(), w)
 			return
 		}
 
@@ -220,7 +222,7 @@ func (h *Handler) HandleAPIAnime(w http.ResponseWriter, r *http.Request) {
 			writeInlineLoadError(w, "Failed to load relations.")
 			return
 		}
-		templates.AnimeRelationsList(relations).Render(r.Context(), w)
+		animecomponents.RelationsList(relations).Render(r.Context(), w)
 	case "recommendations":
 		recs, err := h.jikanClient.GetRecommendations(r.Context(), id, 12)
 		if err != nil {
@@ -228,7 +230,7 @@ func (h *Handler) HandleAPIAnime(w http.ResponseWriter, r *http.Request) {
 			writeInlineLoadError(w, "Failed to load recommendations.")
 			return
 		}
-		templates.AnimeRecommendations(recs).Render(r.Context(), w)
+		animecomponents.Recommendations(recs).Render(r.Context(), w)
 	case "episodes":
 		currentEpisode := r.URL.Query().Get("current")
 		episodes, err := h.getEpisodes(r.Context(), id)
@@ -237,7 +239,7 @@ func (h *Handler) HandleAPIAnime(w http.ResponseWriter, r *http.Request) {
 			writeInlineLoadError(w, "Failed to load episodes.")
 			return
 		}
-		templates.EpisodeList(episodes, currentEpisode, id).Render(r.Context(), w)
+		watchcomponents.EpisodeList(episodes, currentEpisode, id).Render(r.Context(), w)
 	default:
 		renderNotFoundPage(r, w)
 	}
@@ -261,7 +263,7 @@ func (h *Handler) HandleAPIEpisodes(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	templates.EpisodeList(episodes, currentEpisode, id).Render(r.Context(), w)
+	watchcomponents.EpisodeList(episodes, currentEpisode, id).Render(r.Context(), w)
 }
 
 func (h *Handler) getEpisodes(ctx context.Context, animeID int) ([]jikan.Episode, error) {

@@ -2,14 +2,14 @@ package anime
 
 import (
 	"mal/integrations/jikan"
-	"mal/web/components"
+	ui "mal/web/components"
 )
 
 templ Recommendations(recs []jikan.Anime) {
 	if len(recs) > 0 {
 		<div class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:gap-4 lg:grid-cols-4 xl:grid-cols-5">
 			for _, anime := range recs {
-				@components.AnimeCard(components.AnimeCardProps{
+				@ui.AnimeCard(ui.AnimeCardProps{
 					ID:         anime.MalID,
 					Title:      anime.DisplayTitle(),
 					ImageURL:   anime.ImageURL(),
