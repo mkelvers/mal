@@ -1,28 +1,34 @@
 @import 'tailwindcss';
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap');
+@import '@toolwind/anchors';
 
 @source '../../internal/**/*.templ';
 
 :root {
-  --bg: #111419;
-  --panel: #181d24;
-  --panel-soft: #1f2530;
-  --header: #1a2029;
-  --text: #e7eaf0;
-  --text-muted: #b8c0cd;
-  --text-faint: #8b97a8;
-  --accent: #cad4e4;
-  --danger: #d17f88;
-  --surface-search: rgba(10, 13, 18, 0.3);
-  --surface-search-focus-border: rgba(202, 212, 228, 0.24);
-  --surface-thumb: #141920;
-  --surface-input: #151b23;
-  --surface-input-focus: #1c2531;
-  --surface-tab-hover: #2a3340;
-  --surface-tab-active: #323d4c;
-  --surface-select: #1a212b;
-  --surface-search-view-all: #151b23;
-  --text-on-accent: #111419;
-  --overlay-subtle: rgba(0, 0, 0, 0.45);
+  --bg: #fafaf9;
+  --panel: #f5f5f4;
+  --panel-soft: #e7e5e4;
+  --header: #ffffff;
+  --text: #1c1917;
+  --text-muted: #57534e;
+  --text-faint: #a8a29e;
+  --accent: #0c0a09;
+  --danger: #dc2626;
+  --surface-search: #f5f5f4;
+  --surface-search-focus-border: rgba(12, 10, 9, 0.12);
+  --surface-thumb: #e7e5e4;
+  --surface-input: #ffffff;
+  --surface-input-focus: #ffffff;
+  --surface-tab-hover: #e7e5e4;
+  --surface-tab-active: #1c1917;
+  --text-tab-active: #fafaf9;
+  --surface-select: #ffffff;
+  --surface-search-view-all: #f5f5f4;
+  --text-on-accent: #fafaf9;
+  --overlay-subtle: rgba(0, 0, 0, 0.04);
+  --shadow-subtle: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-card: 0 4px 12px rgba(0, 0, 0, 0.08);
+  --shadow-card-hover: 0 8px 24px rgba(0, 0, 0, 0.12);
   --space-1: 0.25rem;
   --space-2: 0.5rem;
   --space-3: 0.75rem;
@@ -31,5 +37,6 @@
   --space-6: 1.5rem;
   --space-8: 2rem;
   --poster-max-height: 360px;
-  --font: 'Verdana', 'Tahoma', 'Segoe UI', sans-serif;
+  --font: 'DM Sans', 'Segoe UI', system-ui, sans-serif;
+  --radius: 6px;
 }
