@@ -24,6 +24,7 @@ type AnimeCardProps struct {
 	TitleJapanese   string
 	Airing          bool
 	WatchlistStatus string // empty if not in watchlist
+	DisableWatchlist bool  // if true, don't render the watchlist button
 }
 
 templ AnimeCard(props AnimeCardProps) {
@@ -91,7 +92,7 @@ templ animeCardPoster(props AnimeCardProps) {
 						</svg>
 					</a>
 				}
-				if !props.CurrentNode {
+				if !props.CurrentNode && !props.DisableWatchlist {
 					@watchlist.CardButton(
 						props.ID,
 						props.Title,
