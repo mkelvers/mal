@@ -103,7 +103,7 @@ The codebase follows standard Go project layout conventions with clear separatio
 
 On startup, the server opens SQLite using `DATABASE_FILE` (defaulting to `mal.db`), runs migrations automatically, initializes core services, starts the background worker, and then serves HTTP traffic on `PORT` (defaulting to `3000`). A request enters the router, passes through global middleware for origin and auth boundaries, reaches a feature handler, and then resolves through service logic that combines database access with upstream data where needed before rendering HTML.
 
-Public access is intentionally limited. `/`, `/login`, `/search`, `/api/search`, `/api/search-quick`, and static asset routes are available without auth; most other routes require a valid session.
+Public access is intentionally limited. Only `/login` and static asset routes (`/static/*`, `/dist/*`) are available without authentication; all other routes require a valid session.
 
 The background worker continuously maintains relation data for sequel awareness, processes queued retryable anime fetches, and periodically removes expired cache records. This keeps user-facing pages stable even when data collection has to happen in multiple phases.
 
