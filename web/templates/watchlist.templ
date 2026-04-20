@@ -2,10 +2,11 @@ package templates
 
 import (
 	"fmt"
+	
 	"mal/internal/db"
 	"mal/web/components"
 	"mal/web/components/watchlist"
-	"math"
+	"mal/web/shared"
 )
 
 templ Watchlist(
@@ -59,14 +60,14 @@ templ Watchlist(
 					class="flex flex-wrap gap-2 max-md:flex-nowrap max-md:overflow-x-auto max-md:pb-1"
 				>
 					<a
-						href={ templ.URL(watchlistURL("grid", currentStatus, sortBy, sortOrder)) }
-						class={ tabClass(layout == "grid") }
+						href={ templ.URL(shared.WatchlistURL("grid", currentStatus, sortBy, sortOrder)) }
+						class={ shared.TabClass(layout == "grid") }
 					>
 						Grid
 					</a>
 					<a
-						href={ templ.URL(watchlistURL("table", currentStatus, sortBy, sortOrder)) }
-						class={ tabClass(layout == "table") }
+						href={ templ.URL(shared.WatchlistURL("table", currentStatus, sortBy, sortOrder)) }
+						class={ shared.TabClass(layout == "table") }
 					>
 						Table
 					</a>
@@ -77,38 +78,38 @@ templ Watchlist(
 			class="mb-3 flex flex-wrap gap-2 max-md:flex-nowrap max-md:overflow-x-auto max-md:pb-1"
 		>
 			<a
-				href={ templ.URL(watchlistURL(layout, "all", sortBy, sortOrder)) }
-				class={ tabClass(currentStatus == "all") }
+				href={ templ.URL(shared.WatchlistURL(layout, "all", sortBy, sortOrder)) }
+				class={ shared.TabClass(currentStatus == "all") }
 			>
 				All
 			</a>
 			<a
-				href={ templ.URL(watchlistURL(layout, "watching", sortBy, sortOrder)) }
-				class={ tabClass(currentStatus == "watching") }
+				href={ templ.URL(shared.WatchlistURL(layout, "watching", sortBy, sortOrder)) }
+				class={ shared.TabClass(currentStatus == "watching") }
 			>
 				Watching
 			</a>
 			<a
-				href={ templ.URL(watchlistURL(layout, "on_hold", sortBy, sortOrder)) }
-				class={ tabClass(currentStatus == "on_hold") }
+				href={ templ.URL(shared.WatchlistURL(layout, "on_hold", sortBy, sortOrder)) }
+				class={ shared.TabClass(currentStatus == "on_hold") }
 			>
 				On hold
 			</a>
 			<a
-				href={ templ.URL(watchlistURL(layout, "plan_to_watch", sortBy, sortOrder)) }
-				class={ tabClass(currentStatus == "plan_to_watch") }
+				href={ templ.URL(shared.WatchlistURL(layout, "plan_to_watch", sortBy, sortOrder)) }
+				class={ shared.TabClass(currentStatus == "plan_to_watch") }
 			>
 				Plan to watch
 			</a>
 			<a
-				href={ templ.URL(watchlistURL(layout, "dropped", sortBy, sortOrder)) }
-				class={ tabClass(currentStatus == "dropped") }
+				href={ templ.URL(shared.WatchlistURL(layout, "dropped", sortBy, sortOrder)) }
+				class={ shared.TabClass(currentStatus == "dropped") }
 			>
 				Dropped
 			</a>
 			<a
-				href={ templ.URL(watchlistURL(layout, "completed", sortBy, sortOrder)) }
-				class={ tabClass(currentStatus == "completed") }
+				href={ templ.URL(shared.WatchlistURL(layout, "completed", sortBy, sortOrder)) }
+				class={ shared.TabClass(currentStatus == "completed") }
 			>
 				Completed
 			</a>
@@ -138,7 +139,7 @@ templ Watchlist(
 							id={ fmt.Sprintf("watchlist-entry-%d", entry.AnimeID) }
 						>
 							<a
-								href={ templ.URL(watchURL(entry)) }
+								href={ templ.URL(shared.AnimeURL(entry.AnimeID)) }
 								class="flex flex-col bg-transparent text-inherit no-underline"
 							>
 								<div class="flex w-full aspect-2/3 justify-center overflow-hidden">
@@ -183,7 +184,7 @@ templ Watchlist(
 								id={ fmt.Sprintf("watchlist-entry-%d", entry.AnimeID) }
 							>
 								<td class="p-2.5">
-									<a href={ templ.URL(watchURL(entry)) }>
+									<a href={ templ.URL(shared.AnimeURL(entry.AnimeID)) }>
 										<img
 											src={ entry.ImageUrl }
 											alt={ entry.DisplayTitle() }
@@ -193,7 +194,7 @@ templ Watchlist(
 									</a>
 								</td>
 								<td class="p-2.5 font-medium">
-									<a href={ templ.URL(watchURL(entry)) }>
+									<a href={ templ.URL(shared.AnimeURL(entry.AnimeID)) }>
 										{ entry.DisplayTitle() }
 									</a>
 									@watchlist.Progress(entry)
@@ -215,42 +216,4 @@ templ Watchlist(
 			}
 		}
 	}
-}
-
-templ ifHasProgress(entry db.GetUserWatchListRow) {
-	if entry.CurrentEpisode.Valid && entry.CurrentEpisode.Int64 > 0 && entry.Status != "completed" {
-		<p class="m-0 mt-1 text-xs text-(--text-faint)">
-			Continue ep { fmt.Sprintf("%d", entry.CurrentEpisode.Int64) }
-			if entry.CurrentTimeSeconds > 0 {
-				{ fmt.Sprintf(" · %s", formatProgressTime(entry.CurrentTimeSeconds)) }
-			}
-		</p>
-	}
-}
-
-func watchURL(entry db.GetUserWatchListRow) string {
-	return fmt.Sprintf("/anime/%d", entry.AnimeID)
-}
-
-func formatProgressTime(seconds float64) string {
-	total := int(math.Round(seconds))
-	if total < 0 {
-		total = 0
-	}
-
-	minutes := total / 60
-	remainingSeconds := total % 60
-	return fmt.Sprintf("%02d:%02d", minutes, remainingSeconds)
-}
-
-func tabClass(active bool) string {
-	base := "shrink-0 whitespace-nowrap bg-(--panel-soft) px-2 py-1 text-xs text-(--text-muted) no-underline hover:bg-(--surface-tab-hover) hover:text-(--text) hover:no-underline"
-	if active {
-		return "shrink-0 whitespace-nowrap bg-(--surface-tab-active) px-2 py-1 text-xs text-(--accent) no-underline hover:no-underline"
-	}
-	return base
-}
-
-func watchlistURL(view string, status string, sortBy string, sortOrder string) string {
-	return fmt.Sprintf("/watchlist?view=%s&status=%s&sort=%s&order=%s", view, status, sortBy, sortOrder)
 }

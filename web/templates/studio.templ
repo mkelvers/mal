@@ -1,26 +1,30 @@
 package templates
 
-import "mal/internal/jikan"
-import "mal/internal/shared/ui"
-import "fmt"
+import (
+	"fmt"
+	
+	"mal/integrations/jikan"
+	"mal/web/components"
+	"mal/web/shared"
+)
 
 templ StudioDetails(producer jikan.ProducerResponse, animes []jikan.Anime, hasNext bool, nextPage int) {
-	@Layout("mal - "+getProducerName(producer), true) {
+	@Layout("mal - "+shared.GetProducerName(producer), true) {
 		<div class="grid gap-5">
 			<div class="grid gap-4 bg-(--panel) p-4">
 				<div class="flex items-start gap-4">
 					if producer.Data.Images.Jpg.ImageURL != "" {
 						<img
 							src={ producer.Data.Images.Jpg.ImageURL }
-							alt={ getProducerName(producer) }
+							alt={ shared.GetProducerName(producer) }
 							class="h-24 w-24 object-contain"
 						/>
 					}
 					<div class="flex-1">
-						<h1 class="text-xl font-semibold">{ getProducerName(producer) }</h1>
+						<h1 class="text-xl font-semibold">{ shared.GetProducerName(producer) }</h1>
 						if producer.Data.Established != "" {
 							<p class="mt-1 text-sm text-(--text-muted)">
-								Established: { formatEstablishedDate(producer.Data.Established) }
+								Established: { shared.FormatEstablishedDate(producer.Data.Established) }
 							</p>
 						}
 						if producer.Data.Count > 0 {
@@ -39,7 +43,7 @@ templ StudioDetails(producer jikan.ProducerResponse, animes []jikan.Anime, hasNe
 				<div class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:gap-4 lg:grid-cols-4 xl:grid-cols-5" id="studio-anime-content">
 					for _, anime := range animes {
 						<div class="min-w-0" data-id={ fmt.Sprintf("%d", anime.MalID) }>
-							@ui.AnimeCard(ui.AnimeCardProps{
+							@components.AnimeCard(components.AnimeCardProps{
 								ID:       anime.MalID,
 								Title:    anime.DisplayTitle(),
 								ImageURL: anime.ImageURL(),
@@ -67,7 +71,7 @@ templ StudioLoadMore(studioID int, nextPage int) {
 templ StudioAnimeItems(animes []jikan.Anime, hasNext bool, studioID int, nextPage int) {
 	for _, anime := range animes {
 		<div class="min-w-0" data-id={ fmt.Sprintf("%d", anime.MalID) }>
-			@ui.AnimeCard(ui.AnimeCardProps{
+			@components.AnimeCard(components.AnimeCardProps{
 				ID:       anime.MalID,
 				Title:    anime.DisplayTitle(),
 				ImageURL: anime.ImageURL(),
@@ -97,20 +101,4 @@ templ StudioAnimeItems(animes []jikan.Anime, hasNext bool, studioID int, nextPag
 			});
 		})();
 	</script>
-}
-
-func getProducerName(producer jikan.ProducerResponse) string {
-	for _, title := range producer.Data.Titles {
-		if title.Type == "Default" {
-			return title.Title
-		}
-	}
-	return "Studio"
-}
-
-func formatEstablishedDate(date string) string {
-	if len(date) >= 10 {
-		return date[:10]
-	}
-	return date
 }
