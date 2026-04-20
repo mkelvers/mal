@@ -2,12 +2,13 @@ package templates
 
 import (
 	"fmt"
-	"mal/internal/database"
-	"mal/internal/shared/ui"
+	"mal/internal/db"
+	"mal/web/components"
+	"mal/web/components/watchlist"
 	"math"
 )
 
-templ Watchlist(entries []database.GetUserWatchListRow, layout string, currentStatus string, sortBy string, sortOrder string) {
+templ Watchlist(entries []db.GetUserWatchListRow, layout string, currentStatus string, sortBy string, sortOrder string) {
 	@Layout("mal - watchlist", true) {
 		<div class="mb-4 flex items-end justify-between gap-4 max-lg:flex-col max-lg:items-start">
 			<div class="grid gap-1">
@@ -34,9 +35,9 @@ templ Watchlist(entries []database.GetUserWatchListRow, layout string, currentSt
 			<a href={ templ.URL(watchlistURL(layout, "dropped", sortBy, sortOrder)) } class={ tabClass(currentStatus == "dropped") }>Dropped</a>
 			<a href={ templ.URL(watchlistURL(layout, "completed", sortBy, sortOrder)) } class={ tabClass(currentStatus == "completed") }>Completed</a>
 		</div>
-		@ui.SortFilter(ui.SortFilterOptions{Sort: sortBy, Order: sortOrder, View: layout, Status: currentStatus})
+		@components.SortFilter(components.SortFilterOptions{Sort: sortBy, Order: sortOrder, View: layout, Status: currentStatus})
 		if len(entries) == 0 {
-			@ui.EmptyState("Nothing here yet") {
+			@components.EmptyState("Nothing here yet") {
 				if currentStatus == "all" {
 					Your watchlist is empty. <a href="/">Search for anime</a> to get started.
 				} else {
@@ -55,16 +56,17 @@ templ Watchlist(entries []database.GetUserWatchListRow, layout string, currentSt
 								<div class="mt-2 line-clamp-2 text-sm leading-snug text-(--text)">
 									{ entry.DisplayTitle() }
 								</div>
-								@ifHasProgress(entry)
+								@watchlist.Progress(entry)
 							</a>
-							<button
-								class="absolute right-2 top-2 h-6 w-6 cursor-pointer border-0 bg-(--overlay-subtle) text-(--text-muted) opacity-0 transition-opacity duration-150 group-hover:opacity-100 hover:text-(--danger)"
-								hx-delete={ string(templ.URL(fmt.Sprintf("/api/watchlist/%d?from=watchlist", entry.AnimeID))) }
-								hx-target={ fmt.Sprintf("#watchlist-entry-%d", entry.AnimeID) }
-								hx-swap="delete"
-							>&times;</button>
-						</div>
-					}
+								<button
+									class="absolute right-2 top-2 h-6 w-6 cursor-pointer border-0 bg-(--overlay-subtle) text-(--text-muted) opacity-0 transition-opacity duration-150 group-hover:opacity-100 hover:text-(--danger)"
+									hx-delete={ string(templ.URL(fmt.Sprintf("/api/watchlist/%d?from=watchlist", entry.AnimeID))) }
+									hx-target={ fmt.Sprintf("#watchlist-entry-%d", entry.AnimeID) }
+									hx-swap="delete"
+								>&times;</button>
+							</div>
+						}
+					</div>
 				</div>
 			} else {
 				<table class="block w-full overflow-x-auto whitespace-nowrap bg-(--panel) md:table md:overflow-visible md:whitespace-normal">
@@ -87,7 +89,7 @@ templ Watchlist(entries []database.GetUserWatchListRow, layout string, currentSt
 									<a href={ templ.URL(watchURL(entry)) }>
 										{ entry.DisplayTitle() }
 									</a>
-									@ifHasProgress(entry)
+									@watchlist.Progress(entry)
 								</td>
 								<td class="w-24 p-2.5">
 									<button
@@ -106,7 +108,7 @@ templ Watchlist(entries []database.GetUserWatchListRow, layout string, currentSt
 	}
 }
 
-templ ifHasProgress(entry database.GetUserWatchListRow) {
+templ ifHasProgress(entry db.GetUserWatchListRow) {
 	if entry.CurrentEpisode.Valid && entry.CurrentEpisode.Int64 > 0 && entry.Status != "completed" {
 		<p class="m-0 mt-1 text-xs text-(--text-faint)">
 			Continue ep { fmt.Sprintf("%d", entry.CurrentEpisode.Int64) }
@@ -117,7 +119,7 @@ templ ifHasProgress(entry database.GetUserWatchListRow) {
 	}
 }
 
-func watchURL(entry database.GetUserWatchListRow) string {
+func watchURL(entry db.GetUserWatchListRow) string {
 	return fmt.Sprintf("/anime/%d", entry.AnimeID)
 }
 
