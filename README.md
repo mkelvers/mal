@@ -131,7 +131,7 @@ When the server starts, the app is available at `http://localhost:3000`.
 
 Important notes:
 - Environment variables are read directly from the process environment (`PORT`, `DATABASE_FILE`, `ENV`, `PLAYBACK_PROXY_SECRET`); `.env` is not auto-loaded.
-- The web app currently exposes a login route only. If your database has no users yet, create the first user outside the web UI.
+- The web app currently exposes a login route only. Seed at least one user directly in the SQLite database before first login.
 
 For containerized usage, the included `Dockerfile` uses a multi-stage build that installs Bun + templ, builds assets, generates templates, compiles `cmd/server`, and ships a slim runtime image with SQLite support.
 

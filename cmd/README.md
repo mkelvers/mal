@@ -3,7 +3,6 @@
 Executable entrypoints live here.
 
 - `cmd/server`: main web process (`go run ./cmd/server`)
-- `cmd/create-user`: admin CLI for adding login users (`go run ./cmd/create-user --email user@example.com --password-stdin`)
 
 ## Why this structure
 
