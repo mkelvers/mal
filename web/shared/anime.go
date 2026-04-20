@@ -1,8 +1,8 @@
 package shared
 
 import (
-	"strings"
 	"mal/integrations/jikan"
+	"strings"
 )
 
 func JoinNames(entities []jikan.NamedEntity) string {
