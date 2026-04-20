@@ -30,14 +30,6 @@ func (s *Service) SaveProgress(ctx context.Context, userID string, animeID int64
 		}
 	}
 
-	watchListEntry, watchListErr := txQueries.GetWatchListEntry(ctx, database.GetWatchListEntryParams{
-		UserID:  userID,
-		AnimeID: animeID,
-	})
-	if watchListErr != nil && !errors.Is(watchListErr, sql.ErrNoRows) {
-		return fmt.Errorf("failed to load watchlist entry: %w", watchListErr)
-	}
-
 	if err := txQueries.SaveWatchProgress(ctx, database.SaveWatchProgressParams{
 		CurrentEpisode:     sql.NullInt64{Int64: int64(episode), Valid: true},
 		CurrentTimeSeconds: timeSeconds,
