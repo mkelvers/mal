@@ -20,7 +20,7 @@ templ Discover() {
 					hx-target="#discover-content"
 					hx-trigger="click"
 					data-tab-trigger
-					data-tab-active-classes="bg-(--surface-tab-active) text-(--accent)"
+					data-tab-active-classes="bg-(--surface-tab-active) text-(--text-tab-active)"
 					data-tab-inactive-classes="bg-(--panel-soft) text-(--text-muted)"
 				>
 					airing now
@@ -32,13 +32,13 @@ templ Discover() {
 					hx-target="#discover-content"
 					hx-trigger="click"
 					data-tab-trigger
-					data-tab-active-classes="bg-(--surface-tab-active) text-(--accent)"
+					data-tab-active-classes="bg-(--surface-tab-active) text-(--text-tab-active)"
 					data-tab-inactive-classes="bg-(--panel-soft) text-(--text-muted)"
 				>
 					upcoming
 				</button>
 			</div>
-			<div class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:gap-4 lg:grid-cols-4 xl:grid-cols-5" id="discover-content" hx-get="/api/discover/airing?page=1" hx-trigger="load">
+			<div class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:gap-4 lg:grid-cols-4 xl:grid-cols-6" id="discover-content" hx-get="/api/discover/airing?page=1" hx-trigger="load">
 				<div class="col-span-full">
 					@ui.LoadingIndicator("Loading discover")
 				</div>

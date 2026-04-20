@@ -41,7 +41,7 @@ templ StudioDetails(producer jikan.ProducerResponse, animes []jikan.Anime, hasNe
 			</div>
 			<div>
 				<h2 class="mb-3 text-lg font-semibold">Anime</h2>
-				<div class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:gap-4 lg:grid-cols-4 xl:grid-cols-5" id="studio-anime-content">
+				<div class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:gap-4 lg:grid-cols-4 xl:grid-cols-6" id="studio-anime-content">
 					for _, anime := range animes {
 						<div class="min-w-0" data-id={ fmt.Sprintf("%d", anime.MalID) }>
 							@components.AnimeCard(components.AnimeCardProps{
