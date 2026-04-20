@@ -1,6 +1,7 @@
 package watch
 
 import (
+	"fmt"
 	"mal/web/components"
 	"mal/web/shared"
 )
@@ -36,38 +37,94 @@ templ VideoPlayer(data shared.WatchPageData) {
 				playsinline
 				src={ buildStreamURL(data.InitialMode, streamToken) }
 			></video>
-			<div data-loading class="absolute inset-0 flex items-center justify-center bg-black/50">
+			<div
+				data-loading
+				class="absolute inset-0 flex items-center justify-center bg-black/50"
+			>
 				<div class="h-8 w-8 animate-spin border-2 border-(--panel-soft) border-t-(--accent)"></div>
 			</div>
-			<div data-subtitle-text class="absolute bottom-16 left-1/2 z-20 hidden max-w-[92vw] -translate-x-1/2 px-3 text-center text-sm font-semibold text-white drop-shadow-lg sm:bottom-20 sm:max-w-[88vw] sm:px-4 sm:text-lg md:text-xl"></div>
-			<button data-skip class="absolute bottom-20 right-3 z-20 hidden border border-white bg-transparent px-3 py-1.5 text-sm font-semibold text-white transition-opacity hover:opacity-85 sm:bottom-24 sm:right-5 sm:px-4 sm:py-2 sm:text-base">
+			<div
+				data-subtitle-text
+				class="absolute bottom-16 left-1/2 z-20 hidden max-w-[92vw] -translate-x-1/2 px-3 text-center text-sm font-semibold text-white drop-shadow-lg sm:bottom-20 sm:max-w-[88vw] sm:px-4 sm:text-lg md:text-xl"
+			></div>
+			<button
+				data-skip
+				class="absolute bottom-20 right-3 z-20 hidden border border-white bg-transparent px-3 py-1.5 text-sm font-semibold text-white transition-opacity hover:opacity-85 sm:bottom-24 sm:right-5 sm:px-4 sm:py-2 sm:text-base"
+			>
 				Skip intro
 			</button>
-			<div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 to-transparent px-3 pb-3 pt-10 opacity-100 transition-opacity sm:px-4 sm:pb-4 sm:pt-12 sm:opacity-0 sm:group-hover:opacity-100 sm:group-[.show-controls]:opacity-100 group-[.show-controls]:opacity-100">
-				<div data-progress-wrap class="group/progress relative mb-3 h-1 cursor-pointer bg-white/30 sm:mb-5">
-					<div data-preview-popover class="pointer-events-none absolute bottom-[calc(100%+10px)] left-0 z-40 hidden -translate-x-1/2">
+			<div
+				class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 to-transparent px-3 pb-3 pt-10 opacity-100 transition-opacity sm:px-4 sm:pb-4 sm:pt-12 sm:opacity-0 sm:group-hover:opacity-100 sm:group-[.show-controls]:opacity-100 group-[.show-controls]:opacity-100"
+			>
+				<div
+					data-progress-wrap
+					class="group/progress relative mb-3 h-1 cursor-pointer bg-white/30 sm:mb-5"
+				>
+					<div
+						data-preview-popover
+						class="pointer-events-none absolute bottom-[calc(100%+10px)] left-0 z-40 hidden -translate-x-1/2"
+					>
 						<div class="overflow-hidden border border-white/20 bg-black shadow-xl">
-							<div data-preview-time class="bg-white px-2 py-1 text-center text-xs font-semibold text-black tabular-nums">00:00</div>
+							<div
+								data-preview-time
+								class="bg-white px-2 py-1 text-center text-xs font-semibold text-black tabular-nums"
+							>
+								00:00
+							</div>
 						</div>
 					</div>
-					<div data-segments class="pointer-events-none absolute inset-0 z-20"></div>
-					<div data-progress class="pointer-events-none absolute inset-y-0 left-0 z-10 bg-blue-500"></div>
-					<div data-scrubber class="pointer-events-none absolute -top-1.5 z-30 h-5 w-5 rounded-full -translate-x-1/2 bg-white opacity-0 transition-opacity group-hover/progress:opacity-100" style="left: 0%"></div>
+					<div
+						data-segments
+						class="pointer-events-none absolute inset-0 z-20"
+					></div>
+					<div
+						data-progress
+						class="pointer-events-none absolute inset-y-0 left-0 z-10 bg-blue-500"
+					></div>
+					<div
+						data-scrubber
+						class="pointer-events-none absolute -top-1.5 z-30 h-5 w-5 rounded-full -translate-x-1/2 bg-white opacity-0 transition-opacity group-hover/progress:opacity-100"
+						style="left: 0%"
+					></div>
 				</div>
 				<div class="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 sm:flex-nowrap sm:gap-4">
 					<div class="flex min-w-0 items-center gap-2 sm:gap-4">
-						<button data-play-pause data-state="paused" class="flex h-9 w-9 items-center justify-center text-white sm:h-10 sm:w-10" title="Play">
-							<svg data-icon-play class="h-5 w-5 sm:h-6 sm:w-6" viewBox="0 0 24 24" aria-hidden="true">
+						<button
+							data-play-pause
+							data-state="paused"
+							class="flex h-9 w-9 items-center justify-center text-white sm:h-10 sm:w-10"
+							title="Play"
+						>
+							<svg
+								data-icon-play
+								class="h-5 w-5 sm:h-6 sm:w-6"
+								viewBox="0 0 24 24"
+								aria-hidden="true"
+							>
 								<polygon points="8 5 19 12 8 19" fill="white" stroke="none"></polygon>
 							</svg>
-							<svg data-icon-pause class="hidden h-5 w-5 sm:h-6 sm:w-6" viewBox="0 0 24 24" aria-hidden="true">
+							<svg
+								data-icon-pause
+								class="hidden h-5 w-5 sm:h-6 sm:w-6"
+								viewBox="0 0 24 24"
+								aria-hidden="true"
+							>
 								<line x1="9" y1="6" x2="9" y2="18" stroke="white" stroke-width="2" stroke-linecap="round"/>
 								<line x1="15" y1="6" x2="15" y2="18" stroke="white" stroke-width="2" stroke-linecap="round"/>
 							</svg>
 						</button>
-						<div data-volume-wrap class="relative flex h-9 w-9 items-center justify-center overflow-visible sm:h-10 sm:w-10">
-							<span data-volume-bridge class="volume-bridge-off absolute inset-x-0 bottom-full h-[calc(100%+26px)]"></span>
-							<div data-volume-panel class="volume-panel pointer-events-none absolute bottom-[calc(100%+26px)] left-1/2 z-30 -translate-x-1/2 opacity-0 invisible transition-opacity">
+						<div
+							data-volume-wrap
+							class="relative flex h-9 w-9 items-center justify-center overflow-visible sm:h-10 sm:w-10"
+						>
+							<span
+								data-volume-bridge
+								class="volume-bridge-off absolute inset-x-0 bottom-full h-[calc(100%+26px)]"
+							></span>
+							<div
+								data-volume-panel
+								class="volume-panel pointer-events-none absolute bottom-[calc(100%+26px)] left-1/2 z-30 -translate-x-1/2 opacity-0 invisible transition-opacity"
+							>
 								<input
 									data-volume-range
 									type="range"
@@ -75,25 +132,46 @@ templ VideoPlayer(data shared.WatchPageData) {
 									max="100"
 									step="1"
 									value="100"
-									class="h-24 w-4 cursor-pointer appearance-none bg-transparent accent-white [&::-webkit-slider-runnable-track]:w-[4px] [&::-webkit-slider-runnable-track]:rounded-full [&::-webkit-slider-runnable-track]:bg-white/55 [&::-webkit-slider-runnable-track]:[box-shadow:0_0_10px_rgba(0,0,0,0.45)] [&::-moz-range-track]:w-[4px] [&::-moz-range-track]:rounded-full [&::-moz-range-track]:bg-white/55 [&::-moz-range-track]:[box-shadow:0_0_10px_rgba(0,0,0,0.45)] [&::-webkit-slider-thumb]:h-[14px] [&::-webkit-slider-thumb]:w-[14px] [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:border-0 [&::-webkit-slider-thumb]:-ml-[5px] [&::-webkit-slider-thumb]:[box-shadow:0_0_10px_rgba(0,0,0,0.55)] [&::-moz-range-thumb]:h-[14px] [&::-moz-range-thumb]:w-[14px] [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-white [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:[box-shadow:0_0_10px_rgba(0,0,0,0.55)] [writing-mode:vertical-lr] [direction:rtl]"
+									class="h-24 w-4 cursor-pointer appearance-none bg-transparent accent-white [writing-mode:vertical-lr] [direction:rtl]"
 									aria-label="Volume"
 								/>
 							</div>
-							<button data-mute class="relative flex h-9 w-9 items-center justify-center pb-1 text-white sm:h-10 sm:w-10" aria-label="Mute">
-								<svg data-icon-volume class="h-5 w-5 sm:h-6 sm:w-6" viewBox="0 0 24 24" aria-hidden="true">
+							<button
+								data-mute
+								class="relative flex h-9 w-9 items-center justify-center pb-1 text-white sm:h-10 sm:w-10"
+								aria-label="Mute"
+							>
+								<svg
+									data-icon-volume
+									class="h-5 w-5 sm:h-6 sm:w-6"
+									viewBox="0 0 24 24"
+									aria-hidden="true"
+								>
 									<polygon points="5 10 9 10 13 6 13 18 9 14 5 14" fill="none" stroke="white" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round"/>
 									<path d="M16 9c1.3 1.3 1.3 4.7 0 6" stroke="white" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
 									<path d="M18.8 6.5c3 2.9 3 8.1 0 11" stroke="white" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
 								</svg>
-								<svg data-icon-muted class="hidden h-5 w-5 sm:h-6 sm:w-6" viewBox="0 0 24 24" aria-hidden="true">
+								<svg
+									data-icon-muted
+									class="hidden h-5 w-5 sm:h-6 sm:w-6"
+									viewBox="0 0 24 24"
+									aria-hidden="true"
+								>
 									<polygon points="5 10 9 10 13 6 13 18 9 14 5 14" fill="none" stroke="white" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round"/>
 									<line x1="16" y1="9" x2="20" y2="15" stroke="white" stroke-width="1.85" stroke-linecap="round"/>
 									<line x1="20" y1="9" x2="16" y2="15" stroke="white" stroke-width="1.85" stroke-linecap="round"/>
 								</svg>
 							</button>
-							<span class="volume-underline pointer-events-none absolute bottom-0 left-1/2 h-0.5 w-6 -translate-x-1/2 bg-white opacity-0 transition-opacity"></span>
+							<span
+								class="volume-underline pointer-events-none absolute bottom-0 left-1/2 h-0.5 w-6 -translate-x-1/2 bg-white opacity-0 transition-opacity"
+							></span>
 						</div>
-						<span data-time class="min-w-0 text-sm text-white tabular-nums sm:text-base">00:00 / 00:00</span>
+						<span
+							data-time
+							class="min-w-0 text-sm text-white tabular-nums sm:text-base"
+						>
+							00:00 / 00:00
+						</span>
 					</div>
 					<div class="ml-auto flex items-center gap-1.5 sm:gap-3">
 						<button
@@ -105,7 +183,11 @@ templ VideoPlayer(data shared.WatchPageData) {
 							title={ shared.ModeButtonTitle("Dub", hasDub) }
 							disabled?={ !hasDub }
 						>
-							<svg class="h-5 w-5 sm:h-6 sm:w-6" viewBox="0 0 24 24" aria-hidden="true">
+							<svg
+								class="h-5 w-5 sm:h-6 sm:w-6"
+								viewBox="0 0 24 24"
+								aria-hidden="true"
+							>
 								<path d="M6 9h6M6 15h4M12 9v6M17 7.5c2.2 2 2.2 7 0 9M19.2 5.5c3.4 3.2 3.4 10 0 13" stroke="white" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
 							</svg>
 						</button>
@@ -118,25 +200,53 @@ templ VideoPlayer(data shared.WatchPageData) {
 							title={ shared.ModeButtonTitle("Sub", hasSub) }
 							disabled?={ !hasSub }
 						>
-							<svg class="h-5 w-5 sm:h-6 sm:w-6" viewBox="0 0 24 24" aria-hidden="true">
+							<svg
+								class="h-5 w-5 sm:h-6 sm:w-6"
+								viewBox="0 0 24 24"
+								aria-hidden="true"
+							>
 								<rect x="3.5" y="5.5" width="17" height="13" rx="2" stroke="white" stroke-width="1.85" fill="none"/>
 								<path d="M8 11.5h8M8 14.5h5" stroke="white" stroke-width="1.85" stroke-linecap="round"/>
 							</svg>
 						</button>
-						<button data-backward class="flex h-9 w-9 items-center justify-center text-white sm:h-10 sm:w-10" title="-10s">
-							<svg class="h-5 w-5 sm:h-6 sm:w-6" viewBox="0 0 50 50" aria-hidden="true">
+						<button
+							data-backward
+							class="flex h-9 w-9 items-center justify-center text-white sm:h-10 sm:w-10"
+							title="-10s"
+						>
+							<svg
+								class="h-5 w-5 sm:h-6 sm:w-6"
+								viewBox="0 0 50 50"
+								aria-hidden="true"
+							>
 								<path d="M29.9199 45H25.2051V26.5391L20.6064 28.3154V24.3975L29.4219 20.7949H29.9199V45ZM48.1013 35.0059C48.1013 38.3483 47.4926 40.9049 46.2751 42.6758C45.0687 44.4466 43.3422 45.332 41.0954 45.332C38.8708 45.332 37.1498 44.4743 35.9323 42.7588C34.726 41.0322 34.1006 38.5641 34.0564 35.3545V30.7891C34.0564 27.4577 34.6596 24.9121 35.8659 23.1523C37.0723 21.3815 38.8044 20.4961 41.0622 20.4961C43.32 20.4961 45.0521 21.3704 46.2585 23.1191C47.4649 24.8678 48.0792 27.3636 48.1013 30.6064V35.0059ZM43.3864 30.1084C43.3864 28.2048 43.1983 26.777 42.822 25.8252C42.4457 24.8734 41.8591 24.3975 41.0622 24.3975C39.5681 24.3975 38.7933 26.1406 38.738 29.627V35.6533C38.738 37.6012 38.9262 39.0511 39.3025 40.0029C39.6898 40.9548 40.2875 41.4307 41.0954 41.4307C41.8591 41.4307 42.4236 40.988 42.7888 40.1025C43.1651 39.2061 43.3643 37.8392 43.3864 36.002V30.1084Z" fill="white"/>
 								<path d="M40.0106 5.45398V0L50 7.79529L40.0106 15.5914V10.3033H4.9114V40.1506H18.7558V45H2.01875e-06V5.45398H40.0106Z" fill="white"/>
 							</svg>
 						</button>
-						<button data-forward class="flex h-9 w-9 items-center justify-center text-white sm:h-10 sm:w-10" title="+10s">
-							<svg class="h-5 w-5 sm:h-6 sm:w-6" viewBox="0 0 52 50" aria-hidden="true">
+						<button
+							data-forward
+							class="flex h-9 w-9 items-center justify-center text-white sm:h-10 sm:w-10"
+							title="+10s"
+						>
+							<svg
+								class="h-5 w-5 sm:h-6 sm:w-6"
+								viewBox="0 0 52 50"
+								aria-hidden="true"
+							>
 								<path d="M11.9199 45H7.20508V26.5391L2.60645 28.3154V24.3975L11.4219 20.7949H11.9199V45ZM30.1013 35.0059C30.1013 38.3483 29.4926 40.9049 28.2751 42.6758C27.0687 44.4466 25.3422 45.332 23.0954 45.332C20.8708 45.332 19.1498 44.4743 17.9323 42.7588C16.726 41.0322 16.1006 38.5641 16.0564 35.3545V30.7891C16.0564 27.4577 16.6596 24.9121 17.8659 23.1523C19.0723 21.3815 20.8044 20.4961 23.0622 20.4961C25.32 20.4961 27.0521 21.3704 28.2585 23.1191C29.4649 24.8678 30.0792 27.3636 30.1013 30.6064V35.0059ZM25.3864 30.1084C25.3864 28.2048 25.1983 26.777 24.822 25.8252C24.4457 24.8734 23.8591 24.3975 23.0622 24.3975C21.5681 24.3975 20.7933 26.1406 20.738 29.627V35.6533C20.738 37.6012 20.9262 39.0511 21.3025 40.0029C21.6898 40.9548 22.2875 41.4307 23.0954 41.4307C23.8591 41.4307 24.4236 40.988 24.7888 40.1025C25.1651 39.2061 25.3643 37.8392 25.3864 36.002V30.1084Z" fill="white"/>
 								<path d="M11.9894 5.45398V0L2 7.79529L11.9894 15.5914V10.3033H47.0886V40.1506H33.2442V45H52V5.45398H11.9894Z" fill="white"/>
 							</svg>
 						</button>
-						<button data-fullscreen class="flex h-9 w-9 items-center justify-center text-white sm:h-10 sm:w-10" title="Fullscreen">
-							<svg class="h-5 w-5 sm:h-6 sm:w-6" viewBox="0 0 240 240" aria-hidden="true">
+						<button
+							data-fullscreen
+							class="flex h-9 w-9 items-center justify-center text-white sm:h-10 sm:w-10"
+							title="Fullscreen"
+						>
+							<svg
+								class="h-5 w-5 sm:h-6 sm:w-6"
+								viewBox="0 0 240 240"
+								aria-hidden="true"
+							>
 								<path d="M96.3,186.1c1.9,1.9,1.3,4-1.4,4.4l-50.6,8.4c-1.8,0.5-3.7-0.6-4.2-2.4c-0.2-0.6-0.2-1.2,0-1.7l8.4-50.6c0.4-2.7,2.4-3.4,4.4-1.4l14.5,14.5l28.2-28.2l14.3,14.3l-28.2,28.2L96.3,186.1z M195.8,39.1l-50.6,8.4c-2.7,0.4-3.4,2.4-1.4,4.4l14.5,14.5l-28.2,28.2l14.3,14.3l28.2-28.2l14.5,14.5c1.9,1.9,4,1.3,4.4-1.4l8.4-50.6c0.5-1.8-0.6-3.6-2.4-4.2C197,39,196.4,39,195.8,39.1L195.8,39.1z" fill="white"/>
 							</svg>
 						</button>
