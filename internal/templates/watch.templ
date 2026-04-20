@@ -59,7 +59,7 @@ templ WatchPage(anime jikan.Anime, data WatchPageData) {
 					<div
 						hx-get={ string(templ.URL(fmt.Sprintf("/api/anime/%d/episodes?current=%s", anime.MalID, data.CurrentEpisode))) }
 						hx-trigger="load"
-						class="scrollbar-hidden overflow-y-auto flex-1"
+						class="overflow-y-auto flex-1 [&::-webkit-scrollbar]:hidden"
 					>
 						@LoadingIndicatorSmall()
 					</div>
@@ -266,7 +266,7 @@ templ VideoPlayer(data WatchPageData) {
 									max="100"
 									step="1"
 									value="100"
-									class="volume-range volume-track volume-thumb h-24 w-4 cursor-pointer appearance-none bg-transparent"
+									class="h-24 w-4 cursor-pointer appearance-none bg-transparent accent-white [&::-webkit-slider-runnable-track]:w-[4px] [&::-webkit-slider-runnable-track]:rounded-full [&::-webkit-slider-runnable-track]:bg-white/55 [&::-webkit-slider-runnable-track]:[box-shadow:0_0_10px_rgba(0,0,0,0.45)] [&::-moz-range-track]:w-[4px] [&::-moz-range-track]:rounded-full [&::-moz-range-track]:bg-white/55 [&::-moz-range-track]:[box-shadow:0_0_10px_rgba(0,0,0,0.45)] [&::-webkit-slider-thumb]:h-[14px] [&::-webkit-slider-thumb]:w-[14px] [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:border-0 [&::-webkit-slider-thumb]:-ml-[5px] [&::-webkit-slider-thumb]:[box-shadow:0_0_10px_rgba(0,0,0,0.55)] [&::-moz-range-thumb]:h-[14px] [&::-moz-range-thumb]:w-[14px] [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-white [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:[box-shadow:0_0_10px_rgba(0,0,0,0.55)] [writing-mode:vertical-lr] [direction:rtl]"
 									aria-label="Volume"
 								/>
 							</div>
