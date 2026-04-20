@@ -3,7 +3,6 @@ package shared
 import (
 	"encoding/json"
 	"fmt"
-	"net/url"
 	"strconv"
 )
 
@@ -42,13 +41,6 @@ type SkipSegment struct {
 	Type  string  `json:"type"`
 	Start float64 `json:"start"`
 	End   float64 `json:"end"`
-}
-
-func BuildStreamURL(mode string, token string) string {
-	if token == "" {
-		return ""
-	}
-	return fmt.Sprintf("/watch/proxy/stream?mode=%s&token=%s", url.QueryEscape(mode), url.QueryEscape(token))
 }
 
 func ModeToken(mode string, modeSources map[string]ModeSource) string {
