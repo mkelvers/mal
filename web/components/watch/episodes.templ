@@ -1,0 +1,58 @@
+package watch
+
+import (
+	"fmt"
+	"mal/integrations/jikan"
+)
+
+templ EpisodeList(episodes []jikan.Episode, currentEpisode string, animeID int) {
+	if len(episodes) == 0 {
+		<p class="py-4 text-center text-sm text-(--text-muted)">No episodes available</p>
+	} else {
+		<div class="flex flex-col">
+			for _, ep := range episodes {
+				@EpisodeItem(ep, currentEpisode, animeID)
+			}
+		</div>
+	}
+}
+
+templ EpisodeItem(episode jikan.Episode, currentEpisode string, animeID int) {
+	{{ isCurrent := fmt.Sprintf("%d", episode.MalID) == currentEpisode }}
+	<a
+		href={ templ.URL(fmt.Sprintf("/watch/%d/%d", animeID, episode.MalID)) }
+		class={
+			"flex items-center gap-3 px-3 py-2.5 text-sm no-underline transition-colors border-b border-(--panel-soft) last:border-0",
+			templ.KV("bg-white/5 text-white", isCurrent),
+			templ.KV("text-(--text-muted) hover:bg-white/5 hover:text-(--text)", !isCurrent),
+		}
+	>
+		<span
+			class={
+				"flex shrink-0 items-center justify-center font-medium w-6",
+				templ.KV("text-(--text)", isCurrent),
+				templ.KV("text-(--text-faint)", !isCurrent),
+			}
+		>
+			{ fmt.Sprintf("%d", episode.MalID) }
+		</span>
+		<span class="min-w-0 truncate font-medium">
+			if episode.Title != "" {
+				{ episode.Title }
+			} else {
+				Episode { fmt.Sprintf("%d", episode.MalID) }
+			}
+		</span>
+		<div class="ml-auto flex items-center gap-2">
+			if episode.Filler {
+				<span class="shrink-0 px-1.5 py-0.5 text-[9px] uppercase tracking-wider bg-yellow-900/50 text-yellow-400">Filler</span>
+			}
+			if episode.Recap {
+				<span class="shrink-0 px-1.5 py-0.5 text-[9px] uppercase tracking-wider bg-blue-900/50 text-blue-400">Recap</span>
+			}
+			if isCurrent {
+				<svg class="h-4 w-4 shrink-0 text-white" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+			}
+		</div>
+	</a>
+}
