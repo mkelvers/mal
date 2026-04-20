@@ -82,23 +82,16 @@ templ StudioAnimeItems(animes []jikan.Anime, hasNext bool, studioID int, nextPag
 		@StudioLoadMore(studioID, nextPage)
 	}
 	<script data-container="studio-anime-content">
-		(function() {
-			const scripts = document.querySelectorAll('script[data-container]');
-			const currentScript = scripts[scripts.length - 1];
-			const actualID = currentScript.getAttribute('data-container');
-			const container = document.getElementById(actualID) || document;
-			const items = container.querySelectorAll('[data-id]');
-			const seen = new Set();
-			items.forEach(item => {
-				const id = item.getAttribute('data-id');
-				if (id) {
-					if (seen.has(id)) {
-						item.remove();
-					} else {
-						seen.add(id);
-					}
-				}
-			});
-		})();
+		const containerId = document.currentScript.getAttribute('data-container');
+		const container = document.getElementById(containerId) || document;
+		const seen = new Set();
+		container.querySelectorAll('[data-id]').forEach(item => {
+			const id = item.getAttribute('data-id');
+			if (id && seen.has(id)) {
+				item.remove();
+			} else if (id) {
+				seen.add(id);
+			}
+		});
 	</script>
 }
