@@ -1,6 +1,10 @@
 package watchlist
 
-import "fmt"
+import (
+	"fmt"
+
+	"mal/web/shared"
+)
 
 templ WatchlistDropdown(
 	animeID int,
@@ -13,11 +17,11 @@ templ WatchlistDropdown(
 ) {
 	<div class="relative inline-block" id="watchlist-dropdown">
 		<button
+			type="button"
 			class="inline-flex h-8 cursor-pointer items-center gap-2 bg-(--panel-soft) px-2 text-xs text-(--text)"
 			onclick="toggleDropdown()"
 			data-dropdown-trigger
 		>
-			type="button"
 			if currentStatus != "" {
 				{ formatStatus(currentStatus) }
 			} else {
@@ -38,11 +42,11 @@ templ WatchlistDropdown(
 			@StatusOption(animeID, animeTitle, animeTitleEnglish, animeTitleJapanese, animeImage, "plan_to_watch", currentStatus, airing)
 			if currentStatus != "" {
 				<button
+					type="button"
 					class="flex w-full cursor-pointer items-center justify-between bg-transparent px-2.5 py-2 text-left text-xs text-(--text-muted) hover:bg-(--panel-soft) hover:text-(--danger)"
 					hx-delete={ string(templ.URL(fmt.Sprintf("/api/watchlist/%d", animeID))) }
 					hx-target="#watchlist-dropdown"
 					hx-swap="outerHTML swap:150ms"
-					type="button"
 				>
 					Remove from list
 				</button>
@@ -67,7 +71,15 @@ templ StatusOption(
 			templ.KV("bg-(--panel-soft) text-(--text)", status == currentStatus),
 		}
 		hx-post="/api/watchlist"
-		hx-vals={ fmt.Sprintf(`{"anime_id": "%d", "anime_title": "%s", "anime_title_english": "%s", "anime_title_japanese": "%s", "anime_image": "%s", "status": "%s", "airing": "%v"}`, animeID, animeTitle, animeTitleEnglish, animeTitleJapanese, animeImage, status, airing) }
+		hx-vals={ shared.HxVals(map[string]interface{}{
+			"anime_id": animeID,
+			"anime_title": animeTitle,
+			"anime_title_english": animeTitleEnglish,
+			"anime_title_japanese": animeTitleJapanese,
+			"anime_image": animeImage,
+			"status": status,
+			"airing": airing,
+		}) }
 		hx-target="#watchlist-dropdown"
 		hx-swap="outerHTML swap:150ms"
 	>
