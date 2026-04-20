@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"log"
 	"mal/internal/db"
 	"net/http"
 	"strconv"
@@ -294,6 +295,7 @@ func (s *Service) fetchPlaybackSourcesAndSegments(ctx context.Context, showID st
 		go func() {
 			resolved, err := s.resolveModeSourceWithCache(ctx, showID, episode, modeValue, "best", probeCache, &probeCacheMu)
 			if err != nil {
+				log.Printf("playback source resolution failed for mode=%s showID=%s episode=%s: %v", modeValue, showID, episode, err)
 				modeCh <- modeSourceResult{Mode: modeValue, OK: false}
 				return
 			}
