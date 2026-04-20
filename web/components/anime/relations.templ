@@ -7,15 +7,12 @@ import (
 
 templ RelationsList(relations []jikan.RelationEntry) {
 	if len(relations) > 1 {
-		<div class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:gap-4 lg:grid-cols-4 xl:grid-cols-5" id="relations-grid">
+		<div class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:gap-4 lg:grid-cols-4 xl:grid-cols-6" id="relations-grid">
 			for _, rel := range relations {
 				@ui.AnimeCard(ui.AnimeCardProps{
 					ID:          rel.Anime.MalID,
 					Title:       rel.Anime.DisplayTitle(),
 					ImageURL:    rel.Anime.ImageURL(),
-					Class:       relationCardClass(rel),
-					ImgClass:    "relation-thumb",
-					TitleClass:  "relation-title",
 					CurrentNode: rel.IsCurrent,
 				}) {
 					if rel.IsCurrent {
@@ -32,6 +29,4 @@ templ RelationsList(relations []jikan.RelationEntry) {
 	}
 }
 
-func relationCardClass(rel jikan.RelationEntry) string {
-	return "relation-card min-w-0 flex flex-col bg-transparent text-inherit no-underline"
-}
+
