@@ -1,52 +1,16 @@
 package templates
 
 import (
-	"encoding/json"
 	"fmt"
-	"mal/internal/jikan"
-	"mal/internal/shared/ui"
-	"net/url"
-	"strconv"
+	"mal/integrations/jikan"
+	"mal/web/components"
+	"mal/web/components/ui"
+	"mal/web/components/watch"
+	"mal/web/components/watchlist"
+	"mal/web/shared"
 )
 
-// WatchPageData holds the data needed for the watch page
-type WatchPageData struct {
-	MalID          int
-	Title          string
-	TitleEnglish   string
-	TitleJapanese  string
-	ImageURL       string
-	Airing         bool
-	CurrentEpisode string
-	TotalEpisodes  int
-	StartTimeSeconds float64
-	CurrentStatus  string
-	InitialMode    string
-	AvailableModes []string
-	ModeSources    map[string]ModeSource
-	Segments       []SkipSegment
-}
-
-// ModeSource represents a stream source for a specific mode (dub/sub)
-type ModeSource struct {
-	Token     string         `json:"token"`
-	Subtitles []SubtitleItem `json:"subtitles"`
-}
-
-// SubtitleItem represents a subtitle track
-type SubtitleItem struct {
-	Lang    string `json:"lang"`
-	Token   string `json:"token"`
-}
-
-// SkipSegment represents a skippable segment (intro/outro)
-type SkipSegment struct {
-	Type  string  `json:"type"`
-	Start float64 `json:"start"`
-	End   float64 `json:"end"`
-}
-
-templ WatchPage(anime jikan.Anime, data WatchPageData) {
+templ WatchPage(anime jikan.Anime, data shared.WatchPageData) {
 	@Layout(fmt.Sprintf("%s - episode %s", anime.DisplayTitle(), data.CurrentEpisode), true) {
 		<div class="w-full overflow-x-clip">
 			<div class="mx-auto grid w-full gap-4 lg:gap-5 lg:grid-cols-[220px_minmax(0,1fr)_250px] xl:grid-cols-[240px_minmax(0,1fr)_280px]">
@@ -61,18 +25,18 @@ templ WatchPage(anime jikan.Anime, data WatchPageData) {
 						hx-trigger="load"
 						class="overflow-y-auto flex-1 [&::-webkit-scrollbar]:hidden"
 					>
-						@LoadingIndicatorSmall()
+						@ui.LoadingIndicatorSmall()
 					</div>
 				</div>
 			</aside>
 
 			<!-- Main content: Video and Controls -->
 			<div class="order-1 flex min-w-0 flex-1 flex-col gap-4 sm:gap-5 lg:order-2">
-				@VideoPlayer(data)
+				@watch.VideoPlayer(data)
 				<div class="flex flex-wrap items-center justify-between gap-2 sm:justify-end">
-					if canGoPrevEpisode(data.CurrentEpisode) {
+					if shared.CanGoPrevEpisode(data.CurrentEpisode) {
 						<a
-							href={ templ.URL(episodeWithOffsetURL(anime.MalID, data.CurrentEpisode, -1)) }
+							href={ templ.URL(shared.EpisodeWithOffsetURL(anime.MalID, data.CurrentEpisode, -1)) }
 							class="inline-flex h-8 items-center bg-(--panel-soft) px-2 text-xs text-(--text) no-underline hover:bg-(--panel) hover:text-(--text) hover:no-underline"
 						>
 							◀ Prev
@@ -80,9 +44,9 @@ templ WatchPage(anime jikan.Anime, data WatchPageData) {
 					} else {
 						<span class="inline-flex h-8 items-center bg-(--panel-soft) px-2 text-xs text-(--text-faint) opacity-50">◀ Prev</span>
 					}
-					if canGoNextEpisode(data.CurrentEpisode, anime.Episodes) {
+					if shared.CanGoNextEpisode(data.CurrentEpisode, anime.Episodes) {
 						<a
-							href={ templ.URL(episodeWithOffsetURL(anime.MalID, data.CurrentEpisode, 1)) }
+							href={ templ.URL(shared.EpisodeWithOffsetURL(anime.MalID, data.CurrentEpisode, 1)) }
 							class="inline-flex h-8 items-center bg-(--panel-soft) px-2 text-xs text-(--text) no-underline hover:bg-(--panel) hover:text-(--text) hover:no-underline"
 						>
 							Next ▶
@@ -91,13 +55,13 @@ templ WatchPage(anime jikan.Anime, data WatchPageData) {
 						<span class="inline-flex h-8 items-center bg-(--panel-soft) px-2 text-xs text-(--text-faint) opacity-50">Next ▶</span>
 					}
 					<span id="watch-status-dropdown">
-						@WatchlistDropdown(anime.MalID, anime.Title, anime.TitleEnglish, anime.TitleJapanese, anime.ImageURL(), data.CurrentStatus, anime.Airing)
+						@watchlist.WatchlistDropdown(anime.MalID, anime.Title, anime.TitleEnglish, anime.TitleJapanese, anime.ImageURL(), data.CurrentStatus, anime.Airing)
 					</span>
 				</div>
 				<section>
 					<h3 class="mb-3 text-lg font-semibold tracking-wide text-(--text)">Watch more seasons of this anime</h3>
 					<div hx-get={ string(templ.URL(fmt.Sprintf("/api/anime/%d/relations", anime.MalID))) } hx-trigger="load">
-						@ui.LoadingIndicator("Loading relations")
+						@components.LoadingIndicator("Loading relations")
 					</div>
 				</section>
 			</div>
@@ -196,10 +160,10 @@ templ EpisodeItem(episode jikan.Episode, currentEpisode string, animeID int) {
 	</a>
 }
 
-templ VideoPlayer(data WatchPageData) {
-	{{ streamToken := modeToken(data.InitialMode, data.ModeSources) }}
-	{{ hasDub := modeAvailable(data.AvailableModes, "dub") }}
-	{{ hasSub := modeAvailable(data.AvailableModes, "sub") }}
+templ VideoPlayer(data shared.WatchPageData) {
+	{{ streamToken := shared.ModeToken(data.InitialMode, data.ModeSources) }}
+	{{ hasDub := shared.ModeAvailable(data.AvailableModes, "dub") }}
+	{{ hasSub := shared.ModeAvailable(data.AvailableModes, "sub") }}
 	<div
 		class="flex w-full flex-col gap-4"
 		data-mal-id={ fmt.Sprintf("%d", data.MalID) }
@@ -215,9 +179,9 @@ templ VideoPlayer(data WatchPageData) {
 		data-start-time-seconds={ fmt.Sprintf("%.3f", data.StartTimeSeconds) }
 		data-initial-mode={ data.InitialMode }
 		data-stream-token={ streamToken }
-		data-available-modes={ toJSON(data.AvailableModes) }
-		data-mode-sources={ toJSON(data.ModeSources) }
-		data-segments={ toJSON(data.Segments) }
+		data-available-modes={ shared.ToJSON(data.AvailableModes) }
+		data-mode-sources={ shared.ToJSON(data.ModeSources) }
+		data-segments={ shared.ToJSON(data.Segments) }
 	>
 		<div class="group relative aspect-video w-full overflow-hidden bg-black">
 			<video
@@ -293,7 +257,7 @@ templ VideoPlayer(data WatchPageData) {
 								"flex h-9 w-9 items-center justify-center text-white sm:h-10 sm:w-10",
 								templ.KV("opacity-50 cursor-not-allowed", !hasDub),
 							}
-							title={ modeButtonTitle("Dub", hasDub) }
+							title={ shared.ModeButtonTitle("Dub", hasDub) }
 							disabled?={ !hasDub }
 						>
 							<svg class="h-5 w-5 sm:h-6 sm:w-6" viewBox="0 0 24 24" aria-hidden="true">
@@ -306,7 +270,7 @@ templ VideoPlayer(data WatchPageData) {
 								"flex h-9 w-9 items-center justify-center text-white sm:h-10 sm:w-10",
 								templ.KV("opacity-50 cursor-not-allowed", !hasSub),
 							}
-							title={ modeButtonTitle("Sub", hasSub) }
+							title={ shared.ModeButtonTitle("Sub", hasSub) }
 							disabled?={ !hasSub }
 						>
 							<svg class="h-5 w-5 sm:h-6 sm:w-6" viewBox="0 0 24 24" aria-hidden="true">
@@ -342,83 +306,5 @@ func buildStreamURL(mode string, token string) string {
 	if token == "" {
 		return ""
 	}
-
 	return fmt.Sprintf("/watch/proxy/stream?mode=%s&token=%s", url.QueryEscape(mode), url.QueryEscape(token))
-}
-
-func modeToken(mode string, modeSources map[string]ModeSource) string {
-	normalizedMode := mode
-	if _, ok := modeSources[normalizedMode]; !ok {
-		if _, ok := modeSources["dub"]; ok {
-			normalizedMode = "dub"
-		} else if _, ok := modeSources["sub"]; ok {
-			normalizedMode = "sub"
-		} else {
-			for key := range modeSources {
-				normalizedMode = key
-				break
-			}
-		}
-	}
-
-	source, ok := modeSources[normalizedMode]
-	if !ok {
-		return ""
-	}
-
-	return source.Token
-}
-
-func toJSON(v interface{}) string {
-	b, _ := json.Marshal(v)
-	return string(b)
-}
-
-func episodeWithOffsetURL(animeID int, currentEpisode string, offset int) string {
-	episodeID, err := strconv.Atoi(currentEpisode)
-	if err != nil {
-		episodeID = 1
-	}
-	nextEpisode := episodeID + offset
-	if nextEpisode < 1 {
-		nextEpisode = 1
-	}
-	return fmt.Sprintf("/watch/%d/%d", animeID, nextEpisode)
-}
-
-func canGoPrevEpisode(currentEpisode string) bool {
-	episodeID, err := strconv.Atoi(currentEpisode)
-	if err != nil {
-		return false
-	}
-	return episodeID > 1
-}
-
-func canGoNextEpisode(currentEpisode string, totalEpisodes int) bool {
-	if totalEpisodes <= 0 {
-		return true
-	}
-	episodeID, err := strconv.Atoi(currentEpisode)
-	if err != nil {
-		return false
-	}
-	return episodeID < totalEpisodes
-}
-
-func modeAvailable(modes []string, mode string) bool {
-	for _, value := range modes {
-		if value == mode {
-			return true
-		}
-	}
-
-	return false
-}
-
-func modeButtonTitle(label string, enabled bool) string {
-	if enabled {
-		return label
-	}
-
-	return label + " unavailable for this episode"
 }
