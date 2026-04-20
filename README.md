@@ -48,21 +48,51 @@ The external anime data source is Jikan (`https://api.jikan.moe/v4`). Because re
 
 ## Repository structure
 
-Instead of treating the repository as one flat service, the codebase is organized into focused boundaries.
+The codebase follows standard Go project layout conventions with clear separation between public APIs, external integrations, private internals, and web presentation.
+
+### Public API Layer
+
+| Path | Purpose |
+| --- | --- |
+| `api/anime` | Catalog, discovery, search, details, recommendations, and relations |
+| `api/auth` | Login/session handling and auth service logic |
+| `api/playback` | Watch page, stream/subtitle proxying, and watch progress APIs |
+| `api/watchlist` | Watchlist updates, retrieval, import/export, and continue-watching |
+
+### External Integrations
+
+| Path | Purpose |
+| --- | --- |
+| `integrations/jikan` | Upstream API client, caching, and retry-aware fetch behavior |
+| `integrations/watchorder` | Watch-order scraping and parsing helpers |
+
+### Private Internal Code
 
 | Path | Purpose |
 | --- | --- |
 | `cmd/server` | Application entrypoint and process lifecycle setup |
+| `internal/db` | Migration runner, generated query layer, and DB models |
+| `internal/middleware` | App-specific auth and access control middleware |
 | `internal/server` | Route registration and middleware composition |
-| `internal/features/anime` | Catalog, discovery, search, details, recommendations, and relations |
-| `internal/features/watchlist` | Watchlist updates, retrieval, import/export, and continue-watching |
-| `internal/features/playback` | Watch page, stream/subtitle proxying, and watch progress APIs |
-| `internal/features/auth` | Login/session handling and auth service logic |
-| `internal/jikan` | Upstream API client, caching, and retry-aware fetch behavior |
 | `internal/worker` | Background relation sync, retry processing, and cache cleanup |
-| `internal/database` | Migration runner, generated query layer, and DB models |
-| `internal/templates` | Server-rendered page and partial templates |
-| `internal/watchorder` | Watch-order scraping and parsing helpers |
+
+### Reusable Libraries
+
+| Path | Purpose |
+| --- | --- |
+| `pkg/middleware` | Generic HTTP middleware (CSRF, rate limiting, logging) |
+
+### Web Layer
+
+| Path | Purpose |
+| --- | --- |
+| `web/templates` | Server-rendered page and partial templates |
+| `web/components` | Reusable UI components and icons |
+
+### Assets & Operations
+
+| Path | Purpose |
+| --- | --- |
 | `migrations` | Schema evolution and operational DB changes |
 | `static` | Source CSS, TypeScript, and static assets |
 | `dist` | Built frontend assets served at `/dist/*` |
