@@ -1,6 +1,6 @@
 package templates
 
-import "mal/internal/shared/ui/icons"
+import "mal/web/components/icons"
 
 templ Layout(title string, showHeader bool) {
 	<!DOCTYPE html>
@@ -17,24 +17,64 @@ templ Layout(title string, showHeader bool) {
 			<script src="/dist/timezone.js" defer></script>
 			<script src="/dist/player.js" defer></script>
 		</head>
-		<body class="min-h-screen bg-(--bg) text-(--text) font-(--font) text-sm leading-normal">
+		<body
+			class="min-h-screen bg-(--bg) text-(--text) font-(--font) text-sm leading-normal"
+		>
 			if showHeader {
 				<header class="sticky top-0 z-100 bg-(--header)">
-					<div class="mx-auto flex w-full max-w-screen-2xl items-center gap-4 px-4 py-3 max-lg:flex-wrap max-lg:gap-3">
-						<div class="flex min-w-0 items-center gap-5 max-lg:w-full max-lg:flex-wrap max-lg:gap-3" data-search-root>
-							<a href="/" class="inline-flex items-center text-(--accent)" aria-label="mal logo">
+					<div
+						class="mx-auto flex w-full max-w-screen-2xl items-center gap-4 px-4 py-3 max-lg:flex-wrap max-lg:gap-3"
+					>
+						<div
+							class="flex min-w-0 items-center gap-5 max-lg:w-full max-lg:flex-wrap max-lg:gap-3"
+							data-search-root
+						>
+							<a
+								href="/"
+								class="inline-flex items-center text-(--accent)"
+								aria-label="mal logo"
+							>
 								@icons.LogoIcon("h-7 w-7")
 							</a>
 							<div class="flex flex-wrap gap-3 text-sm max-lg:w-full max-lg:gap-2">
-								<a class="text-(--text-muted) no-underline hover:text-(--text) hover:no-underline" href="/discover">Discover</a>
-								<a class="text-(--text-muted) no-underline hover:text-(--text) hover:no-underline" href="/continue-watching">Continue watching</a>
-								<a class="text-(--text-muted) no-underline hover:text-(--text) hover:no-underline" href="/watchlist">Watchlist</a>
+								<a
+									class="text-(--text-muted) no-underline hover:text-(--text) hover:no-underline"
+									href="/discover"
+								>
+									Discover
+								</a>
+								<a
+									class="text-(--text-muted) no-underline hover:text-(--text) hover:no-underline"
+									href="/continue-watching"
+								>
+									Continue watching
+								</a>
+								<a
+									class="text-(--text-muted) no-underline hover:text-(--text) hover:no-underline"
+									href="/watchlist"
+								>
+									Watchlist
+								</a>
 							</div>
 						</div>
-						<div class="relative ml-auto min-w-60 w-full max-w-md max-lg:ml-0" data-search-root>
+						<div
+							class="relative ml-auto min-w-60 w-full max-w-md max-lg:ml-0"
+							data-search-root
+						>
 							<form action="/search" method="GET" class="w-full" id="search-form">
-								<input type="text" id="search-input" name="q" class="h-9 w-full border border-transparent bg-(--surface-search) px-3 text-(--text) transition-colors duration-120 placeholder:text-(--text-faint) focus:border-(--surface-search-focus-border) focus:outline-none" placeholder="Search anime..." autocomplete="off"/>
-								<div id="search-dropdown" class="absolute inset-x-0 top-full mt-0.5 z-50 max-h-screen overflow-y-auto bg-(--panel)" data-search-results-container></div>
+								<input
+									type="text"
+									id="search-input"
+									name="q"
+									class="h-9 w-full border border-transparent bg-(--surface-search) px-3 text-(--text) transition-colors duration-120 placeholder:text-(--text-faint) focus:border-(--surface-search-focus-border) focus:outline-none"
+									placeholder="Search anime..."
+									autocomplete="off"
+								/>
+									<div
+										id="search-dropdown"
+										class="absolute inset-x-0 top-full mt-0.5 z-50 max-h-screen overflow-y-auto bg-(--panel)"
+										data-search-results-container
+									></div>
 							</form>
 						</div>
 					</div>
