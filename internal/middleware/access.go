@@ -15,11 +15,7 @@ type AccessPolicy struct {
 func NewAccessPolicy() AccessPolicy {
 	return AccessPolicy{
 		PublicPaths: map[string]struct{}{
-			"/":                 {},
-			"/login":            {},
-			"/search":           {},
-			"/api/search":       {},
-			"/api/search-quick": {},
+			"/login": {},
 		},
 		PublicHeads: []string{
 			"/static/",
