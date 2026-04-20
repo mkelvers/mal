@@ -7,8 +7,8 @@ import (
 	"log"
 	"time"
 
-	"mal/internal/database"
-	"mal/internal/jikan"
+	"mal/internal/db"
+	"mal/integrations/jikan"
 )
 
 type Worker struct {

@@ -14,10 +14,10 @@ import (
 	"strings"
 	"time"
 
-	"mal/internal/database"
-	"mal/internal/jikan"
-	"mal/internal/shared/middleware"
-	"mal/internal/templates"
+	"mal/internal/db"
+	"mal/integrations/jikan"
+	"mal/internal/middleware"
+	"mal/web/templates"
 )
 
 type Handler struct {

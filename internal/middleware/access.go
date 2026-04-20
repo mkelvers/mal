@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"strings"
 
-	"mal/internal/database"
+	"mal/internal/db"
 )
 
 type AccessPolicy struct {

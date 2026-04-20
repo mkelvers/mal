@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"mal/internal/database"
+	"mal/internal/db"
 )
 
 func TestNormalizeProxyURLRejectsLocalhost(t *testing.T) {

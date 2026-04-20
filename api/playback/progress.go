@@ -9,7 +9,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"mal/internal/database"
+	"mal/internal/db"
 )
 
 func (s *Service) SaveProgress(ctx context.Context, userID string, animeID int64, episode int, timeSeconds float64, animeSeed *database.UpsertAnimeParams) error {

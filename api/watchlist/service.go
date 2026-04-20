@@ -10,7 +10,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"mal/internal/database"
+	"mal/internal/db"
 )
 
 type Service struct {

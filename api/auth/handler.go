@@ -3,7 +3,7 @@ package auth
 import (
 	"net/http"
 
-	"mal/internal/templates"
+	"mal/web/templates"
 )
 
 type Handler struct {

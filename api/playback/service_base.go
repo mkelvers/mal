@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"mal/internal/database"
+	"mal/internal/db"
 	"net/http"
 	"strconv"
 	"strings"

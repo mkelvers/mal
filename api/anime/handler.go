@@ -9,10 +9,10 @@ import (
 	"strconv"
 	"strings"
 
-	"mal/internal/database"
-	"mal/internal/jikan"
-	"mal/internal/shared/middleware"
-	"mal/internal/templates"
+	"mal/internal/db"
+	"mal/integrations/jikan"
+	"mal/internal/middleware"
+	"mal/web/templates"
 )
 
 func deduplicateAnimes(animes []jikan.Anime) []jikan.Anime {

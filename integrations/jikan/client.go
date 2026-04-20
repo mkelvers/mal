@@ -13,7 +13,7 @@ import (
 	"sync"
 	"time"
 
-	"mal/internal/database"
+	"mal/internal/db"
 )
 
 type Client struct {

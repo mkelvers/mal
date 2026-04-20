@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"mal/internal/database"
+	"mal/internal/db"
 )
 
 type fakeQuerier struct {

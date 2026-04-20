@@ -4,13 +4,14 @@ import (
 	"database/sql"
 	"net/http"
 
-	"mal/internal/database"
-	"mal/internal/features/anime"
-	"mal/internal/features/auth"
-	"mal/internal/features/playback"
-	"mal/internal/features/watchlist"
-	"mal/internal/jikan"
-	"mal/internal/shared/middleware"
+	"mal/internal/db"
+	"mal/api/anime"
+	"mal/api/auth"
+	"mal/api/playback"
+	"mal/api/watchlist"
+	"mal/integrations/jikan"
+	"mal/internal/middleware"
+	pkgmiddleware "mal/pkg/middleware"
 )
 
 type Config struct {
@@ -70,7 +71,7 @@ func NewRouter(cfg Config) http.Handler {
 		if r.Method == http.MethodGet {
 			authHandler.HandleLoginPage(w, r)
 		} else {
-			middleware.RateLimitAuth(middleware.VerifyOrigin(http.HandlerFunc(authHandler.HandleLogin))).ServeHTTP(w, r)
+			pkgmiddleware.RateLimitAuth(pkgmiddleware.VerifyOrigin(http.HandlerFunc(authHandler.HandleLogin))).ServeHTTP(w, r)
 		}
 	})
 
@@ -84,7 +85,7 @@ func NewRouter(cfg Config) http.Handler {
 
 	// Wrap mux with global CSRF origin verification and auth checking,
 	// THEN auth context parsing.
-	protectedHandler := middleware.RequireGlobalAuthWithPolicy(middleware.NewAccessPolicy())(middleware.VerifyOrigin(mux))
+	protectedHandler := middleware.RequireGlobalAuthWithPolicy(middleware.NewAccessPolicy())(pkgmiddleware.VerifyOrigin(mux))
 	authenticatedHandler := middleware.Auth(cfg.AuthService)(protectedHandler)
-	return middleware.RequestLogger(authenticatedHandler)
+	return pkgmiddleware.RequestLogger(authenticatedHandler)
 }

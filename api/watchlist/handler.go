@@ -8,9 +8,9 @@ import (
 	"slices"
 	"strconv"
 
-	"mal/internal/database"
-	"mal/internal/shared/middleware"
-	"mal/internal/templates"
+	"mal/internal/db"
+	"mal/internal/middleware"
+	"mal/web/templates"
 )
 
 type Handler struct {

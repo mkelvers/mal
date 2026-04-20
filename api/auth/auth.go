@@ -13,7 +13,7 @@ import (
 
 	"golang.org/x/crypto/bcrypt"
 
-	"mal/internal/database"
+	"mal/internal/db"
 )
 
 var (

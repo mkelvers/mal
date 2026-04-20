@@ -14,11 +14,11 @@ import (
 
 	_ "github.com/mattn/go-sqlite3"
 
-	"mal/internal/database"
-	"mal/internal/features/auth"
-	"mal/internal/jikan"
+	dbpkg "mal/internal/db"
+	"mal/api/auth"
+	"mal/integrations/jikan"
 	"mal/internal/server"
-	"mal/internal/shared/middleware"
+	"mal/pkg/middleware"
 	"mal/internal/worker"
 )
 
@@ -30,11 +30,11 @@ func main() {
 	defer db.Close()
 
 	migrationsDir := migrationsDir()
-	if err := database.RunMigrations(db, migrationsDir); err != nil {
+	if err := dbpkg.RunMigrations(db, migrationsDir); err != nil {
 		log.Fatalf("failed to run migrations: %v", err)
 	}
 
-	queries := database.New(db)
+	queries := dbpkg.New(db)
 	jikanClient := jikan.NewClient(queries)
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)

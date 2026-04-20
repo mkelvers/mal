@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"mal/internal/watchorder"
+	"mal/integrations/watchorder"
 )
 
 const chiakiWatchOrderURL = "https://chiaki.site/?/tools/watch_order/id/%d"

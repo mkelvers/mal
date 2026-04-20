@@ -7,7 +7,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"mal/internal/database"
+	"mal/internal/db"
 )
 
 type staleCacheQuerier struct {
