@@ -645,11 +645,13 @@ const initPlayer = (): void => {
 
   const toggleFullscreen = (): void => {
     if (document.fullscreenElement) {
-      document.exitFullscreen()
+      if (document.exitFullscreen) document.exitFullscreen()
       return
     }
 
-    container.requestFullscreen()
+    if ('requestFullscreen' in container && typeof container.requestFullscreen === 'function') {
+      container.requestFullscreen()
+    }
   }
 
   // Initialize
@@ -804,7 +806,10 @@ const initPlayer = (): void => {
         }).then(async (res) => {
           if (!res.ok) return
           const html = await res.text()
-          watchStatusDropdown.outerHTML = `<span id="watch-status-dropdown">${html}</span>`
+          const wrapper = document.createElement('span')
+          wrapper.id = 'watch-status-dropdown'
+          wrapper.innerHTML = html
+          watchStatusDropdown.replaceWith(wrapper)
         }).catch(() => {})
       }
     } catch {
@@ -955,6 +960,8 @@ const initPlayer = (): void => {
   container.addEventListener('mousemove', showControls)
 
   document.addEventListener('keydown', (event) => {
+    const target = event.target as HTMLElement
+    if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) return
     if (event.code === 'Space') {
       event.preventDefault()
       togglePlayPause()
