@@ -1,0 +1,18 @@
+package anime
+
+import (
+	"fmt"
+	"mal/integrations/jikan"
+)
+
+templ StudioLinks(studios []jikan.NamedEntity) {
+	for i, studio := range studios {
+		<a
+			href={ templ.URL(fmt.Sprintf("/studios/%d", studio.MalID)) }
+			class="hover:text-(--text) hover:underline"
+		>{ studio.Name }</a>
+		if i < len(studios)-1 {
+			<span>, </span>
+		}
+	}
+}
