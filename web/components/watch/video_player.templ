@@ -118,9 +118,9 @@ templ VideoPlayer(data shared.WatchPageData) {
 						>
 							<div
 								data-volume-panel
-								class="pointer-events-none absolute bottom-full left-1/2 z-30 -translate-x-1/2 pb-3 opacity-0 invisible transition-all duration-200 group-hover/volume:pointer-events-auto group-hover/volume:opacity-100 group-hover/volume:visible focus-within:pointer-events-auto focus-within:opacity-100 focus-within:visible [&.is-dragging]:pointer-events-auto [&.is-dragging]:opacity-100 [&.is-dragging]:visible"
+								class="pointer-events-none absolute bottom-[calc(100%+16px)] left-1/2 z-30 -translate-x-1/2 opacity-0 invisible transition-all duration-200 group-hover/volume:pointer-events-auto group-hover/volume:opacity-100 group-hover/volume:visible focus-within:pointer-events-auto focus-within:opacity-100 focus-within:visible [&.is-dragging]:pointer-events-auto [&.is-dragging]:opacity-100 [&.is-dragging]:visible"
 							>
-								<div class="flex items-center justify-center px-3 py-2">
+								<div class="flex h-[100px] w-8 items-center justify-center">
 									<input
 										data-volume-range
 										type="range"
@@ -128,10 +128,12 @@ templ VideoPlayer(data shared.WatchPageData) {
 										max="100"
 										step="1"
 										value="100"
-										class="h-24 w-1.5 cursor-pointer rounded-full bg-white/20 accent-gray-300 outline-none [writing-mode:vertical-lr] [direction:rtl] [&::-webkit-slider-thumb]:shadow-[0_0_6px_rgba(255,255,255,1)] [&::-moz-range-thumb]:shadow-[0_0_6px_rgba(255,255,255,1)]"
+										class="h-1 w-20 -rotate-90 cursor-pointer appearance-none rounded-full outline-none [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-3.5 [&::-webkit-slider-thumb]:w-3.5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-moz-range-thumb]:h-3.5 [&::-moz-range-thumb]:w-3.5 [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-white"
+										style="background: linear-gradient(to right, #007aff var(--volume-percent, 100%), #555555 var(--volume-percent, 100%));"
 										aria-label="Volume"
 									/>
 								</div>
+								<div class="absolute top-full left-0 h-[24px] w-full"></div>
 							</div>
 							<button
 								data-mute

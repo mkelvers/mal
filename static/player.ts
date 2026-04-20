@@ -602,6 +602,7 @@ const initPlayer = (): void => {
     if (volumeRange) {
       const volumeValue = video.muted ? 0 : Math.round(video.volume * 100)
       volumeRange.value = String(volumeValue)
+      volumeRange.style.setProperty('--volume-percent', `${volumeValue}%`)
     }
     if (!video.muted && video.volume > 0) {
       lastKnownVolume = video.volume
