@@ -23,7 +23,7 @@ templ Layout(title string, showHeader bool) {
 			if showHeader {
 				<header class="sticky top-0 z-100 bg-(--header)">
 					<div
-						class="mx-auto flex w-full max-w-screen-2xl items-center gap-4 px-4 py-3 max-lg:flex-wrap max-lg:gap-3"
+						class="mx-auto flex w-full max-w-(--breakpoint-2xl) items-center gap-4 px-4 py-3 max-lg:flex-wrap max-lg:gap-3"
 					>
 						<div
 							class="flex min-w-0 items-center gap-5 max-lg:w-full max-lg:flex-wrap max-lg:gap-3"
@@ -81,7 +81,7 @@ templ Layout(title string, showHeader bool) {
 				</header>
 			}
 			<main class={
-				"mx-auto w-full max-w-screen-2xl px-4 pt-5 pb-8 max-lg:px-3 max-lg:pb-6",
+				"mx-auto w-full max-w-(--breakpoint-2xl) px-4 pt-5 pb-8 max-lg:px-3 max-lg:pb-6",
 				templ.KV("flex min-h-screen items-center justify-center px-4 py-0", !showHeader),
 			}>
 				{ children... }
