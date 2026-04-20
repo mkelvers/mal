@@ -223,8 +223,8 @@ func (h *Handler) HandleGetWatchlist(w http.ResponseWriter, r *http.Request) {
 	if sortBy != "title" {
 		sortBy = "date"
 	}
-	if sortOrder != "asc" {
-		sortOrder = "desc"
+	if sortOrder != "desc" {
+		sortOrder = "asc"
 	}
 
 	user := middleware.GetUser(r.Context())
