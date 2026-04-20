@@ -1,6 +1,10 @@
 package ui
 
-import "fmt"
+import (
+	"fmt"
+
+	"mal/web/components/watchlist"
+)
 
 type AnimeCardProps struct {
 	ID       int
@@ -15,6 +19,11 @@ type AnimeCardProps struct {
 	CurrentNode bool   // if true, renders a div instead of an anchor tag (useful for graph nodes)
 	Synopsis    string // optional synopsis for hover detail
 	PlayHref    string // optional play button href (anchored to poster)
+	// Watchlist integration
+	TitleEnglish    string
+	TitleJapanese   string
+	Airing          bool
+	WatchlistStatus string // empty if not in watchlist
 }
 
 templ AnimeCard(props AnimeCardProps) {
@@ -68,16 +77,32 @@ templ animeCardPoster(props AnimeCardProps) {
 				</div>
 			</div>
 		}
-		if props.PlayHref != "" {
-			<a
-				href={ templ.URL(props.PlayHref) }
-				class="absolute bottom-2 left-2 z-10 text-white opacity-0 transition-opacity duration-200 group-hover:opacity-100"
-				aria-label="Play"
-			>
-				<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-					<path d="M8 5V19L19 12L8 5Z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
-				</svg>
-			</a>
+		if props.PlayHref != "" || !props.CurrentNode {
+			<div class="absolute bottom-2 left-2 z-10 flex gap-2 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+				if props.PlayHref != "" {
+					<a
+						href={ templ.URL(props.PlayHref) }
+						class="text-white"
+						aria-label="Play"
+					>
+						<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+							<title>Play</title>
+							<path d="M8 5V19L19 12L8 5Z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+						</svg>
+					</a>
+				}
+				if !props.CurrentNode {
+					@watchlist.CardButton(
+						props.ID,
+						props.Title,
+						props.TitleEnglish,
+						props.TitleJapanese,
+						props.ImageURL,
+						props.Airing,
+						props.WatchlistStatus != "",
+					)
+				}
+			</div>
 		}
 	</div>
 }

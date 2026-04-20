@@ -45,9 +45,12 @@ templ StudioDetails(producer jikan.ProducerResponse, animes []jikan.Anime, hasNe
 					for _, anime := range animes {
 						<div class="min-w-0" data-id={ fmt.Sprintf("%d", anime.MalID) }>
 							@components.AnimeCard(components.AnimeCardProps{
-								ID:       anime.MalID,
-								Title:    anime.DisplayTitle(),
-								ImageURL: anime.ImageURL(),
+								ID:            anime.MalID,
+								Title:         anime.DisplayTitle(),
+								ImageURL:      anime.ImageURL(),
+								TitleEnglish:  anime.TitleEnglish,
+								TitleJapanese: anime.TitleJapanese,
+								Airing:        anime.Airing,
 							})
 						</div>
 					}
@@ -73,9 +76,12 @@ templ StudioAnimeItems(animes []jikan.Anime, hasNext bool, studioID int, nextPag
 	for _, anime := range animes {
 		<div class="min-w-0" data-id={ fmt.Sprintf("%d", anime.MalID) }>
 			@components.AnimeCard(components.AnimeCardProps{
-				ID:       anime.MalID,
-				Title:    anime.DisplayTitle(),
-				ImageURL: anime.ImageURL(),
+				ID:            anime.MalID,
+				Title:         anime.DisplayTitle(),
+				ImageURL:      anime.ImageURL(),
+				TitleEnglish:  anime.TitleEnglish,
+				TitleJapanese: anime.TitleJapanese,
+				Airing:        anime.Airing,
 			})
 		</div>
 	}

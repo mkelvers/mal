@@ -10,10 +10,13 @@ templ Recommendations(recs []jikan.Anime) {
 		<div class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:gap-4 lg:grid-cols-4 xl:grid-cols-6">
 			for _, anime := range recs {
 				@ui.AnimeCard(ui.AnimeCardProps{
-					ID:       anime.MalID,
-					Title:    anime.DisplayTitle(),
-					ImageURL: anime.ImageURL(),
-					Synopsis: anime.Synopsis,
+					ID:            anime.MalID,
+					Title:         anime.DisplayTitle(),
+					ImageURL:      anime.ImageURL(),
+					TitleEnglish:  anime.TitleEnglish,
+					TitleJapanese: anime.TitleJapanese,
+					Airing:        anime.Airing,
+					Synopsis:      anime.Synopsis,
 				})
 			}
 		</div>

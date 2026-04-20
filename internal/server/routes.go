@@ -78,6 +78,7 @@ func NewRouter(cfg Config) http.Handler {
 	// Watchlist Endpoints
 	mux.HandleFunc("/api/watchlist/export", watchlistHandler.HandleExportWatchlist)
 	mux.HandleFunc("/api/watchlist/import", watchlistHandler.HandleImportWatchlist)
+	mux.HandleFunc("/api/watchlist/card", watchlistHandler.HandleCardWatchlist)
 	mux.HandleFunc("/api/watchlist", watchlistHandler.HandleUpdateWatchlist)
 	mux.HandleFunc("/api/watchlist/", watchlistHandler.HandleDeleteWatchlist)
 	mux.HandleFunc("/api/continue-watching/", watchlistHandler.HandleDeleteContinueWatching)

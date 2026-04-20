@@ -1,6 +1,7 @@
 package templates
 
 import (
+	"database/sql"
 	"fmt"
 	db "mal/internal/db"
 	ui "mal/web/components"
@@ -21,14 +22,17 @@ templ ContinueWatching(entries []db.GetContinueWatchingEntriesRow) {
 				<div class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:gap-4 lg:grid-cols-4 xl:grid-cols-5">
 					for _, entry := range entries {
 						<div class="group relative min-w-0" id={ fmt.Sprintf("continue-entry-%d", entry.AnimeID) }>
-							@ui.AnimeCard(ui.AnimeCardProps{
-								ID:        int(entry.AnimeID),
-								Title:     displayContinueWatchingTitle(entry),
-								ImageURL:  entry.ImageUrl,
-								Href:      continueWatchingURL(entry),
-								Class:     "notification-card min-w-0 flex flex-col bg-transparent text-inherit no-underline",
-								HideTitle: true,
-							}) {
+						@ui.AnimeCard(ui.AnimeCardProps{
+							ID:              int(entry.AnimeID),
+							Title:           displayContinueWatchingTitle(entry),
+							ImageURL:        entry.ImageUrl,
+							Href:            continueWatchingURL(entry),
+							TitleEnglish:    nullString(entry.TitleEnglish),
+							TitleJapanese:   nullString(entry.TitleJapanese),
+							WatchlistStatus: "watching",
+							Class:           "notification-card min-w-0 flex flex-col bg-transparent text-inherit no-underline",
+							HideTitle:       true,
+						}) {
 								<div class="mt-2 grid gap-1 p-0">
 									<div class="line-clamp-2 text-sm leading-snug text-(--text)">{ displayContinueWatchingTitle(entry) }</div>
 									<div class="flex flex-wrap gap-2">
@@ -66,4 +70,11 @@ func continueWatchingURL(entry db.GetContinueWatchingEntriesRow) string {
 
 func displayContinueWatchingTitle(entry db.GetContinueWatchingEntriesRow) string {
 	return db.DisplayTitle(entry.TitleEnglish, entry.TitleJapanese, entry.TitleOriginal)
+}
+
+func nullString(s sql.NullString) string {
+	if s.Valid {
+		return s.String
+	}
+	return ""
 }

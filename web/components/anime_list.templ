@@ -31,10 +31,13 @@ templ InfiniteAnimeList(animes []jikan.Anime, hasNext bool, nextURL string, cont
 
 templ CatalogItem(anime jikan.Anime) {
 	@AnimeCard(AnimeCardProps{
-		ID:       anime.MalID,
-		Title:    anime.DisplayTitle(),
-		ImageURL: anime.ImageURL(),
-		Synopsis: anime.Synopsis,
-		PlayHref: fmt.Sprintf("/watch/%d/1", anime.MalID),
+		ID:            anime.MalID,
+		Title:         anime.DisplayTitle(),
+		ImageURL:      anime.ImageURL(),
+		TitleEnglish:  anime.TitleEnglish,
+		TitleJapanese: anime.TitleJapanese,
+		Airing:        anime.Airing,
+		Synopsis:      anime.Synopsis,
+		PlayHref:      fmt.Sprintf("/watch/%d/1", anime.MalID),
 	})
 }

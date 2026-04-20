@@ -1,0 +1,43 @@
+package watchlist
+
+import "fmt"
+
+templ CardButton(
+	animeID int,
+	title string,
+	titleEnglish string,
+	titleJapanese string,
+	imageURL string,
+	airing bool,
+	inWatchlist bool,
+) {
+	<button
+		class={ "cursor-pointer border-0 bg-transparent p-0", templ.KV("text-blue-500", inWatchlist), templ.KV("text-white hover:text-blue-400", !inWatchlist) }
+		if !inWatchlist {
+			hx-post="/api/watchlist/card"
+			hx-vals={ fmt.Sprintf(`{"anime_id": "%d", "anime_title": "%s", "anime_title_english": "%s", "anime_title_japanese": "%s", "anime_image": "%s", "airing": "%v"}`, animeID, title, titleEnglish, titleJapanese, imageURL, airing) }
+			hx-target="this"
+			hx-swap="outerHTML"
+		}
+		aria-label={ getWatchlistLabel(inWatchlist) }
+	>
+		<svg width="24" height="24" viewBox="0 0 24 24" fill={ getWatchlistFill(inWatchlist) } xmlns="http://www.w3.org/2000/svg">
+			<title>{ getWatchlistLabel(inWatchlist) }</title>
+			<path d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+		</svg>
+	</button>
+}
+
+func getWatchlistFill(inWatchlist bool) string {
+	if inWatchlist {
+		return "currentColor"
+	}
+	return "none"
+}
+
+func getWatchlistLabel(inWatchlist bool) string {
+	if inWatchlist {
+		return "In watchlist"
+	}
+	return "Add to watchlist"
+}
