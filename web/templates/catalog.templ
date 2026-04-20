@@ -15,8 +15,8 @@ templ Catalog() {
 	}
 }
 
-templ CatalogItems(animes []jikan.Anime, nextPage int, hasNext bool) {
-	@ui.InfiniteAnimeList(animes, hasNext, string(templ.URL(fmt.Sprintf("/api/catalog?page=%d", nextPage))), "catalog-content")
+templ CatalogItems(animes []jikan.Anime, watchlistStatuses map[int]string, nextPage int, hasNext bool) {
+	@ui.InfiniteAnimeList(animes, watchlistStatuses, hasNext, string(templ.URL(fmt.Sprintf("/api/catalog?page=%d", nextPage))), "catalog-content")
 }
 
 templ CatalogPlaceholderItems(count int) {

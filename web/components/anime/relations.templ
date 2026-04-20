@@ -5,18 +5,19 @@ import (
 	ui "mal/web/components"
 )
 
-templ RelationsList(relations []jikan.RelationEntry) {
+templ RelationsList(relations []jikan.RelationEntry, watchlistStatuses map[int]string) {
 	if len(relations) > 1 {
 		<div class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:gap-4 lg:grid-cols-4 xl:grid-cols-6" id="relations-grid">
 			for _, rel := range relations {
 				@ui.AnimeCard(ui.AnimeCardProps{
-					ID:            rel.Anime.MalID,
-					Title:         rel.Anime.DisplayTitle(),
-					ImageURL:      rel.Anime.ImageURL(),
-					TitleEnglish:  rel.Anime.TitleEnglish,
-					TitleJapanese: rel.Anime.TitleJapanese,
-					Airing:        rel.Anime.Airing,
-					CurrentNode:   rel.IsCurrent,
+					ID:              rel.Anime.MalID,
+					Title:           rel.Anime.DisplayTitle(),
+					ImageURL:        rel.Anime.ImageURL(),
+					TitleEnglish:    rel.Anime.TitleEnglish,
+					TitleJapanese:   rel.Anime.TitleJapanese,
+					Airing:          rel.Anime.Airing,
+					CurrentNode:     rel.IsCurrent,
+					WatchlistStatus: watchlistStatuses[rel.Anime.MalID],
 				}) {
 					if rel.IsCurrent {
 						<div class="mt-2 h-0.5 w-10 bg-white"></div>
@@ -31,5 +32,3 @@ templ RelationsList(relations []jikan.RelationEntry) {
 		<p class="text-sm text-(--text-muted)">No related anime found.</p>
 	}
 }
-
-

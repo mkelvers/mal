@@ -81,6 +81,21 @@ func (h *Handler) HandleCatalog(w http.ResponseWriter, r *http.Request) {
 	templates.Catalog().Render(r.Context(), w)
 }
 
+func (h *Handler) watchlistMap(ctx context.Context, userID string) map[int]string {
+	if userID == "" {
+		return nil
+	}
+	entries, err := h.db.GetUserWatchList(ctx, userID)
+	if err != nil {
+		return nil
+	}
+	m := make(map[int]string, len(entries))
+	for _, e := range entries {
+		m[int(e.AnimeID)] = e.Status
+	}
+	return m
+}
+
 func (h *Handler) HandleSearch(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Vary", "HX-Request")
 
@@ -101,7 +116,8 @@ func (h *Handler) HandleSearch(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "Failed to search anime", http.StatusInternalServerError)
 			return
 		}
-		templates.SearchResultsWrapper(query, res.Animes, 2, res.HasNextPage).Render(r.Context(), w)
+		statuses := h.watchlistMap(r.Context(), userIDFromRequest(r))
+		templates.SearchResultsWrapper(query, res.Animes, statuses, 2, res.HasNextPage).Render(r.Context(), w)
 		return
 	}
 
@@ -125,7 +141,8 @@ func (h *Handler) HandleAPISearch(w http.ResponseWriter, r *http.Request) {
 
 	res.Animes = deduplicateAnimes(res.Animes)
 
-	templates.SearchItems(query, res.Animes, page+1, res.HasNextPage).Render(r.Context(), w)
+	statuses := h.watchlistMap(r.Context(), userIDFromRequest(r))
+	templates.SearchItems(query, res.Animes, statuses, page+1, res.HasNextPage).Render(r.Context(), w)
 }
 
 func (h *Handler) HandleAPICatalog(w http.ResponseWriter, r *http.Request) {
@@ -134,7 +151,8 @@ func (h *Handler) HandleAPICatalog(w http.ResponseWriter, r *http.Request) {
 	result, err := h.jikanClient.GetTopAnime(r.Context(), page)
 	if err == nil {
 		result.Animes = deduplicateAnimes(result.Animes)
-		templates.CatalogItems(result.Animes, page+1, result.HasNextPage).Render(r.Context(), w)
+		statuses := h.watchlistMap(r.Context(), userIDFromRequest(r))
+		templates.CatalogItems(result.Animes, statuses, page+1, result.HasNextPage).Render(r.Context(), w)
 		return
 	}
 
@@ -211,6 +229,7 @@ func (h *Handler) HandleAPIAnime(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	statuses := h.watchlistMap(r.Context(), userIDFromRequest(r))
 	switch section {
 	case "relations":
 		relations, err := h.jikanClient.GetFullRelations(r.Context(), id)
@@ -222,7 +241,7 @@ func (h *Handler) HandleAPIAnime(w http.ResponseWriter, r *http.Request) {
 			writeInlineLoadError(w, "Failed to load relations.")
 			return
 		}
-		animecomponents.RelationsList(relations).Render(r.Context(), w)
+		animecomponents.RelationsList(relations, statuses).Render(r.Context(), w)
 	case "recommendations":
 		recs, err := h.jikanClient.GetRecommendations(r.Context(), id, 12)
 		if err != nil {
@@ -230,7 +249,7 @@ func (h *Handler) HandleAPIAnime(w http.ResponseWriter, r *http.Request) {
 			writeInlineLoadError(w, "Failed to load recommendations.")
 			return
 		}
-		animecomponents.Recommendations(recs).Render(r.Context(), w)
+		animecomponents.Recommendations(recs, statuses).Render(r.Context(), w)
 	case "episodes":
 		currentEpisode := r.URL.Query().Get("current")
 		episodes, err := h.getEpisodes(r.Context(), id)
@@ -344,7 +363,8 @@ func (h *Handler) HandleAPIDiscoverAiring(w http.ResponseWriter, r *http.Request
 
 	res.Animes = deduplicateAnimes(res.Animes)
 
-	templates.DiscoverItems(res.Animes, "airing", page+1, res.HasNextPage).Render(r.Context(), w)
+	statuses := h.watchlistMap(r.Context(), userIDFromRequest(r))
+	templates.DiscoverItems(res.Animes, statuses, "airing", page+1, res.HasNextPage).Render(r.Context(), w)
 }
 
 func (h *Handler) HandleAPIDiscoverUpcoming(w http.ResponseWriter, r *http.Request) {
@@ -359,7 +379,8 @@ func (h *Handler) HandleAPIDiscoverUpcoming(w http.ResponseWriter, r *http.Reque
 
 	res.Animes = deduplicateAnimes(res.Animes)
 
-	templates.DiscoverItems(res.Animes, "upcoming", page+1, res.HasNextPage).Render(r.Context(), w)
+	statuses := h.watchlistMap(r.Context(), userIDFromRequest(r))
+	templates.DiscoverItems(res.Animes, statuses, "upcoming", page+1, res.HasNextPage).Render(r.Context(), w)
 }
 
 func (h *Handler) HandleStudioDetails(w http.ResponseWriter, r *http.Request) {
@@ -387,14 +408,15 @@ func (h *Handler) HandleStudioDetails(w http.ResponseWriter, r *http.Request) {
 		log.Printf("studio anime fetch error for %d: %v", id, err)
 		if jikan.IsRetryableError(err) || errors.Is(err, context.Canceled) {
 			// Render page with empty anime list if API is rate limiting
-			templates.StudioDetails(producer, []jikan.Anime{}, false, 2).Render(r.Context(), w)
+			templates.StudioDetails(producer, []jikan.Anime{}, nil, false, 2).Render(r.Context(), w)
 			return
 		}
 		http.Error(w, "Failed to fetch studio anime", http.StatusInternalServerError)
 		return
 	}
 
-	templates.StudioDetails(producer, result.Animes, result.HasNextPage, 2).Render(r.Context(), w)
+	statuses := h.watchlistMap(r.Context(), userIDFromRequest(r))
+	templates.StudioDetails(producer, result.Animes, statuses, result.HasNextPage, 2).Render(r.Context(), w)
 }
 
 func (h *Handler) HandleAPIStudioAnime(w http.ResponseWriter, r *http.Request) {
@@ -427,5 +449,6 @@ func (h *Handler) HandleAPIStudioAnime(w http.ResponseWriter, r *http.Request) {
 
 	result.Animes = deduplicateAnimes(result.Animes)
 
-	templates.StudioAnimeItems(result.Animes, result.HasNextPage, id, page+1).Render(r.Context(), w)
+	statuses := h.watchlistMap(r.Context(), userIDFromRequest(r))
+	templates.StudioAnimeItems(result.Animes, statuses, result.HasNextPage, id, page+1).Render(r.Context(), w)
 }

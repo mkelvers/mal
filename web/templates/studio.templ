@@ -9,7 +9,7 @@ import (
 	"mal/web/shared/layout"
 )
 
-templ StudioDetails(producer jikan.ProducerResponse, animes []jikan.Anime, hasNext bool, nextPage int) {
+templ StudioDetails(producer jikan.ProducerResponse, animes []jikan.Anime, watchlistStatuses map[int]string, hasNext bool, nextPage int) {
 	@layout.Layout("mal - "+shared.GetProducerName(producer), true) {
 		<div class="grid gap-5">
 			<div class="grid gap-4 bg-(--panel) p-4">
@@ -45,12 +45,13 @@ templ StudioDetails(producer jikan.ProducerResponse, animes []jikan.Anime, hasNe
 					for _, anime := range animes {
 						<div class="min-w-0" data-id={ fmt.Sprintf("%d", anime.MalID) }>
 							@components.AnimeCard(components.AnimeCardProps{
-								ID:            anime.MalID,
-								Title:         anime.DisplayTitle(),
-								ImageURL:      anime.ImageURL(),
-								TitleEnglish:  anime.TitleEnglish,
-								TitleJapanese: anime.TitleJapanese,
-								Airing:        anime.Airing,
+								ID:              anime.MalID,
+								Title:           anime.DisplayTitle(),
+								ImageURL:        anime.ImageURL(),
+								TitleEnglish:    anime.TitleEnglish,
+								TitleJapanese:   anime.TitleJapanese,
+								Airing:          anime.Airing,
+								WatchlistStatus: watchlistStatuses[anime.MalID],
 							})
 						</div>
 					}
@@ -72,16 +73,17 @@ templ StudioLoadMore(studioID int, nextPage int) {
 	></div>
 }
 
-templ StudioAnimeItems(animes []jikan.Anime, hasNext bool, studioID int, nextPage int) {
+templ StudioAnimeItems(animes []jikan.Anime, watchlistStatuses map[int]string, hasNext bool, studioID int, nextPage int) {
 	for _, anime := range animes {
 		<div class="min-w-0" data-id={ fmt.Sprintf("%d", anime.MalID) }>
 			@components.AnimeCard(components.AnimeCardProps{
-				ID:            anime.MalID,
-				Title:         anime.DisplayTitle(),
-				ImageURL:      anime.ImageURL(),
-				TitleEnglish:  anime.TitleEnglish,
-				TitleJapanese: anime.TitleJapanese,
-				Airing:        anime.Airing,
+				ID:              anime.MalID,
+				Title:           anime.DisplayTitle(),
+				ImageURL:        anime.ImageURL(),
+				TitleEnglish:    anime.TitleEnglish,
+				TitleJapanese:   anime.TitleJapanese,
+				Airing:          anime.Airing,
+				WatchlistStatus: watchlistStatuses[anime.MalID],
 			})
 		</div>
 	}

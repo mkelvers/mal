@@ -12,7 +12,7 @@ templ CardButton(
 	inWatchlist bool,
 ) {
 	<button
-		class={ "cursor-pointer border-0 bg-transparent p-0", templ.KV("text-blue-500", inWatchlist), templ.KV("text-white hover:text-blue-400", !inWatchlist) }
+		class={ "cursor-pointer border-0 bg-transparent p-0", templ.KV("text-white", inWatchlist), templ.KV("text-white hover:text-white/70", !inWatchlist) }
 		if !inWatchlist {
 			hx-post="/api/watchlist/card"
 			hx-vals={ fmt.Sprintf(`{"anime_id": "%d", "anime_title": "%s", "anime_title_english": "%s", "anime_title_japanese": "%s", "anime_image": "%s", "airing": "%v"}`, animeID, title, titleEnglish, titleJapanese, imageURL, airing) }

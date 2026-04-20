@@ -47,6 +47,6 @@ templ Discover() {
 	}
 }
 
-templ DiscoverItems(animes []jikan.Anime, listType string, nextPage int, hasNext bool) {
-	@ui.InfiniteAnimeList(animes, hasNext, string(templ.URL(fmt.Sprintf("/api/discover/%s?page=%d", listType, nextPage))), "discover-content")
+templ DiscoverItems(animes []jikan.Anime, watchlistStatuses map[int]string, listType string, nextPage int, hasNext bool) {
+	@ui.InfiniteAnimeList(animes, watchlistStatuses, hasNext, string(templ.URL(fmt.Sprintf("/api/discover/%s?page=%d", listType, nextPage))), "discover-content")
 }

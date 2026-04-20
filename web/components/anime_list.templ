@@ -5,10 +5,10 @@ import (
 	"mal/integrations/jikan"
 )
 
-templ InfiniteAnimeList(animes []jikan.Anime, hasNext bool, nextURL string, containerID string) {
+templ InfiniteAnimeList(animes []jikan.Anime, watchlistStatuses map[int]string, hasNext bool, nextURL string, containerID string) {
 	for _, anime := range animes {
 		<div class="min-w-0" data-id={ fmt.Sprintf("%d", anime.MalID) }>
-			@CatalogItem(anime)
+			@CatalogItem(anime, watchlistStatuses[anime.MalID])
 		</div>
 	}
 	if hasNext {
@@ -29,15 +29,16 @@ templ InfiniteAnimeList(animes []jikan.Anime, hasNext bool, nextURL string, cont
 	</script>
 }
 
-templ CatalogItem(anime jikan.Anime) {
+templ CatalogItem(anime jikan.Anime, watchlistStatus string) {
 	@AnimeCard(AnimeCardProps{
-		ID:            anime.MalID,
-		Title:         anime.DisplayTitle(),
-		ImageURL:      anime.ImageURL(),
-		TitleEnglish:  anime.TitleEnglish,
-		TitleJapanese: anime.TitleJapanese,
-		Airing:        anime.Airing,
-		Synopsis:      anime.Synopsis,
-		PlayHref:      fmt.Sprintf("/watch/%d/1", anime.MalID),
+		ID:              anime.MalID,
+		Title:           anime.DisplayTitle(),
+		ImageURL:        anime.ImageURL(),
+		TitleEnglish:    anime.TitleEnglish,
+		TitleJapanese:   anime.TitleJapanese,
+		Airing:          anime.Airing,
+		Synopsis:        anime.Synopsis,
+		PlayHref:        fmt.Sprintf("/watch/%d/1", anime.MalID),
+		WatchlistStatus: watchlistStatus,
 	})
 }
