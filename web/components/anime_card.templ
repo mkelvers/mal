@@ -20,58 +20,28 @@ type AnimeCardProps struct {
 	Synopsis    string // optional synopsis for hover detail
 	PlayHref    string // optional play button href (anchored to poster)
 	// Watchlist integration
-	TitleEnglish    string
-	TitleJapanese   string
-	Airing          bool
-	WatchlistStatus string // empty if not in watchlist
-	DisableWatchlist bool  // if true, don't render the watchlist button
+	TitleEnglish     string
+	TitleJapanese    string
+	Airing           bool
+	WatchlistStatus  string // empty if not in watchlist
+	DisableWatchlist bool   // if true, don't render the watchlist button
 }
 
 templ AnimeCard(props AnimeCardProps) {
-	<div class={ defaultString(props.Class, "group relative min-w-0") }>
-		if props.CurrentNode {
-			@animeCardPoster(props)
-			if !props.HideTitle {
+	<div class={ defaultString(props.Class, "group min-w-0") }>
+		@animeCardPoster(props)
+		if !props.HideTitle {
+			if props.CurrentNode {
 				<div class={ defaultString(props.TitleClass, "mt-2 line-clamp-2 text-sm leading-snug text-(--text)") }>
 					{ props.Title }
 				</div>
-			}
-		} else {
-			<a href={ templ.URL(cardHref(props)) } class="block">
-				@animeCardPoster(props)
-				if !props.HideTitle {
+			} else {
+				<a href={ templ.URL(cardHref(props)) } class="block">
 					<div class={ defaultString(props.TitleClass, "mt-2 line-clamp-2 text-sm leading-snug text-(--text)") }>
 						{ props.Title }
 					</div>
-				}
-			</a>
-		}
-		if props.PlayHref != "" || !props.CurrentNode && !props.DisableWatchlist {
-			<div class="absolute bottom-2 left-2 z-20 flex gap-2 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
-				if props.PlayHref != "" {
-					<a
-						href={ templ.URL(props.PlayHref) }
-						class="text-white"
-						aria-label="Play"
-					>
-						<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-							<title>Play</title>
-							<path d="M8 5V19L19 12L8 5Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
-						</svg>
-					</a>
-				}
-				if !props.CurrentNode && !props.DisableWatchlist {
-					@watchlist.CardButton(
-						props.ID,
-						props.Title,
-						props.TitleEnglish,
-						props.TitleJapanese,
-						props.ImageURL,
-						props.Airing,
-						props.WatchlistStatus != "",
-					)
-				}
-			</div>
+				</a>
+			}
 		}
 		{ children... }
 	</div>
@@ -81,29 +51,71 @@ func cardHref(props AnimeCardProps) string {
 	if props.Href != "" {
 		return props.Href
 	}
-
 	return fmt.Sprintf("/anime/%d", props.ID)
 }
 
 templ animeCardPoster(props AnimeCardProps) {
-	<div class="relative w-full aspect-2/3 overflow-hidden">
-		<div class="block h-full w-full">
-			if props.ImageURL != "" {
-				<img src={ props.ImageURL } alt={ props.Title } class={ defaultString(props.ImgClass, "block h-full w-full object-cover object-center") } loading="lazy"/>
-			} else {
-				<div class="flex h-full w-full justify-center overflow-hidden text-transparent">No image</div>
-			}
-		</div>
-		<div class="absolute inset-0 bg-black/0 transition-colors duration-200 group-hover:bg-black/40"></div>
+	<div class="grid w-full aspect-2/3 overflow-hidden">
+		<!-- Base image layer -->
+		if !props.CurrentNode {
+			<a href={ templ.URL(cardHref(props)) } class="col-start-1 row-start-1 block h-full w-full">
+				@animeCardImage(props)
+			</a>
+		} else {
+			<div class="col-start-1 row-start-1 h-full w-full">
+				@animeCardImage(props)
+			</div>
+		}
+		<!-- Hover darken overlay -->
+		<div class="pointer-events-none col-start-1 row-start-1 bg-black/0 transition-colors duration-200 group-hover:bg-black/40"></div>
+		<!-- Synopsis overlay -->
 		if props.Synopsis != "" {
-			<div class="absolute inset-0 flex flex-col justify-between p-3 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+			<div class="pointer-events-none col-start-1 row-start-1 flex flex-col justify-between p-3 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
 				<div>
 					<div class="mb-1 text-[11px] font-semibold text-white/90">{ props.Title }</div>
 					<p class="line-clamp-3 text-[11px] leading-relaxed text-white/90">{ props.Synopsis }</p>
 				</div>
 			</div>
 		}
+		<!-- Actions layer -->
+		if props.PlayHref != "" || !props.CurrentNode && !props.DisableWatchlist {
+			<div class="col-start-1 row-start-1 flex items-end justify-start p-3 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+				<div class="flex gap-2">
+					if props.PlayHref != "" {
+						<a
+							href={ templ.URL(props.PlayHref) }
+							class="text-white"
+							aria-label="Play"
+						>
+							<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+								<title>Play</title>
+								<path d="M8 5V19L19 12L8 5Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+							</svg>
+						</a>
+					}
+					if !props.CurrentNode && !props.DisableWatchlist {
+						@watchlist.CardButton(
+							props.ID,
+							props.Title,
+							props.TitleEnglish,
+							props.TitleJapanese,
+							props.ImageURL,
+							props.Airing,
+							props.WatchlistStatus != "",
+						)
+					}
+				</div>
+			</div>
+		}
 	</div>
+}
+
+templ animeCardImage(props AnimeCardProps) {
+	if props.ImageURL != "" {
+		<img src={ props.ImageURL } alt={ props.Title } class={ defaultString(props.ImgClass, "block h-full w-full object-cover object-center") } loading="lazy"/>
+	} else {
+		<div class="flex h-full w-full justify-center overflow-hidden text-transparent">No image</div>
+	}
 }
 
 func defaultString(val, fallback string) string {
