@@ -2,13 +2,14 @@ package templates
 
 import (
 	"fmt"
-	"mal/internal/jikan"
-	"mal/internal/shared/ui"
+	"mal/integrations/jikan"
+	"mal/web/components"
+	"mal/web/shared/layout"
 	"net/url"
 )
 
 templ Search(q string) {
-	@Layout("mal - search", true) {
+	@layout.Layout("mal - search", true) {
 		if q != "" {
 			<div id="loading" class="hidden htmx-request:inline-flex">
 				@ui.LoadingIndicator("Searching...")

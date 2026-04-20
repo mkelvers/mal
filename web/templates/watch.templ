@@ -9,10 +9,11 @@ import (
 	"mal/web/components/watch"
 	"mal/web/components/watchlist"
 	"mal/web/shared"
+	"mal/web/shared/layout"
 )
 
 templ WatchPage(anime jikan.Anime, data shared.WatchPageData) {
-	@Layout(fmt.Sprintf("%s - episode %s", anime.DisplayTitle(), data.CurrentEpisode), true) {
+	@layout.Layout(fmt.Sprintf("%s - episode %s", anime.DisplayTitle(), data.CurrentEpisode), true) {
 		<div class="w-full overflow-x-clip">
 			<div class="mx-auto grid w-full gap-4 lg:gap-5 lg:grid-cols-[220px_minmax(0,1fr)_250px] xl:grid-cols-[240px_minmax(0,1fr)_280px]">
 			<!-- Left sidebar: Episodes -->

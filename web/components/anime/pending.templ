@@ -2,11 +2,11 @@ package anime
 
 import (
 	"fmt"
-	"mal/web/templates"
+	"mal/web/shared/layout"
 )
 
 templ Pending(id int) {
-	@templates.Layout("mal - anime pending", true) {
+	@layout.Layout("mal - anime pending", true) {
 		<div class="grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_300px]">
 			<div class="grid min-w-0 gap-8">
 				<section>

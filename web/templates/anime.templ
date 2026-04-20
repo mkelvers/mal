@@ -9,10 +9,11 @@ import (
 	"mal/web/components"
 	watchlistcomponents "mal/web/components/watchlist"
 	"mal/web/shared"
+	"mal/web/shared/layout"
 )
 
 templ AnimeDetails(anime jikan.Anime, currentStatus string, nextEpisode int) {
-	@Layout("mal - " + anime.DisplayTitle(), true) {
+	@layout.Layout("mal - " + anime.DisplayTitle(), true) {
 		<div class="grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_300px]">
 			<div class="grid min-w-0 gap-8">
 				<div class="grid gap-5 lg:grid-cols-[220px_minmax(0,1fr)]">

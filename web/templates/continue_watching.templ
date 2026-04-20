@@ -2,12 +2,13 @@ package templates
 
 import (
 	"fmt"
-	"mal/internal/database"
-	"mal/internal/shared/ui"
+	"mal/internal/db"
+	"mal/web/components"
+	"mal/web/shared/layout"
 )
 
-templ ContinueWatching(entries []database.GetContinueWatchingEntriesRow) {
-	@Layout("mal - continue watching", true) {
+templ ContinueWatching(entries []db.GetContinueWatchingEntriesRow) {
+	@layout.Layout("mal - continue watching", true) {
 		<div class="grid gap-4">
 			<h1>Continue watching</h1>
 			<p class="m-0 text-sm text-(--text-muted)">Pick up where you left off.</p>
@@ -53,7 +54,7 @@ templ ContinueWatching(entries []database.GetContinueWatchingEntriesRow) {
 	}
 }
 
-func continueWatchingURL(entry database.GetContinueWatchingEntriesRow) string {
+func continueWatchingURL(entry db.GetContinueWatchingEntriesRow) string {
 	episode := 1
 	if entry.CurrentEpisode.Valid && entry.CurrentEpisode.Int64 > 0 {
 		episode = int(entry.CurrentEpisode.Int64)
@@ -62,6 +63,6 @@ func continueWatchingURL(entry database.GetContinueWatchingEntriesRow) string {
 	return fmt.Sprintf("/watch/%d/%d", entry.AnimeID, episode)
 }
 
-func displayContinueWatchingTitle(entry database.GetContinueWatchingEntriesRow) string {
-	return database.DisplayTitle(entry.TitleEnglish, entry.TitleJapanese, entry.TitleOriginal)
+func displayContinueWatchingTitle(entry db.GetContinueWatchingEntriesRow) string {
+	return db.DisplayTitle(entry.TitleEnglish, entry.TitleJapanese, entry.TitleOriginal)
 }

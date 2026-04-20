@@ -6,10 +6,11 @@ import (
 	"mal/integrations/jikan"
 	"mal/web/components"
 	"mal/web/shared"
+	"mal/web/shared/layout"
 )
 
 templ StudioDetails(producer jikan.ProducerResponse, animes []jikan.Anime, hasNext bool, nextPage int) {
-	@Layout("mal - "+shared.GetProducerName(producer), true) {
+	@layout.Layout("mal - "+shared.GetProducerName(producer), true) {
 		<div class="grid gap-5">
 			<div class="grid gap-4 bg-(--panel) p-4">
 				<div class="flex items-start gap-4">
