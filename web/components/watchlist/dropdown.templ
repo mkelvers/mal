@@ -17,6 +17,7 @@ templ WatchlistDropdown(
 			onclick="toggleDropdown()"
 			data-dropdown-trigger
 		>
+			type="button"
 			if currentStatus != "" {
 				{ formatStatus(currentStatus) }
 			} else {
@@ -41,6 +42,7 @@ templ WatchlistDropdown(
 					hx-delete={ string(templ.URL(fmt.Sprintf("/api/watchlist/%d", animeID))) }
 					hx-target="#watchlist-dropdown"
 					hx-swap="outerHTML swap:150ms"
+					type="button"
 				>
 					Remove from list
 				</button>
