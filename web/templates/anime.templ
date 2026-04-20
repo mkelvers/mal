@@ -1,15 +1,21 @@
 package templates
 
-import "mal/internal/jikan"
-import "mal/internal/shared/ui"
-import "fmt"
-import "strings"
+import (
+	"fmt"
+	"strings"
+	
+	"mal/integrations/jikan"
+	animecomponents "mal/web/components/anime"
+	"mal/web/components"
+	watchlistcomponents "mal/web/components/watchlist"
+	"mal/web/shared"
+)
 
 templ AnimeDetails(anime jikan.Anime, currentStatus string, nextEpisode int) {
 	@Layout("mal - " + anime.DisplayTitle(), true) {
 		<div class="grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_300px]">
 			<div class="grid min-w-0 gap-8">
-			<div class="grid gap-5 lg:grid-cols-[220px_minmax(0,1fr)]">
+				<div class="grid gap-5 lg:grid-cols-[220px_minmax(0,1fr)]">
 					<div class="w-56">
 						if anime.ImageURL() != "" {
 							<img class="w-full" src={ anime.ImageURL() } alt={ anime.DisplayTitle() }/>
@@ -36,15 +42,15 @@ templ AnimeDetails(anime jikan.Anime, currentStatus string, nextEpisode int) {
 								<span class="text-xs text-(--text-faint)">{ anime.ShortDuration() }</span>
 							}
 						</div>
-					<div class="mt-3">
-						<div class="flex flex-wrap items-center gap-2">
-							@WatchlistDropdown(anime.MalID, anime.Title, anime.TitleEnglish, anime.TitleJapanese, anime.ImageURL(), currentStatus, anime.Airing)
-						<a
-							href={ templ.URL(fmt.Sprintf("/watch/%d/%d", anime.MalID, watchTargetEpisode(currentStatus, nextEpisode))) }
-							class="inline-flex h-8 items-center bg-(--panel-soft) px-2 text-xs text-(--text) no-underline hover:text-(--text) hover:no-underline"
-						>Watch</a>
+						<div class="mt-3">
+							<div class="flex flex-wrap items-center gap-2">
+								@watchlistcomponents.WatchlistDropdown(anime.MalID, anime.Title, anime.TitleEnglish, anime.TitleJapanese, anime.ImageURL(), currentStatus, anime.Airing)
+								<a
+									href={ templ.URL(fmt.Sprintf("/watch/%d/%d", anime.MalID, shared.WatchTargetEpisode(currentStatus, nextEpisode))) }
+									class="inline-flex h-8 items-center bg-(--panel-soft) px-2 text-xs text-(--text) no-underline hover:text-(--text) hover:no-underline"
+								>Watch</a>
+							</div>
 						</div>
-					</div>
 						<section class="mt-4 max-w-4xl">
 							if anime.Synopsis != "" {
 								<p>{ anime.Synopsis }</p>
@@ -54,18 +60,18 @@ templ AnimeDetails(anime jikan.Anime, currentStatus string, nextEpisode int) {
 						</section>
 					</div>
 				</div>
-			<section>
-				<h3 class="mb-3 text-lg font-semibold tracking-wide text-(--text)">Related</h3>
-				<div hx-get={ string(templ.URL(fmt.Sprintf("/api/anime/%d/relations", anime.MalID))) } hx-trigger="load">
-					@ui.LoadingIndicator("Loading relations")
-				</div>
-			</section>
-			<section>
-				<h3 class="mb-3 text-lg font-semibold tracking-wide text-(--text)">Recommendations</h3>
-				<div hx-get={ string(templ.URL(fmt.Sprintf("/api/anime/%d/recommendations", anime.MalID))) } hx-trigger="load">
-					@ui.LoadingIndicator("Loading recommendations")
-				</div>
-			</section>
+				<section>
+					<h3 class="mb-3 text-lg font-semibold tracking-wide text-(--text)">Related</h3>
+					<div hx-get={ string(templ.URL(fmt.Sprintf("/api/anime/%d/relations", anime.MalID))) } hx-trigger="load">
+						@components.LoadingIndicator("Loading relations")
+					</div>
+				</section>
+				<section>
+					<h3 class="mb-3 text-lg font-semibold tracking-wide text-(--text)">Recommendations</h3>
+					<div hx-get={ string(templ.URL(fmt.Sprintf("/api/anime/%d/recommendations", anime.MalID))) } hx-trigger="load">
+						@components.LoadingIndicator("Loading recommendations")
+					</div>
+				</section>
 			</div>
 			<aside class="sticky top-20 grid gap-4 bg-(--panel) p-3 max-xl:static">
 				<div class="grid gap-3">
@@ -97,11 +103,11 @@ templ AnimeDetails(anime jikan.Anime, currentStatus string, nextEpisode int) {
 					if len(anime.Genres) > 0 {
 						<div class="mt-1 grid gap-1">
 							<span class="mt-0.5 text-sm text-(--text-faint)">Genres</span>
-							<span class="text-sm text-(--text-muted)">{ joinNames(anime.Genres) }</span>
+							<span class="text-sm text-(--text-muted)">{ shared.JoinNames(anime.Genres) }</span>
 						</div>
 					}
 				</div>
-				if hasExtraSidebarDetails(anime) {
+				if shared.HasExtraSidebarDetails(anime) {
 					<details class="grid gap-3">
 						<summary class="cursor-pointer text-xs text-(--text-muted)">More metadata</summary>
 						if anime.TitleJapanese != "" {
@@ -120,14 +126,14 @@ templ AnimeDetails(anime jikan.Anime, currentStatus string, nextEpisode int) {
 							<div class="mt-1 grid gap-1">
 								<span class="mt-0.5 text-sm text-(--text-faint)">Studios</span>
 								<span class="text-sm text-(--text-muted)">
-									@studioLinks(anime.Studios)
+									@animecomponents.StudioLinks(anime.Studios)
 								</span>
 							</div>
 						}
 						if len(anime.Producers) > 0 {
 							<div class="mt-1 grid gap-1">
 								<span class="mt-0.5 text-sm text-(--text-faint)">Producers</span>
-								<span class="text-sm text-(--text-muted)">{ joinNames(anime.Producers) }</span>
+								<span class="text-sm text-(--text-muted)">{ shared.JoinNames(anime.Producers) }</span>
 							</div>
 						}
 						if anime.Source != "" {
@@ -139,13 +145,13 @@ templ AnimeDetails(anime jikan.Anime, currentStatus string, nextEpisode int) {
 						if len(anime.Demographics) > 0 {
 							<div class="mt-1 grid gap-1">
 								<span class="mt-0.5 text-sm text-(--text-faint)">Demographics</span>
-								<span class="text-sm text-(--text-muted)">{ joinNames(anime.Demographics) }</span>
+								<span class="text-sm text-(--text-muted)">{ shared.JoinNames(anime.Demographics) }</span>
 							</div>
 						}
 						if len(anime.Themes) > 0 {
 							<div class="mt-1 grid gap-1">
 								<span class="mt-0.5 text-sm text-(--text-faint)">Themes</span>
-								<span class="text-sm text-(--text-muted)">{ joinNames(anime.Themes) }</span>
+								<span class="text-sm text-(--text-muted)">{ shared.JoinNames(anime.Themes) }</span>
 							</div>
 						}
 						if anime.Broadcast.String != "" {
@@ -157,181 +163,12 @@ templ AnimeDetails(anime jikan.Anime, currentStatus string, nextEpisode int) {
 						if len(anime.Streaming) > 0 {
 							<div class="mt-1 grid gap-1">
 								<span class="mt-0.5 text-sm text-(--text-faint)">Streaming</span>
-								<span class="text-sm text-(--text-muted)">{ joinStreamingNames(anime) }</span>
+								<span class="text-sm text-(--text-muted)">{ shared.JoinStreamingNames(anime) }</span>
 							</div>
 						}
 					</details>
 				}
 			</aside>
 		</div>
-	}
-}
-
-func watchTargetEpisode(currentStatus string, nextEpisode int) int {
-	if currentStatus == "watching" && nextEpisode > 0 {
-		return nextEpisode
-	}
-
-	return 1
-}
-
-templ AnimePending(id int) {
-	@Layout("mal - anime pending", true) {
-		<div class="grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_300px]">
-			<div class="grid min-w-0 gap-8">
-				<section>
-					<h1>Anime data is being fetched</h1>
-					<p class="text-sm text-(--text-muted)">We could not load this anime right now. A background worker is retrying data fetch for anime #{ fmt.Sprintf("%d", id) }.</p>
-					<p class="text-sm text-(--text-muted)">Refresh this page in a few seconds.</p>
-				</section>
-			</div>
-		</div>
-		<script>
-			setTimeout(function() {
-				window.location.reload()
-			}, 10000)
-		</script>
-	}
-}
-
-func joinNames(entities []jikan.NamedEntity) string {
-	names := make([]string, len(entities))
-	for i, e := range entities {
-		names[i] = e.Name
-	}
-	return strings.Join(names, ", ")
-}
-
-func joinStreamingNames(anime jikan.Anime) string {
-	names := make([]string, len(anime.Streaming))
-	for i, s := range anime.Streaming {
-		names[i] = s.Name
-	}
-	return strings.Join(names, ", ")
-}
-
-templ WatchlistDropdown(animeID int, animeTitle string, animeTitleEnglish string, animeTitleJapanese string, animeImage string, currentStatus string, airing bool) {
-	<div class="relative inline-block" id="watchlist-dropdown">
-		<button class="inline-flex h-8 cursor-pointer items-center gap-2 bg-(--panel-soft) px-2 text-xs text-(--text)" onclick="toggleDropdown()" data-dropdown-trigger>
-			if currentStatus != "" {
-				{ formatStatus(currentStatus) }
-			} else {
-				Add to watchlist
-			}
-			<span class="text-xs">▾</span>
-		</button>
-		<div class="invisible absolute left-0 top-full mt-0.5 z-50 min-w-52 bg-(--panel) opacity-0 transition-opacity duration-150" data-dropdown-menu data-dropdown-open-classes="visible opacity-100" data-dropdown-closed-classes="invisible opacity-0">
-			@dropdownStatusOption(animeID, animeTitle, animeTitleEnglish, animeTitleJapanese, animeImage, "watching", currentStatus, airing)
-			@dropdownStatusOption(animeID, animeTitle, animeTitleEnglish, animeTitleJapanese, animeImage, "completed", currentStatus, airing)
-			@dropdownStatusOption(animeID, animeTitle, animeTitleEnglish, animeTitleJapanese, animeImage, "on_hold", currentStatus, airing)
-			@dropdownStatusOption(animeID, animeTitle, animeTitleEnglish, animeTitleJapanese, animeImage, "dropped", currentStatus, airing)
-			@dropdownStatusOption(animeID, animeTitle, animeTitleEnglish, animeTitleJapanese, animeImage, "plan_to_watch", currentStatus, airing)
-			if currentStatus != "" {
-				<button
-					class="flex w-full cursor-pointer items-center justify-between bg-transparent px-2.5 py-2 text-left text-xs text-(--text-muted) hover:bg-(--panel-soft) hover:text-(--danger)"
-					hx-delete={ string(templ.URL(fmt.Sprintf("/api/watchlist/%d", animeID))) }
-					hx-target="#watchlist-dropdown"
-					hx-swap="outerHTML swap:150ms"
-				>Remove from list</button>
-			}
-		</div>
-	</div>
-}
-
-templ dropdownStatusOption(animeID int, animeTitle string, animeTitleEnglish string, animeTitleJapanese string, animeImage string, status string, currentStatus string, airing bool) {
-	<button
-		class={
-			"flex w-full cursor-pointer items-center justify-between bg-transparent px-2.5 py-2 text-left text-xs text-(--text-muted) hover:bg-(--panel-soft) hover:text-(--text)",
-			templ.KV("bg-(--panel-soft) text-(--text)", status == currentStatus),
-		}
-		hx-post="/api/watchlist"
-		hx-vals={ fmt.Sprintf(`{"anime_id": "%d", "anime_title": "%s", "anime_title_english": "%s", "anime_title_japanese": "%s", "anime_image": "%s", "status": "%s", "airing": "%v"}`, animeID, animeTitle, animeTitleEnglish, animeTitleJapanese, animeImage, status, airing) }
-		hx-target="#watchlist-dropdown"
-		hx-swap="outerHTML swap:150ms"
-	>
-		{ formatStatus(status) }
-	</button>
-}
-
-func formatStatus(status string) string {
-	switch status {
-	case "watching":
-		return "Watching"
-	case "completed":
-		return "Completed"
-	case "on_hold":
-		return "On hold"
-	case "dropped":
-		return "Dropped"
-	case "plan_to_watch":
-		return "Plan to watch"
-	default:
-		return status
-	}
-}
-
-templ AnimeRelationsList(relations []jikan.RelationEntry) {
-	if len(relations) > 1 {
-		<div class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:gap-4 lg:grid-cols-4 xl:grid-cols-5" id="relations-grid">
-			for _, rel := range relations {
-				@ui.AnimeCard(ui.AnimeCardProps{
-					ID:          rel.Anime.MalID,
-					Title:       rel.Anime.DisplayTitle(),
-					ImageURL:    rel.Anime.ImageURL(),
-					Class:       relationCardClass(rel),
-					ImgClass:    "relation-thumb",
-					TitleClass:  "relation-title",
-					CurrentNode: rel.IsCurrent,
-				}) {
-					if rel.IsCurrent {
-						<div class="mt-2 h-0.5 w-10 bg-white"></div>
-					}
-					if rel.Relation != "" && rel.Relation != "Current" {
-						<div class="mt-1 text-xs text-(--text-faint)">{ rel.Relation }</div>
-					}
-				}
-			}
-		</div>
-	} else {
-		<p class="text-sm text-(--text-muted)">No related anime found.</p>
-	}
-}
-
-func relationCardClass(rel jikan.RelationEntry) string {
-	return "relation-card min-w-0 flex flex-col bg-transparent text-inherit no-underline"
-}
-
-templ AnimeRecommendations(recs []jikan.Anime) {
-	if len(recs) > 0 {
-		<div class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:gap-4 lg:grid-cols-4 xl:grid-cols-5">
-			for _, anime := range recs {
-				@ui.AnimeCard(ui.AnimeCardProps{
-					ID:         anime.MalID,
-					Title:      anime.DisplayTitle(),
-					ImageURL:   anime.ImageURL(),
-					Class:      "relation-card",
-					ImgClass:   "relation-thumb",
-					TitleClass: "relation-title",
-				})
-			}
-		</div>
-	} else {
-		<p class="text-sm text-(--text-muted)">No recommendations available.</p>
-	}
-}
-
-func hasExtraSidebarDetails(anime jikan.Anime) bool {
-	return anime.TitleJapanese != "" || len(anime.TitleSynonyms) > 0 || len(anime.Studios) > 0 || len(anime.Producers) > 0 || anime.Source != "" || len(anime.Demographics) > 0 || len(anime.Themes) > 0 || anime.Broadcast.String != "" || len(anime.Streaming) > 0
-}
-
-templ studioLinks(studios []jikan.NamedEntity) {
-	for i, studio := range studios {
-		<a
-			href={ templ.URL(fmt.Sprintf("/studios/%d", studio.MalID)) }
-			class="hover:text-(--text) hover:underline"
-		>{ studio.Name }</a>
-		if i < len(studios)-1 {
-			<span>, </span>
-		}
 	}
 }
