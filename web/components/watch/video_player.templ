@@ -120,7 +120,7 @@ templ VideoPlayer(data shared.WatchPageData) {
 								data-volume-panel
 								class="pointer-events-none absolute bottom-full left-1/2 z-30 -translate-x-1/2 pb-3 opacity-0 invisible transition-all duration-200 group-hover/volume:pointer-events-auto group-hover/volume:opacity-100 group-hover/volume:visible focus-within:pointer-events-auto focus-within:opacity-100 focus-within:visible [&.is-dragging]:pointer-events-auto [&.is-dragging]:opacity-100 [&.is-dragging]:visible"
 							>
-								<div class="flex items-center justify-center rounded-md bg-[#2B2B2B] px-3 py-3 shadow-xl">
+								<div class="flex items-center justify-center px-3 py-2">
 									<input
 										data-volume-range
 										type="range"
@@ -128,7 +128,7 @@ templ VideoPlayer(data shared.WatchPageData) {
 										max="100"
 										step="1"
 										value="100"
-										class="h-24 w-1.5 cursor-pointer rounded-full bg-white/20 accent-[#e50914] outline-none [writing-mode:vertical-lr] [direction:rtl]"
+										class="h-24 w-1.5 cursor-pointer rounded-full bg-white/20 accent-gray-300 outline-none [writing-mode:vertical-lr] [direction:rtl] [&::-webkit-slider-thumb]:shadow-[0_0_6px_rgba(255,255,255,1)] [&::-moz-range-thumb]:shadow-[0_0_6px_rgba(255,255,255,1)]"
 										aria-label="Volume"
 									/>
 								</div>
