@@ -30,13 +30,24 @@ func (s *Service) SaveProgress(ctx context.Context, userID string, animeID int64
 		}
 	}
 
-	if err := txQueries.SaveWatchProgress(ctx, database.SaveWatchProgressParams{
-		CurrentEpisode:     sql.NullInt64{Int64: int64(episode), Valid: true},
-		CurrentTimeSeconds: timeSeconds,
-		UserID:             userID,
-		AnimeID:            animeID,
-	}); err != nil && !errors.Is(err, sql.ErrNoRows) {
-		return fmt.Errorf("failed to save watchlist progress: %w", err)
+	watchListEntry, watchListErr := txQueries.GetWatchListEntry(ctx, database.GetWatchListEntryParams{
+		UserID:  userID,
+		AnimeID: animeID,
+	})
+	if watchListErr != nil && !errors.Is(watchListErr, sql.ErrNoRows) {
+		return fmt.Errorf("failed to load watchlist entry: %w", watchListErr)
+	}
+
+	isCompleted := watchListErr == nil && watchListEntry.Status == "completed"
+	if !isCompleted {
+		if err := txQueries.SaveWatchProgress(ctx, database.SaveWatchProgressParams{
+			CurrentEpisode:     sql.NullInt64{Int64: int64(episode), Valid: true},
+			CurrentTimeSeconds: timeSeconds,
+			UserID:             userID,
+			AnimeID:            animeID,
+		}); err != nil && !errors.Is(err, sql.ErrNoRows) {
+			return fmt.Errorf("failed to save watchlist progress: %w", err)
+		}
 	}
 
 	if _, err := txQueries.UpsertContinueWatchingEntry(ctx, database.UpsertContinueWatchingEntryParams{
@@ -95,6 +106,15 @@ func (s *Service) CompleteAnime(ctx context.Context, userID string, animeID int6
 		}); err != nil {
 			return fmt.Errorf("failed to mark watchlist as completed: %w", err)
 		}
+
+		if err := txQueries.SaveWatchProgress(ctx, database.SaveWatchProgressParams{
+			CurrentEpisode:     sql.NullInt64{Int64: int64(episode), Valid: true},
+			CurrentTimeSeconds: 0,
+			UserID:             userID,
+			AnimeID:            animeID,
+		}); err != nil && !errors.Is(err, sql.ErrNoRows) {
+			return fmt.Errorf("failed to reset watch progress: %w", err)
+		}
 	}
 
 	if err := txQueries.DeleteContinueWatchingEntry(ctx, database.DeleteContinueWatchingEntryParams{
@@ -102,15 +122,6 @@ func (s *Service) CompleteAnime(ctx context.Context, userID string, animeID int6
 		AnimeID: animeID,
 	}); err != nil {
 		return fmt.Errorf("failed to clear continue entry: %w", err)
-	}
-
-	if err := txQueries.SaveWatchProgress(ctx, database.SaveWatchProgressParams{
-		CurrentEpisode:     sql.NullInt64{Int64: int64(episode), Valid: true},
-		CurrentTimeSeconds: 0,
-		UserID:             userID,
-		AnimeID:            animeID,
-	}); err != nil && !errors.Is(err, sql.ErrNoRows) {
-		return fmt.Errorf("failed to reset watch progress: %w", err)
 	}
 
 	if err := tx.Commit(); err != nil {
