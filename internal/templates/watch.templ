@@ -59,7 +59,7 @@ templ WatchPage(anime jikan.Anime, data WatchPageData) {
 					<div
 						hx-get={ string(templ.URL(fmt.Sprintf("/api/anime/%d/episodes?current=%s", anime.MalID, data.CurrentEpisode))) }
 						hx-trigger="load"
-						class="watch-episodes-scroll overflow-y-auto flex-1"
+						class="scrollbar-hidden overflow-y-auto flex-1"
 					>
 						@LoadingIndicatorSmall()
 					</div>
@@ -256,9 +256,9 @@ templ VideoPlayer(data WatchPageData) {
 								<line x1="15" y1="6" x2="15" y2="18" stroke="white" stroke-width="2" stroke-linecap="round"/>
 							</svg>
 						</button>
-						<div data-volume-wrap class="volume-wrap relative flex h-9 w-9 items-center justify-center overflow-visible sm:h-10 sm:w-10">
-							<span data-volume-bridge class="absolute inset-x-0 bottom-full h-[calc(100%+26px)]"></span>
-							<div class="volume-panel pointer-events-none absolute bottom-[calc(100%+26px)] left-1/2 z-30 -translate-x-1/2 opacity-0 invisible transition-opacity">
+						<div data-volume-wrap class="relative flex h-9 w-9 items-center justify-center overflow-visible sm:h-10 sm:w-10">
+							<span data-volume-bridge class="volume-bridge-off absolute inset-x-0 bottom-full h-[calc(100%+26px)]"></span>
+							<div data-volume-panel class="volume-panel pointer-events-none absolute bottom-[calc(100%+26px)] left-1/2 z-30 -translate-x-1/2 opacity-0 invisible transition-opacity">
 								<input
 									data-volume-range
 									type="range"
@@ -266,7 +266,7 @@ templ VideoPlayer(data WatchPageData) {
 									max="100"
 									step="1"
 									value="100"
-									class="volume-range h-24 w-4 cursor-pointer appearance-none bg-transparent"
+									class="volume-range volume-track volume-thumb h-24 w-4 cursor-pointer appearance-none bg-transparent"
 									aria-label="Volume"
 								/>
 							</div>

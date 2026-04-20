@@ -27,7 +27,7 @@ const initPlayer = (): void => {
   const iconPause = container.querySelector('[data-icon-pause]') as SVGElement
   const muteBtn = container.querySelector('[data-mute]') as HTMLButtonElement
   const volumeWrap = container.querySelector('[data-volume-wrap]') as HTMLElement
-  const volumePanel = container.querySelector('.volume-panel') as HTMLElement
+  const volumePanel = container.querySelector('[data-volume-panel]') as HTMLElement
   const volumeRange = container.querySelector('[data-volume-range]') as HTMLInputElement
   const iconVolume = container.querySelector('[data-icon-volume]') as SVGElement
   const iconMuted = container.querySelector('[data-icon-muted]') as SVGElement
@@ -854,7 +854,7 @@ const initPlayer = (): void => {
 
   const setVolumePanelOpen = (isOpen: boolean): void => {
     if (volumePanel) {
-      volumePanel.classList.toggle('is-visible', isOpen)
+      volumePanel.classList.toggle('volume-panel-visible', isOpen)
     }
     volumeWrap?.classList.toggle('is-volume-open', isOpen)
     isHoveringVolume = isOpen
