@@ -14,7 +14,6 @@ type AnimeCardProps struct {
 	HideTitle   bool   // if true, do not render the default title block
 	CurrentNode bool   // if true, renders a div instead of an anchor tag (useful for graph nodes)
 	Synopsis    string // optional synopsis for hover detail
-	Score       int    // optional score for hover detail
 	PlayHref    string // optional play button href (anchored to poster)
 }
 
@@ -61,21 +60,11 @@ templ animeCardPoster(props AnimeCardProps) {
 			}
 		</div>
 		<div class="absolute inset-0 bg-black/0 transition-colors duration-200 group-hover:bg-black/40"></div>
-		if props.Synopsis != "" || props.Score > 0 {
+		if props.Synopsis != "" {
 			<div class="absolute inset-0 flex flex-col justify-between p-3 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
 				<div>
-					if props.Score > 0 {
-						<div class="mb-1.5 inline-flex items-center gap-1 rounded bg-(--accent)/90 px-1.5 py-0.5 text-[10px] font-medium text-(--text-on-accent)">
-							<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="h-3 w-3">
-								<path fill-rule="evenodd" d="M7.43 1.466c-.924 1.53-.524 3.577.972 4.405l1.563.938a1.25 1.25 0 0 1 .457 1.666l-1.023 1.845a1.25 1.25 0 0 0 1.457 1.666l1.845-1.023a1.25 1.25 0 0 1 1.666.457l.938 1.563c.828 1.448 2.875 1.396 3.905-.1.714-1.036.714-2.384 0-3.42l-.938-1.563a1.25 1.25 0 0 1 .457-1.666l1.023-1.845a1.25 1.25 0 0 0-1.457-1.666l-1.845 1.023a1.25 1.25 0 0 1-1.666-.457l-.938-1.563c-.83-1.48.129-3.577 1.653-4.405.924-.5 1.696-1.135 2.268-1.89a6.25 6.25 0 0 0-4.834-3.415L8.722.216a.25.25 0 0 0-.427 0L5.84 1.384a6.25 6.25 0 0 0-4.834 3.415c.572.755 1.344 1.39 2.268 1.89Z" clip-rule="evenodd" />
-							</svg>
-							{ fmt.Sprintf("%d", props.Score) }
-						</div>
-					}
 					<div class="mb-1 text-[11px] font-semibold text-white/90">{ props.Title }</div>
-					if props.Synopsis != "" {
-						<p class="line-clamp-3 text-[11px] leading-relaxed text-white/90">{ props.Synopsis }</p>
-					}
+					<p class="line-clamp-3 text-[11px] leading-relaxed text-white/90">{ props.Synopsis }</p>
 				</div>
 			</div>
 		}

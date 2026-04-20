@@ -14,7 +14,6 @@ templ Recommendations(recs []jikan.Anime) {
 					Title:    anime.DisplayTitle(),
 					ImageURL: anime.ImageURL(),
 					Synopsis: anime.Synopsis,
-					Score:    int(anime.Score * 10),
 				})
 			}
 		</div>

@@ -47,7 +47,6 @@ type Anime struct {
 		} `json:"webp"`
 	} `json:"images"`
 	Synopsis     string        `json:"synopsis"`
-	Score        float64       `json:"score"`
 	Rank         int           `json:"rank"`
 	Popularity   int           `json:"popularity"`
 	Status       string        `json:"status"`

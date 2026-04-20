@@ -35,7 +35,6 @@ templ CatalogItem(anime jikan.Anime) {
 		Title:    anime.DisplayTitle(),
 		ImageURL: anime.ImageURL(),
 		Synopsis: anime.Synopsis,
-		Score:    int(anime.Score * 10),
 		PlayHref: fmt.Sprintf("/watch/%d/1", anime.MalID),
 	})
 }
