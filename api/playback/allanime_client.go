@@ -405,7 +405,7 @@ func decryptTobeparsed(encoded string) ([]byte, error) {
 
 	keyStr := os.Getenv(allAnimeAESKey)
 	if keyStr == "" {
-		return nil, fmt.Errorf("ALLANIME_AES_KEY environment variable not set")
+		keyStr = "SimtVuagFbGR2K7P"
 	}
 	if len(keyStr) < 16 {
 		return nil, fmt.Errorf("ALLANIME_AES_KEY must be at least 16 characters")
