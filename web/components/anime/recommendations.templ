@@ -1,0 +1,25 @@
+package anime
+
+import (
+	"mal/integrations/jikan"
+	"mal/web/components"
+)
+
+templ Recommendations(recs []jikan.Anime) {
+	if len(recs) > 0 {
+		<div class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:gap-4 lg:grid-cols-4 xl:grid-cols-5">
+			for _, anime := range recs {
+				@components.AnimeCard(components.AnimeCardProps{
+					ID:         anime.MalID,
+					Title:      anime.DisplayTitle(),
+					ImageURL:   anime.ImageURL(),
+					Class:      "relation-card",
+					ImgClass:   "relation-thumb",
+					TitleClass: "relation-title",
+				})
+			}
+		</div>
+	} else {
+		<p class="text-sm text-(--text-muted)">No recommendations available.</p>
+	}
+}
