@@ -11,7 +11,7 @@ templ Layout(title string, showHeader bool) {
 			<title>{ title }</title>
 			<link rel="icon" type="image/svg+xml" href="/static/favicon.svg"/>
 			<link rel="stylesheet" href="/dist/tailwind.css"/>
-			<script src="https://unpkg.com/htmx.org@1.9.11"></script>
+			<script src="https://unpkg.com/htmx.org@1.9.11" integrity="sha384-0gxUXCCR8yv9FM2b+U3FDbsKthCI66oH5IA9fHppQq9DDMHuMauqq1ZHBpJxQ0J0" crossorigin="anonymous"></script>
 			<script src="/dist/discover.js" defer></script>
 			<script src="/dist/anime.js" defer></script>
 			<script src="/dist/timezone.js" defer></script>
@@ -86,7 +86,7 @@ templ Layout(title string, showHeader bool) {
 			}>
 				{ children... }
 			</main>
-			<script src="/dist/search.js"></script>
+			<script src="/dist/search.js" defer></script>
 		</body>
 	</html>
 }
