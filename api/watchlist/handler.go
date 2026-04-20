@@ -85,7 +85,11 @@ func (h *Handler) HandleUpdateWatchlist(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	watchlist.WatchlistDropdown(int(animeID), animeTitle, animeTitleEnglish, animeTitleJapanese, animeImage, status, airing).Render(r.Context(), w)
+	if err := watchlist.WatchlistDropdown(int(animeID), animeTitle, animeTitleEnglish, animeTitleJapanese, animeImage, status, airing).Render(r.Context(), w); err != nil {
+		log.Printf("render error: %v", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
 }
 
 func (h *Handler) HandleCardWatchlist(w http.ResponseWriter, r *http.Request) {
@@ -139,7 +143,11 @@ func (h *Handler) HandleCardWatchlist(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	watchlist.CardButton(int(animeID), animeTitle, animeTitleEnglish, animeTitleJapanese, animeImage, airing, true).Render(r.Context(), w)
+	if err := watchlist.CardButton(int(animeID), animeTitle, animeTitleEnglish, animeTitleJapanese, animeImage, airing, true).Render(r.Context(), w); err != nil {
+		log.Printf("render error: %v", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
 }
 
 func (h *Handler) HandleDeleteWatchlist(w http.ResponseWriter, r *http.Request) {
@@ -185,11 +193,17 @@ func (h *Handler) HandleDeleteWatchlist(w http.ResponseWriter, r *http.Request) 
 	}
 
 	if from == "card" {
-		watchlist.CardButton(int(animeID), anime.TitleOriginal, title, "", anime.ImageUrl, airing, false).Render(r.Context(), w)
+		if err := watchlist.CardButton(int(animeID), anime.TitleOriginal, title, "", anime.ImageUrl, airing, false).Render(r.Context(), w); err != nil {
+			log.Printf("render error: %v", err)
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		}
 		return
 	}
 
-	watchlist.WatchlistDropdown(int(animeID), anime.TitleOriginal, title, "", anime.ImageUrl, "", airing).Render(r.Context(), w)
+	if err := watchlist.WatchlistDropdown(int(animeID), anime.TitleOriginal, title, "", anime.ImageUrl, "", airing).Render(r.Context(), w); err != nil {
+		log.Printf("render error: %v", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+	}
 }
 
 func (h *Handler) HandleGetWatchlist(w http.ResponseWriter, r *http.Request) {
@@ -241,7 +255,10 @@ func (h *Handler) HandleGetWatchlist(w http.ResponseWriter, r *http.Request) {
 	// Sort entries
 	h.sortEntries(filteredEntries, sortBy, sortOrder)
 
-	templates.Watchlist(filteredEntries, layout, statusFilter, sortBy, sortOrder).Render(r.Context(), w)
+	if err := templates.Watchlist(filteredEntries, layout, statusFilter, sortBy, sortOrder).Render(r.Context(), w); err != nil {
+		log.Printf("render error: %v", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+	}
 }
 
 func (h *Handler) HandleContinueWatching(w http.ResponseWriter, r *http.Request) {
@@ -262,7 +279,10 @@ func (h *Handler) HandleContinueWatching(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	templates.ContinueWatching(entries).Render(r.Context(), w)
+	if err := templates.ContinueWatching(entries).Render(r.Context(), w); err != nil {
+		log.Printf("render error: %v", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+	}
 }
 
 func (h *Handler) HandleDeleteContinueWatching(w http.ResponseWriter, r *http.Request) {

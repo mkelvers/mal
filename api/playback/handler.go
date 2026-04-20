@@ -115,7 +115,10 @@ func (h *Handler) HandleWatchPage(w http.ResponseWriter, r *http.Request) {
 		Segments:         convertSegments(data.Segments),
 	}
 
-	templates.WatchPage(anime, pageData).Render(r.Context(), w)
+	if err := templates.WatchPage(anime, pageData).Render(r.Context(), w); err != nil {
+		log.Printf("render error: %v", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+	}
 }
 
 func watchlistUserIDFromRequest(r *http.Request) string {
