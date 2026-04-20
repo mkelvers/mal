@@ -172,7 +172,8 @@ func (h *Handler) HandleDeleteWatchlist(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	if r.URL.Query().Get("from") == "watchlist" {
+	from := r.URL.Query().Get("from")
+	if from == "watchlist" {
 		w.WriteHeader(http.StatusOK)
 		return
 	}
@@ -181,6 +182,11 @@ func (h *Handler) HandleDeleteWatchlist(w http.ResponseWriter, r *http.Request) 
 	airing := false
 	if anime.Airing.Valid {
 		airing = anime.Airing.Bool
+	}
+
+	if from == "card" {
+		watchlist.CardButton(int(animeID), anime.TitleOriginal, title, "", anime.ImageUrl, airing, false).Render(r.Context(), w)
+		return
 	}
 
 	watchlist.WatchlistDropdown(int(animeID), anime.TitleOriginal, title, "", anime.ImageUrl, "", airing).Render(r.Context(), w)

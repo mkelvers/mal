@@ -13,12 +13,15 @@ templ CardButton(
 ) {
 	<button
 		class={ "cursor-pointer border-0 bg-transparent p-0", templ.KV("text-white", inWatchlist), templ.KV("text-white hover:text-white/70", !inWatchlist) }
-		if !inWatchlist {
+		if inWatchlist {
+			hx-delete={ string(templ.URL(fmt.Sprintf("/api/watchlist/%d?from=card", animeID))) }
+		} else {
 			hx-post="/api/watchlist/card"
 			hx-vals={ fmt.Sprintf(`{"anime_id": "%d", "anime_title": "%s", "anime_title_english": "%s", "anime_title_japanese": "%s", "anime_image": "%s", "airing": "%v"}`, animeID, title, titleEnglish, titleJapanese, imageURL, airing) }
-			hx-target="this"
-			hx-swap="outerHTML"
 		}
+		hx-target="this"
+		hx-swap="outerHTML"
+		hx-on::after-swap="window.location.reload()"
 		aria-label={ getWatchlistLabel(inWatchlist) }
 	>
 		<svg width="24" height="24" viewBox="0 0 24 24" fill={ getWatchlistFill(inWatchlist) } xmlns="http://www.w3.org/2000/svg">
