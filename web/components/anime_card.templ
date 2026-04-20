@@ -31,15 +31,14 @@ templ AnimeCard(props AnimeCardProps) {
 		</div>
 	} else {
 		<div class={ defaultString(props.Class, "group relative min-w-0") }>
+			<a href={ templ.URL(cardHref(props)) } class="absolute inset-0 z-0"></a>
 			@animeCardPoster(props)
-			<a href={ templ.URL(cardHref(props)) } class="block bg-transparent text-inherit no-underline">
-				if !props.HideTitle {
-					<div class={ defaultString(props.TitleClass, "mt-2 line-clamp-2 text-sm leading-snug text-(--text)") }>
-						{ props.Title }
-					</div>
-				}
-				{ children... }
-			</a>
+			if !props.HideTitle {
+				<div class={ defaultString(props.TitleClass, "relative z-10 mt-2 line-clamp-2 text-sm leading-snug text-(--text)") }>
+					{ props.Title }
+				</div>
+			}
+			{ children... }
 		</div>
 	}
 }
@@ -54,14 +53,14 @@ func cardHref(props AnimeCardProps) string {
 
 templ animeCardPoster(props AnimeCardProps) {
 	<div class="relative w-full aspect-2/3 overflow-hidden">
-		<a href={ templ.URL(cardHref(props)) } class="block h-full w-full">
+		<div class="block h-full w-full">
 			if props.ImageURL != "" {
 				<img src={ props.ImageURL } alt={ props.Title } class={ defaultString(props.ImgClass, "block h-full w-full object-cover object-center") } loading="lazy"/>
 			} else {
 				<div class="flex h-full w-full justify-center overflow-hidden text-transparent">No image</div>
 			}
-		</a>
-		<div class="absolute inset-0 bg-black/0 transition-colors duration-200 group-hover:bg-black/20"></div>
+		</div>
+		<div class="absolute inset-0 bg-black/0 transition-colors duration-200 group-hover:bg-black/40"></div>
 		if props.Synopsis != "" || props.Score > 0 {
 			<div class="absolute inset-0 flex flex-col justify-between p-3 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
 				<div>
@@ -73,6 +72,7 @@ templ animeCardPoster(props AnimeCardProps) {
 							{ fmt.Sprintf("%d", props.Score) }
 						</div>
 					}
+					<div class="mb-1 text-[11px] font-semibold text-white/90">{ props.Title }</div>
 					if props.Synopsis != "" {
 						<p class="line-clamp-3 text-[11px] leading-relaxed text-white/90">{ props.Synopsis }</p>
 					}
@@ -82,7 +82,7 @@ templ animeCardPoster(props AnimeCardProps) {
 		if props.PlayHref != "" {
 			<a
 				href={ templ.URL(props.PlayHref) }
-				class="absolute bottom-2 left-2 text-white opacity-0 transition-opacity duration-200 group-hover:opacity-100"
+				class="absolute bottom-2 left-2 z-10 text-white opacity-0 transition-opacity duration-200 group-hover:opacity-100"
 				aria-label="Play"
 			>
 				<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
