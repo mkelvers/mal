@@ -28,58 +28,26 @@ type AnimeCardProps struct {
 }
 
 templ AnimeCard(props AnimeCardProps) {
-	if props.CurrentNode {
-		<div class={ defaultString(props.Class, "group relative min-w-0") }>
+	<div class={ defaultString(props.Class, "group relative min-w-0") }>
+		if props.CurrentNode {
 			@animeCardPoster(props)
 			if !props.HideTitle {
 				<div class={ defaultString(props.TitleClass, "mt-2 line-clamp-2 text-sm leading-snug text-(--text)") }>
 					{ props.Title }
 				</div>
 			}
-			{ children... }
-		</div>
-	} else {
-		<div class={ defaultString(props.Class, "group relative min-w-0") }>
-			<a href={ templ.URL(cardHref(props)) } class="absolute inset-0 z-10"></a>
-			@animeCardPoster(props)
-			if !props.HideTitle {
-				<div class={ defaultString(props.TitleClass, "relative z-10 mt-2 line-clamp-2 text-sm leading-snug text-(--text)") }>
-					{ props.Title }
-				</div>
-			}
-			{ children... }
-		</div>
-	}
-}
-
-func cardHref(props AnimeCardProps) string {
-	if props.Href != "" {
-		return props.Href
-	}
-
-	return fmt.Sprintf("/anime/%d", props.ID)
-}
-
-templ animeCardPoster(props AnimeCardProps) {
-	<div class="pointer-events-none relative w-full aspect-2/3 overflow-hidden">
-		<div class="block h-full w-full">
-			if props.ImageURL != "" {
-				<img src={ props.ImageURL } alt={ props.Title } class={ defaultString(props.ImgClass, "block h-full w-full object-cover object-center") } loading="lazy"/>
-			} else {
-				<div class="flex h-full w-full justify-center overflow-hidden text-transparent">No image</div>
-			}
-		</div>
-		<div class="pointer-events-none absolute inset-0 bg-black/0 transition-colors duration-200 group-hover:bg-black/40"></div>
-		if props.Synopsis != "" {
-			<div class="pointer-events-none absolute inset-0 flex flex-col justify-between p-3 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
-				<div>
-					<div class="mb-1 text-[11px] font-semibold text-white/90">{ props.Title }</div>
-					<p class="line-clamp-3 text-[11px] leading-relaxed text-white/90">{ props.Synopsis }</p>
-				</div>
-			</div>
+		} else {
+			<a href={ templ.URL(cardHref(props)) } class="block">
+				@animeCardPoster(props)
+				if !props.HideTitle {
+					<div class={ defaultString(props.TitleClass, "mt-2 line-clamp-2 text-sm leading-snug text-(--text)") }>
+						{ props.Title }
+					</div>
+				}
+			</a>
 		}
 		if props.PlayHref != "" || !props.CurrentNode && !props.DisableWatchlist {
-			<div class="pointer-events-auto absolute bottom-2 left-2 z-20 flex gap-2 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+			<div class="absolute bottom-2 left-2 z-20 flex gap-2 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
 				if props.PlayHref != "" {
 					<a
 						href={ templ.URL(props.PlayHref) }
@@ -103,6 +71,36 @@ templ animeCardPoster(props AnimeCardProps) {
 						props.WatchlistStatus != "",
 					)
 				}
+			</div>
+		}
+		{ children... }
+	</div>
+}
+
+func cardHref(props AnimeCardProps) string {
+	if props.Href != "" {
+		return props.Href
+	}
+
+	return fmt.Sprintf("/anime/%d", props.ID)
+}
+
+templ animeCardPoster(props AnimeCardProps) {
+	<div class="relative w-full aspect-2/3 overflow-hidden">
+		<div class="block h-full w-full">
+			if props.ImageURL != "" {
+				<img src={ props.ImageURL } alt={ props.Title } class={ defaultString(props.ImgClass, "block h-full w-full object-cover object-center") } loading="lazy"/>
+			} else {
+				<div class="flex h-full w-full justify-center overflow-hidden text-transparent">No image</div>
+			}
+		</div>
+		<div class="absolute inset-0 bg-black/0 transition-colors duration-200 group-hover:bg-black/40"></div>
+		if props.Synopsis != "" {
+			<div class="absolute inset-0 flex flex-col justify-between p-3 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+				<div>
+					<div class="mb-1 text-[11px] font-semibold text-white/90">{ props.Title }</div>
+					<p class="line-clamp-3 text-[11px] leading-relaxed text-white/90">{ props.Synopsis }</p>
+				</div>
 			</div>
 		}
 	</div>
