@@ -38,21 +38,6 @@ func (s *Service) SaveProgress(ctx context.Context, userID string, animeID int64
 		return fmt.Errorf("failed to load watchlist entry: %w", watchListErr)
 	}
 
-	if watchListErr == nil && watchListEntry.Status == "completed" {
-		if err := txQueries.DeleteContinueWatchingEntry(ctx, database.DeleteContinueWatchingEntryParams{
-			UserID:  userID,
-			AnimeID: animeID,
-		}); err != nil {
-			return fmt.Errorf("failed to clear continue entry: %w", err)
-		}
-
-		if err := tx.Commit(); err != nil {
-			return fmt.Errorf("failed to commit save progress transaction: %w", err)
-		}
-
-		return nil
-	}
-
 	if err := txQueries.SaveWatchProgress(ctx, database.SaveWatchProgressParams{
 		CurrentEpisode:     sql.NullInt64{Int64: int64(episode), Valid: true},
 		CurrentTimeSeconds: timeSeconds,
