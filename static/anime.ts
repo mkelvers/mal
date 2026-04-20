@@ -1,15 +1,4 @@
-export {}
-
-const parseClassList = (value: string | null): string[] => {
-  if (!value) {
-    return []
-  }
-
-  return value
-    .split(' ')
-    .map((entry: string): string => entry.trim())
-    .filter((entry: string): boolean => entry.length > 0)
-}
+import { parseClassList } from './utils'
 
 const setDropdownMenuState = (menu: HTMLElement, isOpen: boolean): void => {
   const openClasses = parseClassList(menu.getAttribute('data-dropdown-open-classes'))
