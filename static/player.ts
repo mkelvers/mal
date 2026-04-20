@@ -31,6 +31,7 @@ const initPlayer = (): void => {
   const volumeRange = container.querySelector('[data-volume-range]') as HTMLInputElement
   const iconVolume = container.querySelector('[data-icon-volume]') as SVGElement
   const iconMuted = container.querySelector('[data-icon-muted]') as SVGElement
+  const volumeUnderline = container.querySelector('[data-volume-underline]') as HTMLElement
   const timeDisplay = container.querySelector('[data-time]') as HTMLElement
   const progressWrap = container.querySelector('[data-progress-wrap]') as HTMLElement
   const progress = container.querySelector('[data-progress]') as HTMLElement
@@ -84,7 +85,6 @@ const initPlayer = (): void => {
   }
   let controlsTimeout: number | undefined
   let isScrubbing = false
-  let isHoveringVolume = false
   let lastKnownVolume = 1
   let activeSubtitles: Array<{ start: number, end: number, text: string }> = []
   let currentSubtitleTracks: Array<{ lang: string, label: string, url: string }> = []
@@ -627,7 +627,7 @@ const initPlayer = (): void => {
     container.classList.add('show-controls')
     window.clearTimeout(controlsTimeout)
     controlsTimeout = window.setTimeout(() => {
-      if (!isScrubbing && !isHoveringVolume && !video.paused) {
+      if (!isScrubbing && !video.paused) {
         container.classList.remove('show-controls')
       }
     }, 2000)
@@ -852,35 +852,12 @@ const initPlayer = (): void => {
     showControls()
   })
 
-  const setVolumePanelOpen = (isOpen: boolean): void => {
-    if (volumePanel) {
-      volumePanel.classList.toggle('volume-panel-visible', isOpen)
-    }
-    volumeWrap?.classList.toggle('is-volume-open', isOpen)
-    isHoveringVolume = isOpen
-    if (isOpen) showControls()
-  }
+  volumeRange?.addEventListener('pointerdown', () => {
+    volumePanel?.classList.add('is-dragging')
+  })
 
-  const openVolumePanel = (): void => {
-    setVolumePanelOpen(true)
-  }
-
-  const closeVolumePanel = (): void => {
-    setVolumePanelOpen(false)
-  }
-
-  closeVolumePanel()
-
-  muteBtn?.addEventListener('mouseenter', openVolumePanel)
-
-  volumeWrap?.addEventListener('mouseleave', closeVolumePanel)
-
-  volumeWrap?.addEventListener('focusin', openVolumePanel)
-
-  volumeWrap?.addEventListener('focusout', (event: FocusEvent) => {
-    const nextTarget = event.relatedTarget
-    if (nextTarget instanceof Node && volumeWrap.contains(nextTarget)) return
-    closeVolumePanel()
+  window.addEventListener('pointerup', () => {
+    volumePanel?.classList.remove('is-dragging')
   })
 
   backwardBtn?.addEventListener('click', () => seekBy(-10))

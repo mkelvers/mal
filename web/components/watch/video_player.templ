@@ -114,26 +114,24 @@ templ VideoPlayer(data shared.WatchPageData) {
 						</button>
 						<div
 							data-volume-wrap
-							class="relative flex h-9 w-9 items-center justify-center overflow-visible sm:h-10 sm:w-10"
+							class="group/volume relative flex h-9 w-9 items-center justify-center overflow-visible sm:h-10 sm:w-10"
 						>
-							<span
-								data-volume-bridge
-								class="volume-bridge-off absolute inset-x-0 bottom-full h-[calc(100%+26px)]"
-							></span>
 							<div
 								data-volume-panel
-								class="volume-panel pointer-events-none absolute bottom-[calc(100%+26px)] left-1/2 z-30 -translate-x-1/2 opacity-0 invisible transition-opacity"
+								class="pointer-events-none absolute bottom-full left-1/2 z-30 -translate-x-1/2 pb-3 opacity-0 invisible transition-all duration-200 group-hover/volume:pointer-events-auto group-hover/volume:opacity-100 group-hover/volume:visible focus-within:pointer-events-auto focus-within:opacity-100 focus-within:visible [&.is-dragging]:pointer-events-auto [&.is-dragging]:opacity-100 [&.is-dragging]:visible"
 							>
-								<input
-									data-volume-range
-									type="range"
-									min="0"
-									max="100"
-									step="1"
-									value="100"
-									class="h-24 w-4 cursor-pointer appearance-none bg-transparent accent-white [writing-mode:vertical-lr] [direction:rtl]"
-									aria-label="Volume"
-								/>
+								<div class="flex items-center justify-center rounded-md bg-[#2B2B2B] px-3 py-3 shadow-xl">
+									<input
+										data-volume-range
+										type="range"
+										min="0"
+										max="100"
+										step="1"
+										value="100"
+										class="h-24 w-1.5 cursor-pointer rounded-full bg-white/20 accent-[#e50914] outline-none [writing-mode:vertical-lr] [direction:rtl]"
+										aria-label="Volume"
+									/>
+								</div>
 							</div>
 							<button
 								data-mute
@@ -161,10 +159,11 @@ templ VideoPlayer(data shared.WatchPageData) {
 									<line x1="20" y1="9" x2="16" y2="15" stroke="white" stroke-width="1.85" stroke-linecap="round"/>
 								</svg>
 							</button>
-							<span
-								class="volume-underline pointer-events-none absolute bottom-0 left-1/2 h-0.5 w-6 -translate-x-1/2 bg-white opacity-0 transition-opacity"
-							></span>
-						</div>
+						<span
+							data-volume-underline
+							class="volume-underline pointer-events-none absolute bottom-0 left-1/2 h-0.5 w-6 -translate-x-1/2 bg-white opacity-0 transition-opacity"
+						></span>
+					</div>
 						<span
 							data-time
 							class="min-w-0 text-sm text-white tabular-nums sm:text-base"
