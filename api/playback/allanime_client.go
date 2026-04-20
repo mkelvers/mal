@@ -12,6 +12,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -141,8 +142,9 @@ func (c *allAnimeClient) Search(ctx context.Context, query string, mode string) 
 		id, _ := item["_id"].(string)
 		malID, _ := item["malId"].(string)
 		name, _ := item["name"].(string)
-		name = strings.ReplaceAll(name, `\\"`, `"`)
-		name = strings.ReplaceAll(name, `\"`, `"`)
+		if unquoted, err := strconv.Unquote("\"" + name + "\""); err == nil {
+			name = unquoted
+		}
 		name = strings.TrimSpace(name)
 
 		if id == "" {
@@ -403,7 +405,7 @@ func decryptTobeparsed(encoded string) ([]byte, error) {
 
 	keyStr := os.Getenv(allAnimeAESKey)
 	if keyStr == "" {
-		keyStr = "SimtVuagFbGR2K7P"
+		return nil, fmt.Errorf("ALLANIME_AES_KEY environment variable not set")
 	}
 	if len(keyStr) < 16 {
 		return nil, fmt.Errorf("ALLANIME_AES_KEY must be at least 16 characters")
