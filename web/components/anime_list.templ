@@ -14,7 +14,7 @@ templ InfiniteAnimeList(animes []jikan.Anime, watchlistStatuses map[int]string, 
 	if hasNext {
 		<div class="col-span-full h-px w-full" hx-get={ nextURL } hx-trigger="revealed" hx-swap="outerHTML"></div>
 	}
-	<script src="/dist/dedupe.js" data-container={ containerID } defer></script>
+	<script src="/dist/static/dedupe.js" data-container={ containerID } defer></script>
 }
 
 templ CatalogItem(anime jikan.Anime, watchlistStatus string) {
