@@ -11,20 +11,18 @@ type AnimeCardProps struct {
 	Title    string
 	ImageURL string
 	Href     string
-	// Options to customize the card behavior
-	Class       string // override default wrapper class
-	ImgClass    string // override default image class
-	TitleClass  string // override default title class
-	HideTitle   bool   // if true, do not render the default title block
-	CurrentNode bool   // if true, renders a div instead of an anchor tag (useful for graph nodes)
-	Synopsis    string // optional synopsis for hover detail
-	PlayHref    string // optional play button href (anchored to poster)
-	// Watchlist integration
+	Class       string
+	ImgClass    string
+	TitleClass  string
+	HideTitle   bool
+	CurrentNode bool
+	Synopsis    string
+	PlayHref    string
 	TitleEnglish     string
 	TitleJapanese    string
 	Airing           bool
-	WatchlistStatus  string // empty if not in watchlist
-	DisableWatchlist bool   // if true, don't render the watchlist button
+	WatchlistStatus  string
+	DisableWatchlist bool
 }
 
 templ AnimeCard(props AnimeCardProps) {
@@ -55,20 +53,11 @@ func cardHref(props AnimeCardProps) string {
 }
 
 templ animeCardPoster(props AnimeCardProps) {
-	<div class="grid w-full aspect-2/3 overflow-hidden">
-		<!-- Base image layer -->
-		if !props.CurrentNode {
-			<a href={ templ.URL(cardHref(props)) } class="col-start-1 row-start-1 block h-full w-full">
-				@animeCardImage(props)
-			</a>
-		} else {
-			<div class="col-start-1 row-start-1 h-full w-full">
-				@animeCardImage(props)
-			</div>
-		}
-		<!-- Hover darken overlay -->
+	<div class="relative grid w-full aspect-2/3 overflow-hidden">
+		<div class="col-start-1 row-start-1 h-full w-full">
+			@animeCardImage(props)
+		</div>
 		<div class="pointer-events-none col-start-1 row-start-1 bg-black/0 transition-colors duration-200 group-hover:bg-black/40"></div>
-		<!-- Synopsis overlay -->
 		if props.Synopsis != "" {
 			<div class="pointer-events-none col-start-1 row-start-1 flex flex-col justify-between p-3 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
 				<div>
@@ -77,10 +66,12 @@ templ animeCardPoster(props AnimeCardProps) {
 				</div>
 			</div>
 		}
-		<!-- Actions layer -->
+		if !props.CurrentNode {
+			<a href={ templ.URL(cardHref(props)) } class="absolute inset-0 z-10" aria-label={ props.Title }></a>
+		}
 		if props.PlayHref != "" || !props.CurrentNode && !props.DisableWatchlist {
-			<div class="col-start-1 row-start-1 flex items-end justify-start p-3 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
-				<div class="flex gap-2">
+			<div class="pointer-events-none col-start-1 row-start-1 z-20 flex items-end justify-start p-3 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+				<div class="pointer-events-auto flex gap-2">
 					if props.PlayHref != "" {
 						<a
 							href={ templ.URL(props.PlayHref) }
