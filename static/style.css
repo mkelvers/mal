@@ -5,30 +5,32 @@
 @source '../../internal/**/*.templ';
 
 :root {
-  --bg: #fafaf9;
-  --panel: #f5f5f4;
-  --panel-soft: #e7e5e4;
-  --header: #ffffff;
-  --text: #1c1917;
-  --text-muted: #57534e;
-  --text-faint: #a8a29e;
-  --accent: #0c0a09;
+  color-scheme: light dark;
+
+  --bg: light-dark(#fafaf9, #0c0a09);
+  --panel: light-dark(#f5f5f4, #1c1917);
+  --panel-soft: light-dark(#e7e5e4, #292524);
+  --header: light-dark(#ffffff, #1c1917);
+  --text: light-dark(#1c1917, #e7e5e4);
+  --text-muted: light-dark(#57534e, #a8a29e);
+  --text-faint: light-dark(#a8a29e, #78716c);
+  --accent: light-dark(#0c0a09, #fafaf9);
   --danger: #dc2626;
-  --surface-search: #f5f5f4;
-  --surface-search-focus-border: rgba(12, 10, 9, 0.12);
-  --surface-thumb: #e7e5e4;
-  --surface-input: #ffffff;
-  --surface-input-focus: #ffffff;
-  --surface-tab-hover: #e7e5e4;
-  --surface-tab-active: #1c1917;
-  --text-tab-active: #fafaf9;
-  --surface-select: #ffffff;
-  --surface-search-view-all: #f5f5f4;
-  --text-on-accent: #fafaf9;
-  --overlay-subtle: rgba(0, 0, 0, 0.04);
-  --shadow-subtle: 0 1px 2px rgba(0, 0, 0, 0.04);
-  --shadow-card: 0 4px 12px rgba(0, 0, 0, 0.08);
-  --shadow-card-hover: 0 8px 24px rgba(0, 0, 0, 0.12);
+  --surface-search: light-dark(#f5f5f4, #1c1917);
+  --surface-search-focus-border: light-dark(rgba(12, 10, 9, 0.12), rgba(255, 255, 255, 0.12));
+  --surface-thumb: light-dark(#e7e5e4, #44403c);
+  --surface-input: light-dark(#ffffff, #1c1917);
+  --surface-input-focus: light-dark(#ffffff, #1c1917);
+  --surface-tab-hover: light-dark(#e7e5e4, #292524);
+  --surface-tab-active: light-dark(#1c1917, #fafaf9);
+  --text-tab-active: light-dark(#fafaf9, #0c0a09);
+  --surface-select: light-dark(#ffffff, #1c1917);
+  --surface-search-view-all: light-dark(#f5f5f4, #1c1917);
+  --text-on-accent: light-dark(#fafaf9, #0c0a09);
+  --overlay-subtle: light-dark(rgba(0, 0, 0, 0.04), rgba(255, 255, 255, 0.04));
+  --shadow-subtle: light-dark(0 1px 2px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.2));
+  --shadow-card: light-dark(0 4px 12px rgba(0, 0, 0, 0.08), 0 4px 12px rgba(0, 0, 0, 0.3));
+  --shadow-card-hover: light-dark(0 8px 24px rgba(0, 0, 0, 0.12), 0 8px 24px rgba(0, 0, 0, 0.4));
   --space-1: 0.25rem;
   --space-2: 0.5rem;
   --space-3: 0.75rem;
@@ -39,4 +41,12 @@
   --poster-max-height: 360px;
   --font: 'DM Sans', 'Segoe UI', system-ui, sans-serif;
   --radius: 6px;
+}
+
+[data-theme="light"] {
+  color-scheme: light;
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
 }
