@@ -16,11 +16,11 @@ templ Layout(title string, showHeader bool) {
 				var t = localStorage.getItem('theme');
 				if (t === 'light' || t === 'dark') document.documentElement.setAttribute('data-theme', t);
 			</script>
-			<script src="/dist/theme.js" defer></script>
-			<script src="/dist/discover.js" defer></script>
-			<script src="/dist/anime.js" defer></script>
-			<script src="/dist/timezone.js" defer></script>
-			<script src="/dist/player.js" defer></script>
+			<script src="/dist/static/theme.js" defer></script>
+			<script src="/dist/static/discover.js" defer></script>
+			<script src="/dist/static/anime.js" defer></script>
+			<script src="/dist/static/timezone.js" defer></script>
+			<script src="/dist/static/player.js" defer></script>
 		</head>
 		<body
 			class="min-h-screen bg-(--bg) text-(--text) font-(--font) text-sm leading-normal"
@@ -90,8 +90,7 @@ templ Layout(title string, showHeader bool) {
 							title="Toggle theme"
 						>
 							<svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-								<rect x="2" y="3" width="20" height="14" rx="2"/>
-								<path d="M8 21h8M12 17v4"/>
+								<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
 							</svg>
 						</button>
 					</div>
@@ -103,7 +102,7 @@ templ Layout(title string, showHeader bool) {
 			}>
 				{ children... }
 			</main>
-			<script src="/dist/search.js" defer></script>
+			<script src="/dist/static/search.js" defer></script>
 		</body>
 	</html>
 }
