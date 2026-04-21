@@ -3,6 +3,8 @@ package server
 import (
 	"database/sql"
 	"net/http"
+	"path/filepath"
+	"strings"
 
 	"mal/api/anime"
 	"mal/api/auth"
@@ -20,6 +22,23 @@ type Config struct {
 	JikanClient         *jikan.Client
 	AuthService         *auth.Service
 	PlaybackProxySecret string
+}
+
+func withMimeTypes(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ext := strings.ToLower(filepath.Ext(r.URL.Path))
+		switch ext {
+		case ".js":
+			w.Header().Set("Content-Type", "application/javascript")
+		case ".css":
+			w.Header().Set("Content-Type", "text/css")
+		case ".svg":
+			w.Header().Set("Content-Type", "image/svg+xml")
+		case ".json":
+			w.Header().Set("Content-Type", "application/json")
+		}
+		next.ServeHTTP(w, r)
+	})
 }
 
 func NewRouter(cfg Config) http.Handler {
@@ -40,7 +59,7 @@ func NewRouter(cfg Config) http.Handler {
 
 	// Serve built frontend assets
 	dist := http.FileServer(http.Dir("./dist"))
-	mux.Handle("/dist/", http.StripPrefix("/dist/", dist))
+	mux.Handle("/dist/", http.StripPrefix("/dist/", withMimeTypes(dist)))
 
 	mux.HandleFunc("/", animeHandler.HandleCatalog)
 	mux.HandleFunc("/discover", animeHandler.HandleDiscover)
