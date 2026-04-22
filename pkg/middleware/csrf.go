@@ -16,7 +16,6 @@ func VerifyOrigin(next http.Handler) http.Handler {
 		if origin == "" {
 			referer := r.Header.Get("Referer")
 			if referer == "" {
-				// If neither is present, and it's a POST/PUT/DELETE, reject it (strict policy)
 				http.Error(w, "Missing Origin or Referer header", http.StatusForbidden)
 				return
 			}
@@ -29,12 +28,21 @@ func VerifyOrigin(next http.Handler) http.Handler {
 			origin = refURL.Scheme + "://" + refURL.Host
 		}
 
+		originURL, err := url.Parse(origin)
+		if err != nil {
+			http.Error(w, "Invalid Origin header", http.StatusForbidden)
+			return
+		}
+
 		host := r.Host
-		// If origin doesn't match host (accounting for potential schema prefixes)
+		if forwardedHost := r.Header.Get("X-Forwarded-Host"); forwardedHost != "" {
+			host = forwardedHost
+		}
+
 		expectedHTTP := "http://" + host
 		expectedHTTPS := "https://" + host
 
-		if origin != expectedHTTP && origin != expectedHTTPS {
+		if originURL.Scheme+"://"+originURL.Host != expectedHTTP && originURL.Scheme+"://"+originURL.Host != expectedHTTPS {
 			http.Error(w, "Cross-Site Request Forgery (CSRF) origin mismatch", http.StatusForbidden)
 			return
 		}
