@@ -65,11 +65,20 @@ const initPlayer = (): void => {
   const animeTitleJapanese = container.getAttribute('data-anime-title-japanese') || ''
   const animeImage = container.getAttribute('data-anime-image') || ''
   const animeAiring = (container.getAttribute('data-anime-airing') || '').toLowerCase() === 'true'
+  const safeJsonParse = <T>(raw: string | null, fallback: T): T => {
+    if (!raw) return fallback
+    try {
+      return JSON.parse(raw) as T
+    } catch {
+      return fallback
+    }
+  }
+
   const startTimeSeconds = Number.parseFloat(container.getAttribute('data-start-time-seconds') || '0')
-  const modeSources = JSON.parse(container.getAttribute('data-mode-sources') || '{}')
-  const availableModes = JSON.parse(container.getAttribute('data-available-modes') || '[]')
+  const modeSources = safeJsonParse(container.getAttribute('data-mode-sources'), {} as Record<string, string>)
+  const availableModes = safeJsonParse(container.getAttribute('data-available-modes'), [] as string[])
   const initialMode = container.getAttribute('data-initial-mode') || 'dub'
-  const segments = JSON.parse(container.getAttribute('data-segments') || '[]')
+  const segments = safeJsonParse(container.getAttribute('data-segments'), [] as SkipSegment[])
   const maxIntroStartSeconds = 180
   const minOutroStartRatio = 0.5
   const minSegmentDurationSeconds = 20
@@ -820,6 +829,7 @@ const goToNextEpisode = (): void => {
           credentials: 'same-origin',
         }).then(async (res) => {
           if (!res.ok) return
+          if (!watchStatusDropdown || !watchStatusDropdown.isConnected) return
           const html = await res.text()
           const wrapper = document.createElement('span')
           wrapper.id = 'watch-status-dropdown'
