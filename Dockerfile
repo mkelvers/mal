@@ -8,6 +8,9 @@ ENV CGO_ENABLED=1
 # Install templ
 RUN go install github.com/a-h/templ/cmd/templ@latest
 
+# Install sqlc for code generation
+RUN go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest
+
 # Install build dependencies for bun + assets
 RUN apt-get update && apt-get install -y ca-certificates sqlite3 curl unzip && rm -rf /var/lib/apt/lists/*
 RUN curl -fsSL https://bun.sh/install | bash
@@ -26,6 +29,9 @@ RUN bun run build:assets
 
 # Generate templ files
 RUN templ generate
+
+# Generate sqlc code
+RUN sqlc generate
 
 # Build the server and CLI tools
 RUN go build -o main_server ./cmd/server
