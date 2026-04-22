@@ -291,9 +291,8 @@ func (c *Client) fetchWithRetry(ctx context.Context, urlStr string, out any) err
 				retryAfter = parsed
 			}
 
-			resp.Body.Close()
-
 			if retryable && attempt < maxRetries-1 {
+				resp.Body.Close()
 				delay := retryDelay(attempt)
 				if retryAfter > delay {
 					delay = retryAfter
@@ -304,6 +303,12 @@ func (c *Client) fetchWithRetry(ctx context.Context, urlStr string, out any) err
 				}
 
 				continue
+			}
+
+			err = json.NewDecoder(resp.Body).Decode(out)
+			resp.Body.Close()
+			if err == nil {
+				return nil
 			}
 
 			return apiErr
