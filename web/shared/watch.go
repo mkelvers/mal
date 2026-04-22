@@ -66,7 +66,7 @@ func ModeToken(mode string, modeSources map[string]ModeSource) string {
 	return source.Token
 }
 
-func ToJSON(v interface{}) string {
+func ToJSON(v any) string {
 	b, err := json.Marshal(v)
 	if err != nil {
 		log.Printf("ToJSON error: %v", err)
