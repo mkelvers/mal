@@ -108,19 +108,10 @@ func NewRouter(cfg Config) http.Handler {
 	// Admin Endpoints (protected by admin middleware in route handlers)
 	mux.Handle("/admin", middleware.RequireAdmin(http.HandlerFunc(adminHandler.HandleAdminPage)))
 	mux.Handle("/admin/users", middleware.RequireAdmin(http.HandlerFunc(adminHandler.HandleAddUserForm)))
-	mux.Handle("/admin/users/", middleware.RequireAdmin(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		path := r.URL.Path
-		switch {
-		case strings.HasSuffix(path, "/delete"):
-			adminHandler.HandleDeleteUser(w, r)
-		case strings.HasSuffix(path, "/watchlist"):
-			adminHandler.HandleUserWatchlist(w, r)
-		case strings.HasSuffix(path, "/continue-watching"):
-			adminHandler.HandleUserContinueWatching(w, r)
-		default:
-			adminHandler.HandleImpersonateUser(w, r)
-		}
-	})))
+	mux.HandleFunc("/admin/users/delete", func(w http.ResponseWriter, r *http.Request) {
+		middleware.RequireAdmin(http.HandlerFunc(adminHandler.HandleDeleteUserRouter)).ServeHTTP(w, r)
+	})
+	mux.Handle("/admin/users/", middleware.RequireAdmin(http.HandlerFunc(adminHandler.HandleUserRouter)))
 
 	// Wrap mux with global CSRF origin verification and auth checking,
 	// THEN auth context parsing.
