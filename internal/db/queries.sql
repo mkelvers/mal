@@ -7,6 +7,9 @@ SELECT * FROM user WHERE username = ? LIMIT 1;
 -- name: ListUsers :many
 SELECT * FROM user ORDER BY created_at DESC;
 
+-- name: DeleteUser :exec
+DELETE FROM user WHERE id = ?;
+
 -- name: CreateUser :one
 INSERT INTO user (id, username, password_hash)
 VALUES (?, ?, ?)

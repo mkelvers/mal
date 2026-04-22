@@ -111,6 +111,8 @@ func NewRouter(cfg Config) http.Handler {
 	mux.Handle("/admin/users/", middleware.RequireAdmin(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		path := r.URL.Path
 		switch {
+		case strings.HasSuffix(path, "/delete"):
+			adminHandler.HandleDeleteUser(w, r)
 		case strings.HasSuffix(path, "/watchlist"):
 			adminHandler.HandleUserWatchlist(w, r)
 		case strings.HasSuffix(path, "/continue-watching"):

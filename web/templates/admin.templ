@@ -69,6 +69,15 @@ templ AdminUsersList(users []database.User) {
 					>
 						View
 					</a>
+					<button
+						hx-delete={ templ.URL(fmt.Sprintf("/admin/users/%s/delete", user.ID)) }
+						hx-target="#users-list"
+						hx-swap="outerHTML"
+						hx-confirm={ fmt.Sprintf("Are you sure you want to delete %s? This cannot be undone.", user.Username) }
+						class="rounded bg-(--surface-button) px-3 py-1 text-xs text-(--danger) opacity-80 transition-opacity duration-150 hover:opacity-100"
+					>
+						Delete
+					</button>
 				</div>
 			</div>
 		}

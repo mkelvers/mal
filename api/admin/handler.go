@@ -142,6 +142,49 @@ func (h *Handler) HandleAddUserForm(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func (h *Handler) HandleDeleteUser(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	userID := r.URL.Path[len("/admin/users/"):]
+	if userID == "" {
+		writeInlineError(w, "Invalid user ID")
+		return
+	}
+
+	// Don't allow deleting yourself
+	currentUser, ok := r.Context().Value(webcontext.UserKey).(*database.User)
+	if !ok || currentUser == nil {
+		writeInlineError(w, "Not authenticated")
+		return
+	}
+	if userID == currentUser.ID {
+		writeInlineError(w, "Cannot delete your own account")
+		return
+	}
+
+	err := h.db.DeleteUser(r.Context(), userID)
+	if err != nil {
+		log.Printf("delete user error: %v", err)
+		writeInlineError(w, "Failed to delete user")
+		return
+	}
+
+	users, err := h.db.ListUsers(r.Context())
+	if err != nil {
+		log.Printf("list users error: %v", err)
+		writeInlineError(w, "User deleted but failed to refresh list")
+		return
+	}
+
+	if err := templates.AdminUsersList(users).Render(r.Context(), w); err != nil {
+		log.Printf("render error: %v", err)
+		writeInlineError(w, "User deleted but failed to render list")
+	}
+}
+
 func writeInlineError(w http.ResponseWriter, message string) {
 	w.Header().Set("Content-Type", "text/html")
 	w.WriteHeader(http.StatusBadRequest)
