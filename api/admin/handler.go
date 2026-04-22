@@ -89,7 +89,7 @@ func (h *Handler) HandleAddUserForm(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) HandleDeleteUserRouter(w http.ResponseWriter, r *http.Request) {
 	path := r.URL.Path
 	path = strings.TrimPrefix(path, "/admin/users/delete/")
-	
+
 	if path == "" {
 		writeInlineError(w, "Invalid user ID")
 		return
@@ -130,6 +130,8 @@ func (h *Handler) HandleDeleteUserRouter(w http.ResponseWriter, r *http.Request)
 func (h *Handler) HandleUserRouter(w http.ResponseWriter, r *http.Request) {
 	path := r.URL.Path
 	switch {
+	case strings.HasSuffix(path, "/delete"):
+		h.HandleDeleteUserRouter(w, r)
 	case strings.HasSuffix(path, "/watchlist"):
 		h.HandleUserWatchlist(w, r)
 	case strings.HasSuffix(path, "/continue-watching"):
