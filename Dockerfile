@@ -9,7 +9,7 @@ ENV CGO_ENABLED=1
 RUN go install github.com/a-h/templ/cmd/templ@latest
 
 # Install sqlc for code generation
-RUN go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest
+RUN go install github.com/sqlc-dev/sqlc/cmd/sqlc@v1.30.0
 
 # Install build dependencies for bun + assets
 RUN apt-get update && apt-get install -y ca-certificates sqlite3 curl unzip && rm -rf /var/lib/apt/lists/*
