@@ -12,7 +12,7 @@ import (
 
 	"mal/integrations/jikan"
 	"mal/internal/db"
-	"mal/internal/middleware"
+	webcontext "mal/web/context"
 	animecomponents "mal/web/components/anime"
 	watchcomponents "mal/web/components/watch"
 	"mal/web/templates"
@@ -65,7 +65,7 @@ func parsePageParam(r *http.Request) int {
 }
 
 func userIDFromRequest(r *http.Request) string {
-	user, ok := r.Context().Value(middleware.UserContextKey).(*database.User)
+	user, ok := r.Context().Value(webcontext.UserKey).(*database.User)
 	if !ok || user == nil {
 		return ""
 	}

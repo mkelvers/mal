@@ -11,6 +11,7 @@ import (
 	"mal/api/auth"
 	"mal/internal/db"
 	"mal/internal/middleware"
+	webcontext "mal/web/context"
 	"mal/web/templates"
 )
 
@@ -166,7 +167,7 @@ func GetImpersonatedUserID(r *http.Request) string {
 	}
 
 	// Verify the current user is admin
-	user, ok := r.Context().Value(middleware.UserContextKey).(*database.User)
+	user, ok := r.Context().Value(webcontext.UserKey).(*database.User)
 	if !ok || user == nil || !middleware.IsAdmin(user) {
 		return ""
 	}

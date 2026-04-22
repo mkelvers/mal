@@ -17,6 +17,7 @@ import (
 	"mal/integrations/jikan"
 	"mal/internal/db"
 	"mal/internal/middleware"
+	webcontext "mal/web/context"
 	"mal/web/components/watch"
 	"mal/web/shared"
 	"mal/web/templates"
@@ -131,7 +132,7 @@ func (h *Handler) HandleWatchPage(w http.ResponseWriter, r *http.Request) {
 }
 
 func watchlistUserIDFromRequest(r *http.Request) string {
-	user, ok := r.Context().Value(middleware.UserContextKey).(*database.User)
+	user, ok := r.Context().Value(webcontext.UserKey).(*database.User)
 	if !ok || user == nil {
 		return ""
 	}
