@@ -19,7 +19,7 @@ templ ContinueWatching(entries []db.GetContinueWatchingEntriesRow) {
 					Start watching any anime and your progress will show up here.
 				}
 			} else {
-				<div class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:gap-4 lg:grid-cols-4 xl:grid-cols-5">
+				<div class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:gap-4 lg:grid-cols-4 xl:grid-cols-5 relative">
 					for _, entry := range entries {
 						<div class="group relative min-w-0" id={ fmt.Sprintf("continue-entry-%d", entry.AnimeID) }>
 						@ui.AnimeCard(ui.AnimeCardProps{
@@ -47,7 +47,7 @@ templ ContinueWatching(entries []db.GetContinueWatchingEntriesRow) {
 							</div>
 							}
 							<button
-								class="absolute right-2 top-2 h-6 w-6 cursor-pointer border-0 bg-(--overlay-subtle) text-(--text-muted) opacity-0 transition-opacity duration-150 group-hover:opacity-100 hover:text-(--danger)"
+								class="absolute right-2 top-2 z-30 h-6 w-6 cursor-pointer border-0 bg-(--overlay-subtle) text-(--text-muted) opacity-0 transition-opacity duration-150 group-hover:opacity-100 hover:text-(--danger)"
 								hx-delete={ string(templ.URL(fmt.Sprintf("/api/continue-watching/%d", entry.AnimeID))) }
 								hx-target={ fmt.Sprintf("#continue-entry-%d", entry.AnimeID) }
 								hx-swap="delete"
