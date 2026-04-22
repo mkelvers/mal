@@ -88,14 +88,13 @@ func (h *Handler) HandleAddUserForm(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) HandleDeleteUserRouter(w http.ResponseWriter, r *http.Request) {
 	path := r.URL.Path
-	path = strings.TrimPrefix(path, "/admin/users/delete/")
+	parts := strings.Split(strings.TrimSuffix(path, "/delete"), "/")
+	userID := parts[len(parts)-1]
 
-	if path == "" {
+	if userID == "" {
 		writeInlineError(w, "Invalid user ID")
 		return
 	}
-
-	userID := path
 
 	currentUser, ok := r.Context().Value(webcontext.UserKey).(*database.User)
 	if !ok || currentUser == nil {
