@@ -232,9 +232,26 @@ type cacheResult struct {
 	hasStale bool
 }
 
+func isEmptyResult(out any) bool {
+	switch v := out.(type) {
+	case *TopAnimeResponse:
+		return len(v.Data) == 0
+	case *SearchResponse:
+		return len(v.Data) == 0
+	case *AnimeResponse:
+		return v.Data.MalID == 0
+	case *EpisodesResponse:
+		return len(v.Data) == 0
+	}
+	return false
+}
+
 func (c *Client) getWithCache(ctx context.Context, cacheKey string, ttl time.Duration, url string, out any) error {
 	if c.getCache(ctx, cacheKey, out) {
-		return nil
+		if !isEmptyResult(out) {
+			return nil
+		}
+		log.Printf("jikan: cache hit for %s but data is empty, refetching", cacheKey)
 	}
 
 	var stale any
@@ -245,11 +262,11 @@ func (c *Client) getWithCache(ctx context.Context, cacheKey string, ttl time.Dur
 			staleBytes, marshalErr := json.Marshal(stale)
 			if marshalErr == nil {
 				unmarshalErr := json.Unmarshal(staleBytes, out)
-				if unmarshalErr == nil {
+				if unmarshalErr == nil && !isEmptyResult(out) {
 					return nil
 				}
 			}
-			log.Printf("jikan: stale cache unmarshal failed, falling back to error: %v", err)
+			log.Printf("jikan: stale cache unmarshal failed or empty, falling back to error: %v", err)
 		}
 		return err
 	}

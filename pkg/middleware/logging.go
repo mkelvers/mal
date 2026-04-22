@@ -6,6 +6,7 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -67,6 +68,14 @@ func (rw *statusRecorder) Unwrap() http.ResponseWriter {
 func RequestLogger(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
+
+		if strings.HasPrefix(r.URL.Path, "/dist/static/") ||
+			strings.HasPrefix(r.URL.Path, "/static/") ||
+			r.URL.Path == "/favicon.ico" {
+			next.ServeHTTP(w, r)
+			return
+		}
+
 		recorder := newStatusRecorder(w)
 
 		next.ServeHTTP(recorder, r)
