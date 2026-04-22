@@ -76,8 +76,8 @@ func RateLimitAuth(next http.Handler) http.Handler {
 			v.lastSeen = time.Now()
 		}
 
-		// If more than 5 attempts within a minute, block
-		if exists && v.attempts > 5 {
+		// If 5 or more attempts within a minute, block
+		if exists && v.attempts >= 5 {
 			mu.Unlock()
 			if strings.HasPrefix(r.URL.Path, "/") {
 				http.Redirect(w, r, fmt.Sprintf("%s?error=rate_limited", r.URL.Path), http.StatusFound)
