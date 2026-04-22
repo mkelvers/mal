@@ -12,16 +12,34 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
 )
 
 const (
-	allAnimeBaseURL  = "https://api.allanime.day"
-	allAnimeReferer  = "https://allmanga.to"
-	defaultUserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/121.0"
-	allAnimeAESKey   = "ALLANIME_AES_KEY"
+	allAnimeBaseURL    = "https://api.allanime.day"
+	allAnimeReferer    = "https://allmanga.to"
+	defaultUserAgent   = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/121.0"
+	allAnimeAESKey     = "ALLANIME_AES_KEY"
+	aniCliRawSourceURL = "https://raw.githubusercontent.com/pystardust/ani-cli/master/ani-cli"
+	aniCliKeyRegex     = `allanime_key="\$\(printf '%s' '([^']+)'`
+	consensusThreshold = 2
+)
+
+var (
+	aesKeys          = []string{"Xot36i3lK3:v1", "SimtVuagFbGR2K7P"}
+	cachedKey        string
+	cachedKeyFetched time.Time
+	keyCacheDuration = 1 * time.Hour
+	forkSources      = []string{
+		"https://raw.githubusercontent.com/pystardust/ani-cli/master/ani-cli",
+		"https://raw.githubusercontent.com/justfoolingaround/ani-cli/master/ani-cli",
+		"https://raw.githubusercontent.com/justfoolingaround/ani-cli-mpv/master/ani-cli",
+		"https://raw.githubusercontent.com/An1sora/ani-cli/master/ani-cli",
+		"https://raw.githubusercontent.com/sdaqo/ani-cli/master/ani-cli",
+	}
 )
 
 type searchResult struct {
@@ -399,43 +417,350 @@ func decryptTobeparsed(encoded string) ([]byte, error) {
 		return nil, fmt.Errorf("encrypted payload too short")
 	}
 
-	iv := raw[:12]
-	cipherText := raw[12 : len(raw)-16]
-	tag := raw[len(raw)-16:]
+	version := raw[0]
+	iv := raw[1:13]
+	cipherText := raw[13 : len(raw)-16]
 
-	keyStr := os.Getenv(allAnimeAESKey)
-	if keyStr == "" {
-		keyStr = "SimtVuagFbGR2K7P"
-	}
-	if len(keyStr) < 16 {
-		return nil, fmt.Errorf("ALLANIME_AES_KEY must be at least 16 characters")
-	}
-	key := sha256.Sum256([]byte(keyStr))
+	for _, keyStr := range getAllKeys() {
+		key := sha256.Sum256([]byte(keyStr))
 
-	block, err := aes.NewCipher(key[:])
-	if err != nil {
-		return nil, fmt.Errorf("cipher init failed: %w", err)
-	}
+		block, err := aes.NewCipher(key[:])
+		if err != nil {
+			continue
+		}
 
-	gcm, err := cipher.NewGCM(block)
-	if err == nil {
-		combined := append(append([]byte{}, cipherText...), tag...)
-		plainText, openErr := gcm.Open(nil, iv, combined, nil)
-		if openErr == nil && json.Valid(plainText) {
-			return plainText, nil
+		if version == 1 {
+			plainText, err := tryDecryptCTR(block, iv, cipherText)
+			if err == nil && json.Valid(plainText) {
+				return plainText, nil
+			}
+		}
+
+		gcm, err := cipher.NewGCM(block)
+		if err == nil {
+			tag := raw[len(raw)-16:]
+			combined := append(append([]byte{}, cipherText...), tag...)
+			plainText, openErr := gcm.Open(nil, iv, combined, nil)
+			if openErr == nil && json.Valid(plainText) {
+				return plainText, nil
+			}
 		}
 	}
 
+	return nil, fmt.Errorf("decryption failed")
+}
+
+func getAllKeys() []string {
+	keys := make([]string, 0, len(aesKeys)+1)
+
+	if cachedKey != "" && time.Since(cachedKeyFetched) < keyCacheDuration {
+		keys = append(keys, cachedKey)
+	}
+
+	keys = append(keys, aesKeys...)
+	return keys
+}
+
+func tryDecryptCTR(block cipher.Block, iv []byte, cipherText []byte) ([]byte, error) {
 	ctrIV := append([]byte{}, iv...)
 	ctrIV = append(ctrIV, 0x00, 0x00, 0x00, 0x02)
 	ctr := cipher.NewCTR(block, ctrIV)
 	plainText := make([]byte, len(cipherText))
 	ctr.XORKeyStream(plainText, cipherText)
-	if !json.Valid(plainText) {
-		return nil, fmt.Errorf("decryption failed")
+	return plainText, nil
+}
+
+func getAESKey() string {
+	if envKey := os.Getenv(allAnimeAESKey); envKey != "" {
+		return envKey
 	}
 
-	return plainText, nil
+	if cachedKey != "" && time.Since(cachedKeyFetched) < keyCacheDuration {
+		return cachedKey
+	}
+
+	validatedKey := validateKeys()
+	if validatedKey != "" {
+		cachedKey = validatedKey
+		cachedKeyFetched = time.Now()
+		return cachedKey
+	}
+
+	if len(aesKeys) > 0 {
+		return aesKeys[0]
+	}
+
+	return ""
+}
+
+func validateKeys() string {
+	fetchedKeys := fetchKeyFromForks()
+	allKeys := append([]string{fetchedKeys}, aesKeys...)
+
+	for _, keyStr := range allKeys {
+		if keyStr == "" {
+			continue
+		}
+
+		raw, err := base64.StdEncoding.DecodeString(getTestPayload())
+		if err != nil {
+			continue
+		}
+
+		if len(raw) < 29 {
+			continue
+		}
+
+		version := raw[0]
+		iv := raw[1:13]
+		cipherText := raw[13 : len(raw)-16]
+
+		key := sha256.Sum256([]byte(keyStr))
+		block, err := aes.NewCipher(key[:])
+		if err != nil {
+			continue
+		}
+
+		var plainText []byte
+
+		if version == 1 {
+			plainText, _ = tryDecryptCTR(block, iv, cipherText)
+		}
+
+		if len(plainText) == 0 || !json.Valid(plainText) {
+			gcm, err := cipher.NewGCM(block)
+			if err != nil {
+				continue
+			}
+			tag := raw[len(raw)-16:]
+			combined := append(append([]byte{}, cipherText...), tag...)
+			plainText, err = gcm.Open(nil, iv, combined, nil)
+			if err != nil || !json.Valid(plainText) {
+				continue
+			}
+		}
+
+		var parsed map[string]any
+		if err := json.Unmarshal(plainText, &parsed); err != nil {
+			continue
+		}
+
+		episodeData, ok := parsed["episode"].(map[string]any)
+		if !ok || episodeData == nil {
+			continue
+		}
+
+		sourceUrls, ok := episodeData["sourceUrls"].([]any)
+		if !ok || len(sourceUrls) == 0 {
+			continue
+		}
+
+		return keyStr
+	}
+
+	return ""
+}
+
+var testPayloadCache string
+
+func getTestPayload() string {
+	if testPayloadCache != "" {
+		return testPayloadCache
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer cancel()
+
+	searchQuery := `query($search: SearchInput, $limit: Int, $page: Int, $translationType: VaildTranslationTypeEnumType, $countryOrigin: VaildCountryOriginEnumType) {
+		searchResults(search: $search, limit: $limit, page: $page, translationType: $translationType, countryOrigin: $countryOrigin) {
+			results {
+				_id
+			}
+		}
+	}`
+
+	searchVariables := map[string]any{
+		"search":          map[string]any{"query": "pokemon"},
+		"limit":           1,
+		"page":            1,
+		"translationType": "SUB",
+		"countryOrigin":   "JP",
+	}
+
+	searchBody, _ := json.Marshal(map[string]any{
+		"query":     searchQuery,
+		"variables": searchVariables,
+	})
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, allAnimeBaseURL+"/api", bytes.NewReader(searchBody))
+	if err != nil {
+		return ""
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Referer", allAnimeReferer)
+	req.Header.Set("User-Agent", defaultUserAgent)
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return ""
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil || resp.StatusCode != http.StatusOK {
+		return ""
+	}
+
+	var searchResult struct {
+		Data struct {
+			SearchResults struct {
+				Results []struct {
+					ID string `json:"_id"`
+				} `json:"results"`
+			} `json:"searchResults"`
+		} `json:"data"`
+	}
+
+	if err := json.Unmarshal(body, &searchResult); err != nil {
+		return ""
+	}
+
+	if len(searchResult.Data.SearchResults.Results) == 0 {
+		return ""
+	}
+
+	showID := searchResult.Data.SearchResults.Results[0].ID
+
+	episodeQuery := `query($showId: String!, $translationType: VaildTranslationTypeEnumType!, $episodeString: String!) {
+		episode(showId: $showId, translationType: $translationType, episodeString: $episodeString) {
+			tobeparsed
+		}
+	}`
+
+	episodeVariables := map[string]any{
+		"showId":          showID,
+		"translationType": "SUB",
+		"episodeString":   "1",
+	}
+
+	episodeBody, _ := json.Marshal(map[string]any{
+		"query":     episodeQuery,
+		"variables": episodeVariables,
+	})
+
+	episodeReq, err := http.NewRequestWithContext(ctx, http.MethodPost, allAnimeBaseURL+"/api", bytes.NewReader(episodeBody))
+	if err != nil {
+		return ""
+	}
+	episodeReq.Header.Set("Content-Type", "application/json")
+	episodeReq.Header.Set("Referer", allAnimeReferer)
+	episodeReq.Header.Set("User-Agent", defaultUserAgent)
+
+	episodeResp, err := http.DefaultClient.Do(episodeReq)
+	if err != nil {
+		return ""
+	}
+	defer episodeResp.Body.Close()
+
+	episodeBodyBytes, err := io.ReadAll(episodeResp.Body)
+	if err != nil || episodeResp.StatusCode != http.StatusOK {
+		return ""
+	}
+
+	var episodeResult struct {
+		Data struct {
+			Episode struct {
+				ToBeParsed string `json:"tobeparsed"`
+			} `json:"episode"`
+		} `json:"data"`
+	}
+
+	if err := json.Unmarshal(episodeBodyBytes, &episodeResult); err != nil {
+		return ""
+	}
+
+	testPayloadCache = episodeResult.Data.Episode.ToBeParsed
+	return testPayloadCache
+}
+
+func fetchKeyFromForks() string {
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer cancel()
+
+	type fetchResult struct {
+		key  string
+		err  error
+		body string
+	}
+
+	results := make(chan fetchResult, len(forkSources))
+
+	for _, source := range forkSources {
+		go func(source string) {
+			req, err := http.NewRequestWithContext(ctx, http.MethodGet, source, nil)
+			if err != nil {
+				results <- fetchResult{err: err}
+				return
+			}
+			req.Header.Set("User-Agent", defaultUserAgent)
+
+			resp, err := http.DefaultClient.Do(req)
+			if err != nil {
+				results <- fetchResult{err: err}
+				return
+			}
+			defer resp.Body.Close()
+
+			body, err := io.ReadAll(resp.Body)
+			if err != nil || resp.StatusCode != 200 {
+				results <- fetchResult{err: fmt.Errorf("bad response")}
+				return
+			}
+
+			results <- fetchResult{body: string(body)}
+		}(source)
+	}
+
+	keyCounts := make(map[string]int)
+	deadline := time.After(12 * time.Second)
+	for range forkSources {
+		select {
+		case r := <-results:
+			if r.err != nil || r.body == "" {
+				continue
+			}
+			if key := extractKey(r.body); key != "" {
+				keyCounts[key]++
+				if keyCounts[key] >= consensusThreshold {
+					return key
+				}
+			}
+		case <-deadline:
+			goto checkConsensus
+		}
+	}
+
+checkConsensus:
+	for key, count := range keyCounts {
+		if count >= consensusThreshold {
+			return key
+		}
+	}
+
+	for key := range keyCounts {
+		return key
+	}
+
+	return ""
+}
+
+func extractKey(scriptContent string) string {
+	re := regexp.MustCompile(aniCliKeyRegex)
+	matches := re.FindStringSubmatch(scriptContent)
+	if len(matches) < 2 {
+		return ""
+	}
+	return matches[1]
 }
 
 func decodeSourceURL(encoded string) string {
