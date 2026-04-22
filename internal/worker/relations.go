@@ -76,8 +76,11 @@ func retryBackoff(attempts int64) string {
 		delay = 30 * time.Minute
 	}
 
-	seconds := int(delay / time.Second)
-	return fmt.Sprintf("+%d seconds", seconds)
+	minutes := int(delay / time.Minute)
+	if minutes < 1 {
+		minutes = 1
+	}
+	return fmt.Sprintf("+%d minutes", minutes)
 }
 
 func (w *Worker) processAnimeFetchRetries(ctx context.Context) {
@@ -231,10 +234,12 @@ func (w *Worker) ensureAnimeExistsAndStatusUpdated(ctx context.Context, malID in
 		// OR we can explicitly fetch its details to keep sequels up to date.
 		animeDetails, err := w.client.GetAnimeByID(ctx, malID)
 		if err == nil {
-			w.db.UpdateAnimeStatus(ctx, database.UpdateAnimeStatusParams{
+			if err := w.db.UpdateAnimeStatus(ctx, database.UpdateAnimeStatusParams{
 				Status: sql.NullString{String: animeDetails.Status, Valid: true},
 				ID:     int64(animeDetails.MalID),
-			})
+			}); err != nil {
+				log.Printf("worker: failed to update status for anime %d: %v", animeDetails.MalID, err)
+			}
 		}
 		time.Sleep(400 * time.Millisecond)
 	}
