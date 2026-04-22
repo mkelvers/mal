@@ -42,8 +42,8 @@ func newAllAnimeClient() *allAnimeClient {
 	}
 }
 
-func (c *allAnimeClient) graphqlRequest(ctx context.Context, query string, variables map[string]interface{}) (map[string]interface{}, error) {
-	payload := map[string]interface{}{
+func (c *allAnimeClient) graphqlRequest(ctx context.Context, query string, variables map[string]any) (map[string]any, error) {
+	payload := map[string]any{
 		"query":     query,
 		"variables": variables,
 	}
@@ -77,12 +77,12 @@ func (c *allAnimeClient) graphqlRequest(ctx context.Context, query string, varia
 		return nil, fmt.Errorf("graphql status %d", resp.StatusCode)
 	}
 
-	var parsed map[string]interface{}
+	var parsed map[string]any
 	if err := json.Unmarshal(respBody, &parsed); err != nil {
 		return nil, fmt.Errorf("decode graphql response: %w", err)
 	}
 
-	if errs, ok := parsed["errors"].([]interface{}); ok && len(errs) > 0 {
+	if errs, ok := parsed["errors"].([]any); ok && len(errs) > 0 {
 		return nil, fmt.Errorf("graphql error: %v", errs[0])
 	}
 
@@ -100,8 +100,8 @@ func (c *allAnimeClient) Search(ctx context.Context, query string, mode string) 
 		}
 	}`
 
-	variables := map[string]interface{}{
-		"search": map[string]interface{}{
+	variables := map[string]any{
+		"search": map[string]any{
 			"allowAdult":   false,
 			"allowUnknown": false,
 			"query":        query,
@@ -117,24 +117,24 @@ func (c *allAnimeClient) Search(ctx context.Context, query string, mode string) 
 		return nil, err
 	}
 
-	data, ok := result["data"].(map[string]interface{})
+	data, ok := result["data"].(map[string]any)
 	if !ok {
 		return nil, fmt.Errorf("invalid search response")
 	}
 
-	shows, ok := data["shows"].(map[string]interface{})
+	shows, ok := data["shows"].(map[string]any)
 	if !ok {
 		return nil, fmt.Errorf("invalid shows payload")
 	}
 
-	edges, ok := shows["edges"].([]interface{})
+	edges, ok := shows["edges"].([]any)
 	if !ok {
 		return nil, fmt.Errorf("invalid search edges")
 	}
 
 	out := make([]searchResult, 0, len(edges))
 	for _, edge := range edges {
-		item, ok := edge.(map[string]interface{})
+		item, ok := edge.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -164,27 +164,27 @@ func (c *allAnimeClient) GetEpisodes(ctx context.Context, showID string, mode st
 		}
 	}`
 
-	result, err := c.graphqlRequest(ctx, graphqlQuery, map[string]interface{}{"showId": showID})
+	result, err := c.graphqlRequest(ctx, graphqlQuery, map[string]any{"showId": showID})
 	if err != nil {
 		return nil, err
 	}
 
-	data, ok := result["data"].(map[string]interface{})
+	data, ok := result["data"].(map[string]any)
 	if !ok {
 		return nil, fmt.Errorf("invalid episode response")
 	}
 
-	show, ok := data["show"].(map[string]interface{})
+	show, ok := data["show"].(map[string]any)
 	if !ok || show == nil {
 		return nil, fmt.Errorf("show not found")
 	}
 
-	detail, ok := show["availableEpisodesDetail"].(map[string]interface{})
+	detail, ok := show["availableEpisodesDetail"].(map[string]any)
 	if !ok {
 		return nil, fmt.Errorf("invalid episodes detail")
 	}
 
-	rawList, ok := detail[mode].([]interface{})
+	rawList, ok := detail[mode].([]any)
 	if !ok {
 		return nil, fmt.Errorf("no episodes for mode %s", mode)
 	}
@@ -223,7 +223,7 @@ func (c *allAnimeClient) GetEpisodeSources(ctx context.Context, showID string, e
 		}
 	}`
 
-	variables := map[string]interface{}{
+	variables := map[string]any{
 		"showId":          showID,
 		"translationType": mode,
 		"episodeString":   episode,
@@ -234,7 +234,7 @@ func (c *allAnimeClient) GetEpisodeSources(ctx context.Context, showID string, e
 		return nil, err
 	}
 
-	data, ok := result["data"].(map[string]interface{})
+	data, ok := result["data"].(map[string]any)
 	if !ok {
 		return nil, fmt.Errorf("invalid source response")
 	}
@@ -244,7 +244,7 @@ func (c *allAnimeClient) GetEpisodeSources(ctx context.Context, showID string, e
 		return nil, err
 	}
 
-	rawSourceURLs, ok := episodeData["sourceUrls"].([]interface{})
+	rawSourceURLs, ok := episodeData["sourceUrls"].([]any)
 	if !ok || len(rawSourceURLs) == 0 {
 		return nil, fmt.Errorf("no source urls")
 	}
@@ -310,7 +310,7 @@ type sourceReference struct {
 	Name string
 }
 
-func buildSourceReferences(rawSourceURLs []interface{}) []sourceReference {
+func buildSourceReferences(rawSourceURLs []any) []sourceReference {
 	priorityOrder := []string{"default", "yt-mp4", "s-mp4", "luf-mp4"}
 	prioritySet := map[string]struct{}{"default": {}, "yt-mp4": {}, "s-mp4": {}, "luf-mp4": {}}
 
@@ -319,7 +319,7 @@ func buildSourceReferences(rawSourceURLs []interface{}) []sourceReference {
 	seen := make(map[string]struct{})
 
 	for _, source := range rawSourceURLs {
-		item, ok := source.(map[string]interface{})
+		item, ok := source.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -360,8 +360,8 @@ func buildSourceReferences(rawSourceURLs []interface{}) []sourceReference {
 	return ordered
 }
 
-func extractEpisodeData(data map[string]interface{}) (map[string]interface{}, error) {
-	episodeData, ok := data["episode"].(map[string]interface{})
+func extractEpisodeData(data map[string]any) (map[string]any, error) {
+	episodeData, ok := data["episode"].(map[string]any)
 	if ok && episodeData != nil {
 		return episodeData, nil
 	}
@@ -376,12 +376,12 @@ func extractEpisodeData(data map[string]interface{}) (map[string]interface{}, er
 		return nil, fmt.Errorf("decode episode payload: %w", err)
 	}
 
-	var parsed map[string]interface{}
+	var parsed map[string]any
 	if err := json.Unmarshal(decoded, &parsed); err != nil {
 		return nil, fmt.Errorf("parse decoded payload: %w", err)
 	}
 
-	episodeData, ok = parsed["episode"].(map[string]interface{})
+	episodeData, ok = parsed["episode"].(map[string]any)
 	if !ok || episodeData == nil {
 		return nil, fmt.Errorf("decoded payload missing episode")
 	}
@@ -443,9 +443,7 @@ func decodeSourceURL(encoded string) string {
 		return ""
 	}
 
-	if strings.HasPrefix(encoded, "--") {
-		encoded = encoded[2:]
-	}
+	encoded = strings.TrimPrefix(encoded, "--")
 
 	substitutions := map[string]string{
 		"79": "A", "7a": "B", "7b": "C", "7c": "D", "7d": "E",
