@@ -688,6 +688,38 @@ func (q *Queries) GetWatchingAnime(ctx context.Context, userID string) ([]GetWat
 	return items, nil
 }
 
+const listUsers = `-- name: ListUsers :many
+SELECT id, username, password_hash, created_at FROM user ORDER BY created_at DESC
+`
+
+func (q *Queries) ListUsers(ctx context.Context) ([]User, error) {
+	rows, err := q.db.QueryContext(ctx, listUsers)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []User
+	for rows.Next() {
+		var i User
+		if err := rows.Scan(
+			&i.ID,
+			&i.Username,
+			&i.PasswordHash,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const markAnimeFetchRetryFailed = `-- name: MarkAnimeFetchRetryFailed :exec
 UPDATE anime_fetch_retry
 SET attempts = attempts + 1,
@@ -698,9 +730,9 @@ WHERE anime_id = ?
 `
 
 type MarkAnimeFetchRetryFailedParams struct {
-	Datetime  string `json:"datetime"`
-	LastError string `json:"last_error"`
-	AnimeID   int64  `json:"anime_id"`
+	Datetime  interface{} `json:"datetime"`
+	LastError string      `json:"last_error"`
+	AnimeID   int64       `json:"anime_id"`
 }
 
 func (q *Queries) MarkAnimeFetchRetryFailed(ctx context.Context, arg MarkAnimeFetchRetryFailedParams) error {

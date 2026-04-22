@@ -4,6 +4,9 @@ SELECT * FROM user WHERE id = ? LIMIT 1;
 -- name: GetUserByUsername :one
 SELECT * FROM user WHERE username = ? LIMIT 1;
 
+-- name: ListUsers :many
+SELECT * FROM user ORDER BY created_at DESC;
+
 -- name: CreateUser :one
 INSERT INTO user (id, username, password_hash)
 VALUES (?, ?, ?)

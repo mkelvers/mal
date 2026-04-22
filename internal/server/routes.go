@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"mal/api/admin"
 	"mal/api/anime"
 	"mal/api/auth"
 	"mal/api/playback"
@@ -52,6 +53,7 @@ func NewRouter(cfg Config) http.Handler {
 	animeHandler := anime.NewHandler(cfg.JikanClient, cfg.DB)
 	playbackSvc := playback.NewService(cfg.DB, cfg.SQLDB, playback.Config{ProxyTokenSecret: cfg.PlaybackProxySecret})
 	playbackHandler := playback.NewHandler(playbackSvc, cfg.JikanClient)
+	adminHandler := admin.NewHandler(cfg.DB, cfg.AuthService)
 
 	// Serve static files
 	fs := http.FileServer(http.Dir("./static"))
@@ -102,6 +104,21 @@ func NewRouter(cfg Config) http.Handler {
 	mux.HandleFunc("/api/watchlist/", watchlistHandler.HandleDeleteWatchlist)
 	mux.HandleFunc("/api/continue-watching/", watchlistHandler.HandleDeleteContinueWatching)
 	mux.HandleFunc("/watchlist", watchlistHandler.HandleGetWatchlist)
+
+	// Admin Endpoints (protected by admin middleware in route handlers)
+	mux.Handle("/admin", middleware.RequireAdmin(http.HandlerFunc(adminHandler.HandleAdminPage)))
+	mux.Handle("/admin/users", middleware.RequireAdmin(http.HandlerFunc(adminHandler.HandleAddUserForm)))
+	mux.Handle("/admin/users/", middleware.RequireAdmin(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		path := r.URL.Path
+		switch {
+		case strings.HasSuffix(path, "/watchlist"):
+			adminHandler.HandleUserWatchlist(w, r)
+		case strings.HasSuffix(path, "/continue-watching"):
+			adminHandler.HandleUserContinueWatching(w, r)
+		default:
+			adminHandler.HandleImpersonateUser(w, r)
+		}
+	})))
 
 	// Wrap mux with global CSRF origin verification and auth checking,
 	// THEN auth context parsing.

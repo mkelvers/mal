@@ -33,6 +33,7 @@ type Querier interface {
 	GetUserWatchList(ctx context.Context, userID string) ([]GetUserWatchListRow, error)
 	GetWatchListEntry(ctx context.Context, arg GetWatchListEntryParams) (WatchListEntry, error)
 	GetWatchingAnime(ctx context.Context, userID string) ([]GetWatchingAnimeRow, error)
+	ListUsers(ctx context.Context) ([]User, error)
 	MarkAnimeFetchRetryFailed(ctx context.Context, arg MarkAnimeFetchRetryFailedParams) error
 	MarkRelationsSynced(ctx context.Context, id int64) error
 	SaveWatchProgress(ctx context.Context, arg SaveWatchProgressParams) error
