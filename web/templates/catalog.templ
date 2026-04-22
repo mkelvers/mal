@@ -27,3 +27,29 @@ templ CatalogPlaceholderItems(count int) {
 		</div>
 	}
 }
+
+templ CatalogError(message string) {
+	<div class="col-span-full py-8 text-center" id="catalog-content">
+		<div class="mb-3 text-base text-(--text)">
+			if message != "" {
+				{ message }
+			} else {
+				Unable to load data
+			}
+		</div>
+		<div class="text-sm text-(--text-muted)">
+			The anime catalog is temporarily unavailable. Please wait a moment and refresh the page.
+		</div>
+		<button
+			hx-get="/api/catalog?page=1"
+			hx-target="#catalog-content"
+			hx-swap="outerHTML"
+			class="mt-4 inline-flex cursor-pointer items-center gap-2 rounded bg-(--surface-search) px-4 py-2 text-sm text-(--text) hover:bg-(--panel-soft)"
+		>
+			<svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+				<path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+			</svg>
+			Try again
+		</button>
+	</div>
+}

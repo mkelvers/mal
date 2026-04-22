@@ -182,10 +182,9 @@ func (h *Handler) HandleAPICatalog(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if jikan.IsRetryableError(err) {
-		if err := templates.CatalogPlaceholderItems(25).Render(r.Context(), w); err != nil {
+		if err := templates.CatalogError("Unable to load anime catalog").Render(r.Context(), w); err != nil {
 			log.Printf("render error: %v", err)
 			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-			return
 		}
 		return
 	}
