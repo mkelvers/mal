@@ -1,3 +1,7 @@
+declare const htmx: {
+  ajax(verb: string, path: string, target: HTMLElement): Promise<void>
+}
+
 export {}
 
 interface ModeSource {
@@ -16,9 +20,16 @@ interface SkipSegment {
   end: number
 }
 
+let playerInitialized = false
+
 const initPlayer = (): void => {
   const container = document.querySelector('[data-video-player]')
   if (!container) return
+
+  if (playerInitialized) return
+
+  const shouldAutoPlay = sessionStorage.getItem('mal:autoplay-next') === 'true'
+  sessionStorage.removeItem('mal:autoplay-next')
 
   const video = container.querySelector('video') as HTMLVideoElement
   const loading = container.querySelector('[data-loading]') as HTMLElement
@@ -686,6 +697,9 @@ const initPlayer = (): void => {
         } catch {}
         pendingSeekTime = null
       }
+      if (shouldAutoPlay) {
+        video.play().catch(() => {})
+      }
       updateTimeline(video.currentTime)
       updateSkipButton(video.currentTime)
     })
@@ -727,25 +741,26 @@ const initPlayer = (): void => {
     })
   }
 
-  const goToNextEpisode = (): void => {
-    const pathParts = window.location.pathname.split('/')
-    if (pathParts.length < 4) return
+const goToNextEpisode = (): void => {
+  const pathParts = window.location.pathname.split('/')
+  if (pathParts.length < 4) return
 
-    const animeID = pathParts[2]
-    const currentEpisodeNumber = Number.parseInt(pathParts[3], 10)
-    if (Number.isNaN(currentEpisodeNumber)) return
+  const animeID = pathParts[2]
+  const currentEpisodeNumber = Number.parseInt(pathParts[3], 10)
+  if (Number.isNaN(currentEpisodeNumber)) return
 
-    if (Number.isInteger(totalEpisodes) && totalEpisodes > 0 && currentEpisodeNumber >= totalEpisodes) {
-      completeAnime(currentEpisodeNumber)
-      return
-    }
-
-    const nextEpisode = currentEpisodeNumber + 1
-    markEpisodeTransition(nextEpisode)
-    const nextUrl = `/watch/${animeID}/${nextEpisode}`
-
-    window.location.href = nextUrl
+  if (Number.isInteger(totalEpisodes) && totalEpisodes > 0 && currentEpisodeNumber >= totalEpisodes) {
+    completeAnime(currentEpisodeNumber)
+    return
   }
+
+  const nextEpisode = currentEpisodeNumber + 1
+  markEpisodeTransition(nextEpisode)
+  const nextUrl = `/watch/${animeID}/${nextEpisode}`
+
+  sessionStorage.setItem('mal:autoplay-next', 'true')
+  window.location.href = nextUrl
+}
 
   const completeAnime = async (episodeNumber: number): Promise<void> => {
     if (completionSent) return
@@ -995,6 +1010,15 @@ const initPlayer = (): void => {
   syncVolumeUI()
   updateSkipButton(0)
   showControls()
+
+  playerInitialized = true
 }
 
 document.addEventListener('DOMContentLoaded', initPlayer)
+document.body.addEventListener('htmx:afterSwap', (e: Event) => {
+  const target = (e as CustomEvent).detail?.target as HTMLElement | null
+  if (!target) return
+  if (target.querySelector('[data-video-player]')) {
+    initPlayer()
+  }
+})

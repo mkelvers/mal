@@ -33,7 +33,10 @@ templ WatchPage(anime jikan.Anime, data shared.WatchPageData) {
 			</aside>
 
 			<!-- Main content: Video and Controls -->
-			<div class="order-1 flex min-w-0 flex-1 flex-col gap-4 sm:gap-5 lg:order-2">
+			<div
+				class="order-1 flex min-w-0 flex-1 flex-col gap-4 sm:gap-5 lg:order-2"
+				hx-boost="true"
+			>
 				@watch.VideoPlayer(data)
 				<div class="flex flex-wrap items-center justify-between gap-2 sm:justify-end">
 					if shared.CanGoPrevEpisode(data.CurrentEpisode) {

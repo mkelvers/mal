@@ -17,6 +17,7 @@ import (
 	"mal/integrations/jikan"
 	"mal/internal/db"
 	"mal/internal/middleware"
+	"mal/web/components/watch"
 	"mal/web/shared"
 	"mal/web/templates"
 )
@@ -113,6 +114,14 @@ func (h *Handler) HandleWatchPage(w http.ResponseWriter, r *http.Request) {
 		AvailableModes:   data.AvailableModes,
 		ModeSources:      convertModeSources(data.ModeSources),
 		Segments:         convertSegments(data.Segments),
+	}
+
+	if r.Header.Get("HX-Request") == "true" {
+		if err := watch.VideoPlayer(pageData).Render(r.Context(), w); err != nil {
+			log.Printf("render error: %v", err)
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		}
+		return
 	}
 
 	if err := templates.WatchPage(anime, pageData).Render(r.Context(), w); err != nil {
