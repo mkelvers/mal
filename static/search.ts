@@ -7,7 +7,8 @@ type QuickSearchResult = {
   type?: string
 }
 
-const globalWindow = window as Window & { searchInitialized?: boolean }
+const searchInitializedKey = Symbol('searchInitialized')
+const globalWindow = window as Window & { [searchInitializedKey]?: boolean }
 
 let searchTimeout: number | undefined
 const searchInput = document.getElementById('search-input') as HTMLInputElement | null
@@ -150,10 +151,10 @@ const onDocumentClick = (event: MouseEvent): void => {
 }
 
 const initQuickSearch = (): void => {
-  if (globalWindow.searchInitialized) {
+  if (globalWindow[searchInitializedKey]) {
     return
   }
-  globalWindow.searchInitialized = true
+  globalWindow[searchInitializedKey] = true
 
   if (!searchInput || !searchDropdown) {
     return
