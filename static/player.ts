@@ -75,7 +75,7 @@ const initPlayer = (): void => {
   }
 
   const startTimeSeconds = Number.parseFloat(container.getAttribute('data-start-time-seconds') || '0')
-  const modeSources = safeJsonParse(container.getAttribute('data-mode-sources'), {} as Record<string, string>)
+  const modeSources = safeJsonParse(container.getAttribute('data-mode-sources'), {} as Record<string, ModeSource>)
   const availableModes = safeJsonParse(container.getAttribute('data-available-modes'), [] as string[])
   const initialMode = container.getAttribute('data-initial-mode') || 'dub'
   const segments = safeJsonParse(container.getAttribute('data-segments'), [] as SkipSegment[])
