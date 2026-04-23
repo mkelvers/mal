@@ -13,7 +13,9 @@ func IsAdmin(user *database.User) bool {
 	return user.Username == AdminEmail
 }
 
-func IsAdminFromContext(ctx interface{ Value(key interface{}) interface{} }) bool {
+func IsAdminFromContext(ctx interface {
+	Value(key interface{}) interface{}
+}) bool {
 	const userKey = "mal:user"
 	user, _ := ctx.Value(userKey).(*database.User)
 	return IsAdmin(user)
