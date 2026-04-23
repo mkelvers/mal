@@ -17,8 +17,8 @@ import (
 	"mal/integrations/jikan"
 	"mal/internal/db"
 	"mal/internal/middleware"
-	webcontext "mal/web/context"
 	"mal/web/components/watch"
+	webcontext "mal/web/context"
 	"mal/web/shared"
 	"mal/web/templates"
 )

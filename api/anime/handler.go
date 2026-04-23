@@ -12,9 +12,9 @@ import (
 
 	"mal/integrations/jikan"
 	"mal/internal/db"
-	webcontext "mal/web/context"
 	animecomponents "mal/web/components/anime"
 	watchcomponents "mal/web/components/watch"
+	webcontext "mal/web/context"
 	"mal/web/templates"
 )
 
