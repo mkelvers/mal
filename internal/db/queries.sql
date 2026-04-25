@@ -4,17 +4,6 @@ SELECT * FROM user WHERE id = ? LIMIT 1;
 -- name: GetUserByUsername :one
 SELECT * FROM user WHERE username = ? LIMIT 1;
 
--- name: ListUsers :many
-SELECT * FROM user ORDER BY created_at DESC;
-
--- name: DeleteUser :exec
-DELETE FROM user WHERE id = ?;
-
--- name: CreateUser :one
-INSERT INTO user (id, username, password_hash)
-VALUES (?, ?, ?)
-RETURNING *;
-
 -- name: CreateSession :one
 INSERT INTO session (id, user_id, expires_at)
 VALUES (?, ?, ?)
@@ -25,9 +14,6 @@ SELECT * FROM session WHERE id = ? LIMIT 1;
 
 -- name: DeleteSession :exec
 DELETE FROM session WHERE id = ?;
-
--- name: DeleteUserSessions :exec
-DELETE FROM session WHERE user_id = ?;
 
 -- name: UpsertAnime :one
 INSERT INTO anime (id, title_original, title_english, title_japanese, image_url, airing)
