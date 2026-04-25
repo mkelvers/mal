@@ -47,15 +47,11 @@ RUN apt-get update && apt-get install -y ca-certificates sqlite3 && rm -rf /var/
 RUN mkdir -p /app/data
 
 COPY --from=builder /app/main_server .
-COPY --from=builder /app/entrypoint.sh .
 COPY --from=builder /app/static ./static
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/migrations ./migrations
 
-RUN chmod +x ./entrypoint.sh
-
 # Expose the application port
 EXPOSE 3000
 
-# Run entrypoint which handles migrations and cache clearing
-ENTRYPOINT ["./entrypoint.sh"]
+ENTRYPOINT ["./main_server"]
