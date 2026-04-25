@@ -61,20 +61,15 @@ const initTheme = (): void => {
   const saved = getSavedTheme();
   applyTheme(saved);
 
-  const headerBtn = document.getElementById(
-    "theme-toggle",
-  ) as HTMLButtonElement | null;
-  const footerBtn = document.getElementById(
-    "footer-theme-toggle",
-  ) as HTMLButtonElement | null;
-
-  if (headerBtn) {
-    headerBtn.addEventListener("click", cycleTheme);
-  }
-
-  if (footerBtn) {
-    footerBtn.addEventListener("click", cycleTheme);
-  }
+  // Use event delegation to handle theme toggles
+  document.addEventListener("click", (e) => {
+    const target = e.target as HTMLElement;
+    const btn = target.closest("#theme-toggle, #footer-theme-toggle") as HTMLButtonElement | null;
+    
+    if (btn) {
+      cycleTheme();
+    }
+  });
 };
 
 if (document.readyState === "loading") {

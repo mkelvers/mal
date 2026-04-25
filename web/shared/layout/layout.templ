@@ -13,17 +13,17 @@ templ Layout(title string, showHeader bool) {
 			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 			<title>{ title }</title>
 			<link rel="icon" type="image/svg+xml" href="/static/favicon.svg"/>
-			<link rel="stylesheet" href="/dist/tailwind.css?v=1.0.1"/>
+			<link rel="stylesheet" href="/dist/tailwind.css?v=1.0.2"/>
 			<script src="https://unpkg.com/htmx.org@1.9.11" integrity="sha384-0gxUXCCR8yv9FM2b+U3FDbsKthCI66oH5IA9fHppQq9DDMHuMauqq1ZHBpJxQ0J0" crossorigin="anonymous"></script>
 			<script>
 				var t = localStorage.getItem('theme');
 				if (t === 'light' || t === 'dark') document.documentElement.setAttribute('data-theme', t);
 			</script>
-			<script src="/dist/static/theme.js" defer></script>
-			<script src="/dist/static/discover.js" defer></script>
-			<script src="/dist/static/anime.js" defer></script>
-			<script src="/dist/static/timezone.js" defer></script>
-			<script src="/dist/static/player.js" defer></script>
+			<script src="/dist/static/theme.js?v=1.0.1" defer></script>
+			<script src="/dist/static/discover.js?v=1.0.1" defer></script>
+			<script src="/dist/static/anime.js?v=1.0.1" defer></script>
+			<script src="/dist/static/timezone.js?v=1.0.1" defer></script>
+			<script src="/dist/static/player.js?v=1.0.1" defer></script>
 		</head>
 		<body
 			class="min-h-screen bg-(--bg) text-(--text) font-(--font) text-sm leading-normal flex flex-col"
@@ -120,7 +120,7 @@ templ Layout(title string, showHeader bool) {
 					</div>
 				</div>
 			</footer>
-			<script src="/dist/static/search.js" defer></script>
+			<script src="/dist/static/search.js?v=1.0.1" defer></script>
 		</body>
 	</html>
 }
