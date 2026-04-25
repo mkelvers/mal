@@ -2,7 +2,6 @@ package layout
 
 import (
 	"mal/web/components/icons"
-	"mal/web/shared/admin"
 )
 
 templ Layout(title string, showHeader bool) {
@@ -63,14 +62,6 @@ templ Layout(title string, showHeader bool) {
 								>
 									Watchlist
 								</a>
-							if admin.IsAdminFromContext(ctx) {
-								<a
-									class="text-(--accent) no-underline hover:text-(--accent) hover:no-underline"
-									href="/admin"
-								>
-									Admin
-								</a>
-							}
 							</div>
 						</div>
 						<div
