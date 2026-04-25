@@ -118,26 +118,24 @@ There are still honest limits. Metadata quality depends on external providers, a
 For local development, install Go `1.24+`, Bun, and the `templ` CLI, then generate templates, build frontend assets, and run the server.
 
 ```bash
-go install github.com/a-h/templ/cmd/templ@latest
-bun install
-templ generate
-./scripts/check.sh
-PLAYBACK_PROXY_SECRET="your-32+char-secret" go run ./cmd/server
+bun install # Install Bun dependencies
+go install github.com/a-h/templ/cmd/templ@latest # Install templ CLI
+templ generate # Generate Go templates from .templ files
+bun run build:css && bun run build:ts # Build frontend assets (CSS and TypeScript)
+PLAYBACK_PROXY_SECRET="your-32+char-secret" go run ./cmd/server # Run the Go server
 ```
 
-The frontend pipeline uses a single source stylesheet (`static/style.css`) and TypeScript sources in `static/*.ts`, then emits build artifacts into `dist/` (`dist/tailwind.css` and `dist/*.js`) for serving.
+The frontend pipeline uses a single source stylesheet (`static/style.css`) and TypeScript sources in `static/*.ts`, then emits build artifacts into `dist/` for serving.
 
 When the server starts, the app is available at `http://localhost:3000`.
 
-Important notes:
-- Environment variables are read directly from the process environment (`PORT`, `DATABASE_FILE`, `ENV`, `PLAYBACK_PROXY_SECRET`); `.env` is not auto-loaded.
-- The web app currently exposes a login route only. Seed at least one user directly in the SQLite database before first login.
+**Note:** The app requires at least one user in the database. Seed a user in the `user` table before attempting to login.
 
-For containerized usage, the included `Dockerfile` uses a multi-stage build that installs Bun + templ, builds assets, generates templates, compiles `cmd/server`, and ships a slim runtime image with SQLite support.
+For containerized usage:
 
 ```bash
 docker build -t myanimelist .
-docker run --rm -p 3000:3000 myanimelist
+docker run --rm -p 3000:3000 -e PLAYBACK_PROXY_SECRET="your-32+char-secret" myanimelist
 ```
 
 For persistent data in containers, set `DATABASE_FILE` to `/app/data/mal.db` and mount a volume:
@@ -162,18 +160,18 @@ docker run --rm \
 
 ## Database and testing
 
-Migrations run at startup, so schema changes are applied automatically before the server begins accepting traffic. Migration history includes the initial auth and watchlist schema, anime metadata expansion, relation tracking, Jikan cache persistence, indexing updates, and retry-queue support for failed fetches.
-
-Current automated tests are unit-focused and cover watchlist behavior, relation helpers, auth middleware boundaries, and watch-order parsing. Run the full local validation suite with:
-
-```bash
-./scripts/check.sh
-```
+Migrations run at startup. Schema history includes auth, watchlist, anime metadata, relation tracking, Jikan cache persistence, and retry-queue support.
 
 There is no CI workflow, so validation is local. Use `just check` to run all checks (lint, test, typecheck, build) or `just install-hooks` to set up the pre-push hook that runs them automatically before each push.
 
 > [!NOTE]
 > [`just`](https://github.com/casey/just) must be installed first (e.g. `brew install just`).
+
+Alternatively, run tests manually with:
+
+```bash
+go test ./...
+```
 
 ## Security
 
