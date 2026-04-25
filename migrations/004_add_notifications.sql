@@ -1,6 +1,4 @@
--- Add episode tracking to watch list entries
-ALTER TABLE watch_list_entry ADD COLUMN current_episode INTEGER DEFAULT 0;
-ALTER TABLE watch_list_entry ADD COLUMN last_episode_at DATETIME;
+-- Note: watch_list_entry columns now in 001_init.sql
 
 -- Add notification preferences
 CREATE TABLE IF NOT EXISTS notification_preference (

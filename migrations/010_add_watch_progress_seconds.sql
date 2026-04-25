@@ -1,2 +1,1 @@
-ALTER TABLE watch_list_entry
-ADD COLUMN current_time_seconds REAL NOT NULL DEFAULT 0;
+-- Note: watch_list_entry columns now in 001_init.sql
