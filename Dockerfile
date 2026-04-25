@@ -24,11 +24,11 @@ RUN bun install --frozen-lockfile
 
 COPY . .
 
-# Build frontend assets (tailwind + ts)
-RUN bun run build:assets
-
 # Generate templ files
 RUN templ generate
+
+# Build frontend assets (tailwind + ts)
+RUN bun run build:assets
 
 # Generate sqlc code
 RUN sqlc generate
