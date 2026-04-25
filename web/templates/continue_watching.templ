@@ -29,7 +29,6 @@ templ ContinueWatching(entries []db.GetContinueWatchingEntriesRow) {
 							Href:             continueWatchingURL(entry),
 							TitleEnglish:     nullString(entry.TitleEnglish),
 							TitleJapanese:    nullString(entry.TitleJapanese),
-							WatchlistStatus:  "watching",
 							DisableWatchlist: true,
 							Class:            "notification-card min-w-0 flex flex-col bg-transparent text-inherit no-underline",
 							HideTitle:        true,

@@ -35,9 +35,7 @@ templ WatchlistDropdown(
 			data-dropdown-open-classes="visible opacity-100"
 			data-dropdown-closed-classes="invisible opacity-0"
 		>
-			@StatusOption(animeID, animeTitle, animeTitleEnglish, animeTitleJapanese, animeImage, "watching", currentStatus, airing)
 			@StatusOption(animeID, animeTitle, animeTitleEnglish, animeTitleJapanese, animeImage, "completed", currentStatus, airing)
-			@StatusOption(animeID, animeTitle, animeTitleEnglish, animeTitleJapanese, animeImage, "on_hold", currentStatus, airing)
 			@StatusOption(animeID, animeTitle, animeTitleEnglish, animeTitleJapanese, animeImage, "dropped", currentStatus, airing)
 			@StatusOption(animeID, animeTitle, animeTitleEnglish, animeTitleJapanese, animeImage, "plan_to_watch", currentStatus, airing)
 			if currentStatus != "" {
@@ -89,12 +87,8 @@ templ StatusOption(
 
 func formatStatus(status string) string {
 	switch status {
-	case "watching":
-		return "Watching"
 	case "completed":
 		return "Completed"
-	case "on_hold":
-		return "On hold"
 	case "dropped":
 		return "Dropped"
 	case "plan_to_watch":

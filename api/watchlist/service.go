@@ -24,9 +24,7 @@ var (
 )
 
 var validStatuses = map[string]struct{}{
-	"watching":      {},
 	"completed":     {},
-	"on_hold":       {},
 	"dropped":       {},
 	"plan_to_watch": {},
 }

@@ -69,18 +69,6 @@ templ Watchlist(
 				All
 			</a>
 			<a
-				href={ templ.URL(shared.WatchlistURL("watching", sortBy, sortOrder)) }
-				class={ shared.TabClass(currentStatus == "watching") }
-			>
-				Watching
-			</a>
-			<a
-				href={ templ.URL(shared.WatchlistURL("on_hold", sortBy, sortOrder)) }
-				class={ shared.TabClass(currentStatus == "on_hold") }
-			>
-				On hold
-			</a>
-			<a
 				href={ templ.URL(shared.WatchlistURL("plan_to_watch", sortBy, sortOrder)) }
 				class={ shared.TabClass(currentStatus == "plan_to_watch") }
 			>
