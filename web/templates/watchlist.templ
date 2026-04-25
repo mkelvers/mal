@@ -26,38 +26,6 @@ templ Watchlist(
 					Track what you're watching with less noise.
 				</p>
 			</div>
-			<div
-				class="flex flex-wrap items-center justify-end gap-2 max-lg:w-full max-lg:justify-start"
-			>
-				<a
-					href="/api/watchlist/export"
-					class="inline-flex min-w-16 items-center justify-center px-2 py-1 text-center text-xs leading-tight text-(--text-muted) no-underline hover:text-(--accent) hover:no-underline"
-				>
-					Export
-				</a>
-				<button
-					class="inline-flex min-w-16 cursor-pointer items-center justify-center border-0 bg-transparent px-2 py-1 text-center text-xs leading-tight text-(--text-muted) hover:text-(--accent)"
-					type="button"
-					onclick="document.getElementById('import-file').click()"
-				>
-					Import
-				</button>
-				<form
-					id="import-form"
-					hx-post="/api/watchlist/import"
-					hx-encoding="multipart/form-data"
-					class="hidden"
-				>
-					<input
-						type="file"
-						id="import-file"
-						name="file"
-						accept=".json"
-						onchange="htmx.trigger('#import-form', 'submit')"
-					/>
-				</form>
-
-			</div>
 		</div>
 		<div
 			class="mb-3 flex flex-wrap gap-2 max-md:flex-nowrap max-md:overflow-x-auto max-md:pb-1"

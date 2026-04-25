@@ -1,7 +1,6 @@
 package watchlist
 
 import (
-	"encoding/json"
 	"errors"
 	"log"
 	"net/http"
@@ -305,67 +304,6 @@ func (h *Handler) HandleDeleteContinueWatching(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
-}
-
-func (h *Handler) HandleExportWatchlist(w http.ResponseWriter, r *http.Request) {
-	if !requireMethod(w, r, http.MethodGet) {
-		return
-	}
-
-	user := middleware.GetUser(r.Context())
-	if user == nil {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		return
-	}
-
-	export, err := h.svc.Export(r.Context(), user.ID)
-	if err != nil {
-		log.Printf("watchlist export failed: user_id=%s err=%v", user.ID, err)
-		http.Error(w, "failed to export", http.StatusInternalServerError)
-		return
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Content-Disposition", "attachment; filename=mal-watchlist.json")
-	json.NewEncoder(w).Encode(export)
-}
-
-func (h *Handler) HandleImportWatchlist(w http.ResponseWriter, r *http.Request) {
-	if !requireMethod(w, r, http.MethodPost) {
-		return
-	}
-
-	user := middleware.GetUser(r.Context())
-	if user == nil {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		return
-	}
-
-	if err := r.ParseMultipartForm(10 << 20); err != nil {
-		http.Error(w, "failed to parse form", http.StatusBadRequest)
-		return
-	}
-
-	file, _, err := r.FormFile("file")
-	if err != nil {
-		http.Error(w, "no file uploaded", http.StatusBadRequest)
-		return
-	}
-	defer file.Close()
-
-	var export ExportData
-	if err := json.NewDecoder(file).Decode(&export); err != nil {
-		http.Error(w, "invalid JSON format", http.StatusBadRequest)
-		return
-	}
-
-	if _, err := h.svc.Import(r.Context(), user.ID, export); err != nil {
-		http.Error(w, "failed to import", http.StatusInternalServerError)
-		return
-	}
-
-	w.Header().Set("HX-Redirect", "/watchlist")
 	w.WriteHeader(http.StatusOK)
 }
 

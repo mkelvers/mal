@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/google/uuid"
 
@@ -164,71 +163,4 @@ func (s *Service) DeleteContinueWatching(ctx context.Context, userID string, ani
 	}
 
 	return tx.Commit()
-}
-
-type ExportEntry struct {
-	AnimeID   int64  `json:"anime_id"`
-	Title     string `json:"title"`
-	ImageURL  string `json:"image_url"`
-	Status    string `json:"status"`
-	UpdatedAt string `json:"updated_at"`
-}
-
-type ExportData struct {
-	ExportedAt string        `json:"exported_at"`
-	Entries    []ExportEntry `json:"entries"`
-}
-
-func (s *Service) Export(ctx context.Context, userID string) (ExportData, error) {
-	entries, err := s.GetUserWatchlist(ctx, userID)
-	if err != nil {
-		return ExportData{}, err
-	}
-
-	export := ExportData{
-		ExportedAt: time.Now().UTC().Format(time.RFC3339),
-		Entries:    make([]ExportEntry, len(entries)),
-	}
-
-	for i, entry := range entries {
-		export.Entries[i] = ExportEntry{
-			AnimeID:   entry.AnimeID,
-			Title:     database.DisplayTitle(entry.TitleEnglish, entry.TitleJapanese, entry.TitleOriginal),
-			ImageURL:  entry.ImageUrl,
-			Status:    entry.Status,
-			UpdatedAt: entry.UpdatedAt.Format(time.RFC3339),
-		}
-	}
-
-	return export, nil
-}
-
-func (s *Service) Import(ctx context.Context, userID string, export ExportData) (int, error) {
-	imported := 0
-	for _, entry := range export.Entries {
-		_, err := s.db.UpsertAnime(ctx, database.UpsertAnimeParams{
-			ID:            entry.AnimeID,
-			TitleOriginal: entry.Title,
-			TitleEnglish:  sql.NullString{},
-			TitleJapanese: sql.NullString{},
-			ImageUrl:      entry.ImageURL,
-		})
-		if err != nil {
-			continue // skip failures and keep going
-		}
-
-		_, err = s.db.UpsertWatchListEntry(ctx, database.UpsertWatchListEntryParams{
-			ID:                 uuid.New().String(),
-			UserID:             userID,
-			AnimeID:            entry.AnimeID,
-			Status:             entry.Status,
-			CurrentEpisode:     sql.NullInt64{Int64: 0, Valid: false},
-			CurrentTimeSeconds: 0,
-		})
-		if err != nil {
-			continue
-		}
-		imported++
-	}
-	return imported, nil
 }
