@@ -95,7 +95,7 @@ templ Layout(title string, showHeader bool) {
 			}>
 				{ children... }
 			</main>
-			<footer class="border-t border-(--panel-soft) bg-(--panel) text-(--text-muted) py-6 mt-auto">
+			<footer class="sticky bottom-0 z-50 border-t border-(--panel-soft) bg-(--panel) text-(--text-muted) py-6 mt-auto">
 				<div class="mx-auto max-w-(--breakpoint-2xl) px-4 flex justify-between items-center">
 					<p class="text-sm">
 						&copy; {time.Now().Year()} mal. Open source anime tracking.
