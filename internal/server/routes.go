@@ -6,7 +6,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	"mal/api/admin"
 	"mal/api/anime"
 	"mal/api/auth"
 	"mal/api/playback"
@@ -53,7 +52,6 @@ func NewRouter(cfg Config) http.Handler {
 	animeHandler := anime.NewHandler(cfg.JikanClient, cfg.DB)
 	playbackSvc := playback.NewService(cfg.DB, cfg.SQLDB, playback.Config{ProxyTokenSecret: cfg.PlaybackProxySecret})
 	playbackHandler := playback.NewHandler(playbackSvc, cfg.JikanClient)
-	adminHandler := admin.NewHandler(cfg.DB, cfg.AuthService)
 
 	// Serve static files
 	fs := http.FileServer(http.Dir("./static"))
@@ -66,9 +64,6 @@ func NewRouter(cfg Config) http.Handler {
 	mux.HandleFunc("/", animeHandler.HandleCatalog)
 	mux.HandleFunc("/discover", animeHandler.HandleDiscover)
 	mux.HandleFunc("/continue-watching", watchlistHandler.HandleContinueWatching)
-	mux.HandleFunc("/notifications", func(w http.ResponseWriter, r *http.Request) {
-		http.Redirect(w, r, "/continue-watching", http.StatusMovedPermanently)
-	})
 	mux.HandleFunc("/api/discover/airing", animeHandler.HandleAPIDiscoverAiring)
 	mux.HandleFunc("/api/discover/upcoming", animeHandler.HandleAPIDiscoverUpcoming)
 	mux.HandleFunc("/search", animeHandler.HandleSearch)
@@ -97,18 +92,11 @@ func NewRouter(cfg Config) http.Handler {
 	})
 
 	// Watchlist Endpoints
-	mux.HandleFunc("/api/watchlist/export", watchlistHandler.HandleExportWatchlist)
-	mux.HandleFunc("/api/watchlist/import", watchlistHandler.HandleImportWatchlist)
 	mux.HandleFunc("/api/watchlist/card", watchlistHandler.HandleCardWatchlist)
 	mux.HandleFunc("/api/watchlist", watchlistHandler.HandleUpdateWatchlist)
 	mux.HandleFunc("/api/watchlist/", watchlistHandler.HandleDeleteWatchlist)
 	mux.HandleFunc("/api/continue-watching/", watchlistHandler.HandleDeleteContinueWatching)
 	mux.HandleFunc("/watchlist", watchlistHandler.HandleGetWatchlist)
-
-	// Admin Endpoints (protected by admin middleware in route handlers)
-	mux.Handle("/admin", middleware.RequireAdmin(http.HandlerFunc(adminHandler.HandleAdminPage)))
-	mux.Handle("/admin/users", middleware.RequireAdmin(http.HandlerFunc(adminHandler.HandleAddUserForm)))
-	mux.Handle("/admin/users/", middleware.RequireAdmin(http.HandlerFunc(adminHandler.HandleUserRouter)))
 
 	// Wrap mux with global CSRF origin verification and auth checking,
 	// THEN auth context parsing.
