@@ -280,7 +280,52 @@ func (h *Handler) HandleSaveProgress(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-w.WriteHeader(http.StatusNoContent)
+	w.WriteHeader(http.StatusNoContent)
+}
+
+func (h *Handler) HandleCompleteAnime(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	user := middleware.GetUser(r.Context())
+	if user == nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	type completeAnimeRequest struct {
+		MalID   int `json:"mal_id"`
+		Episode int `json:"episode"`
+	}
+
+	var payload completeAnimeRequest
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+		http.Error(w, "invalid payload", http.StatusBadRequest)
+		return
+	}
+
+	if payload.MalID <= 0 || payload.Episode <= 0 {
+		http.Error(w, "invalid payload", http.StatusBadRequest)
+		return
+	}
+
+	animeID := int64(payload.MalID)
+	animeSeed, err := h.ensureAnimeSeed(r.Context(), payload.MalID)
+	if err != nil {
+		log.Printf("complete anime failed to resolve anime user_id=%s mal_id=%d err=%v", user.ID, payload.MalID, err)
+		http.Error(w, "failed to mark anime completed", http.StatusInternalServerError)
+		return
+	}
+
+	if err := h.svc.CompleteAnime(r.Context(), user.ID, animeID, payload.Episode, animeSeed); err != nil {
+		log.Printf("complete anime failed user_id=%s mal_id=%d err=%v", user.ID, payload.MalID, err)
+		http.Error(w, "failed to mark anime completed", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }
 
 // HandleEpisodeData returns JSON for episode data (for in-player transitions)
@@ -344,20 +389,20 @@ func (h *Handler) HandleEpisodeData(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response := struct {
-		MalID           int                       `json:"mal_id"`
-		Title          string                   `json:"title"`
-		CurrentEpisode string                  `json:"current_episode"`
-		TotalEpisodes int                     `json:"total_episodes"`
-		InitialMode   string                  `json:"initial_mode"`
-		Token         string                  `json:"token"`
-		AvailableModes []string               `json:"available_modes"`
-		ModeSources  map[string]shared.ModeSource `json:"mode_sources"`
-		Segments     []shared.SkipSegment     `json:"segments"`
+		MalID          int                          `json:"mal_id"`
+		Title          string                       `json:"title"`
+		CurrentEpisode string                       `json:"current_episode"`
+		TotalEpisodes  int                          `json:"total_episodes"`
+		InitialMode    string                       `json:"initial_mode"`
+		Token          string                       `json:"token"`
+		AvailableModes []string                     `json:"available_modes"`
+		ModeSources    map[string]shared.ModeSource `json:"mode_sources"`
+		Segments       []shared.SkipSegment         `json:"segments"`
 	}{
-		MalID:           malID,
+		MalID:          malID,
 		Title:          data.Title,
 		CurrentEpisode: data.CurrentEpisode,
-		TotalEpisodes: anime.Episodes,
+		TotalEpisodes:  anime.Episodes,
 		InitialMode:    initialMode,
 		Token:          token,
 		AvailableModes: data.AvailableModes,
