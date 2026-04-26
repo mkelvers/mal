@@ -81,6 +81,7 @@ func NewRouter(cfg Config) http.Handler {
 	mux.HandleFunc("/watch/proxy/subtitle", playbackHandler.HandleProxy)
 	mux.HandleFunc("/api/watch-progress", playbackHandler.HandleSaveProgress)
 	mux.HandleFunc("/api/watch-complete", playbackHandler.HandleCompleteAnime)
+	mux.HandleFunc("/api/watch/episode/", playbackHandler.HandleEpisodeData)
 
 	// Auth Endpoints
 	mux.HandleFunc("/login", func(w http.ResponseWriter, r *http.Request) {

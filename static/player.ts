@@ -20,6 +20,18 @@ interface SkipSegment {
   end: number
 }
 
+interface EpisodeData {
+  mal_id: number
+  title: string
+  current_episode: string
+  total_episodes: number
+  initial_mode: string
+  token: string
+  available_modes: string[]
+  mode_sources: Record<string, ModeSource>
+  segments: SkipSegment[]
+}
+
 let playerInitialized = false
 
 const initPlayer = (): void => {
@@ -57,9 +69,9 @@ const initPlayer = (): void => {
 
   const streamURL = container.getAttribute('data-stream-url') || '/watch/proxy/stream'
   const initialStreamToken = container.getAttribute('data-stream-token') || ''
-  const currentEpisode = container.getAttribute('data-current-episode') || '1'
+  let currentEpisode = container.getAttribute('data-current-episode') || '1'
   const malID = Number.parseInt(container.getAttribute('data-mal-id') || '', 10)
-  const totalEpisodes = Number.parseInt(container.getAttribute('data-total-episodes') || '0', 10)
+  let totalEpisodes = Number.parseInt(container.getAttribute('data-total-episodes') || '0', 10)
   const animeTitle = container.getAttribute('data-anime-title') || ''
   const animeTitleEnglish = container.getAttribute('data-anime-title-english') || ''
   const animeTitleJapanese = container.getAttribute('data-anime-title-japanese') || ''
@@ -84,7 +96,7 @@ const initPlayer = (): void => {
   const minSegmentDurationSeconds = 20
   const maxSegmentDurationSeconds = 240
 
-  const parsedSegments = segments
+  let parsedSegments = segments
     .map((segment: SkipSegment) => {
       const start = Number(segment.start || 0)
       const end = Number(segment.end || 0)
@@ -765,10 +777,87 @@ const goToNextEpisode = (): void => {
 
   const nextEpisode = currentEpisodeNumber + 1
   markEpisodeTransition(nextEpisode)
-  const nextUrl = `/watch/${animeID}/${nextEpisode}`
 
+  if (document.fullscreenElement) {
+    loadNextEpisodeInPlace(Number(animeID), nextEpisode)
+    return
+  }
+
+  const nextUrl = `/watch/${animeID}/${nextEpisode}`
   sessionStorage.setItem('mal:autoplay-next', 'true')
   window.location.href = nextUrl
+}
+
+const loadNextEpisodeInPlace = async (animeID: number, nextEpisode: number): Promise<void> => {
+  if (!Number.isInteger(animeID) || animeID <= 0) return
+
+  const url = `/api/watch/episode/${animeID}/${nextEpisode}`
+  let data: EpisodeData | null = null
+
+  try {
+    const resp = await fetch(url)
+    if (!resp.ok) return
+    data = await resp.json() as EpisodeData
+  } catch {
+    return
+  }
+
+  if (!data) return
+
+  const container = document.querySelector('[data-video-player]') as HTMLElement | null
+  if (!container) return
+
+  const video = container.querySelector('video') as HTMLVideoElement | null
+  if (!video) return
+
+  container.setAttribute('data-current-episode', String(nextEpisode))
+  container.setAttribute('data-mal-id', String(animeID))
+  container.setAttribute('data-total-episodes', String(data.total_episodes))
+  container.setAttribute('data-start-time-seconds', '0')
+  container.setAttribute('data-initial-mode', data.initial_mode)
+  container.setAttribute('data-stream-token', data.token)
+  container.setAttribute('data-available-modes', JSON.stringify(data.available_modes))
+  container.setAttribute('data-mode-sources', JSON.stringify(data.mode_sources))
+  container.setAttribute('data-segments', JSON.stringify(data.segments))
+
+  currentEpisode = String(nextEpisode)
+  totalEpisodes = data.total_episodes
+
+  const newStreamURL = container.getAttribute('data-stream-url') || '/watch/proxy/stream'
+  const streamMode = data.initial_mode
+  const modeSource = data.mode_sources[streamMode]
+
+  if (modeSource?.token) {
+    video.src = `${newStreamURL}?mode=${encodeURIComponent(streamMode)}&token=${encodeURIComponent(modeSource.token)}`
+  } else if (data.token) {
+    video.src = `${newStreamURL}?mode=${encodeURIComponent(streamMode)}&token=${encodeURIComponent(data.token)}`
+  }
+
+  video.load()
+  video.play().catch(() => {})
+
+  parsedSegments = (data.segments || [])
+    .map((segment: SkipSegment) => {
+      const start = Number(segment.start || 0)
+      const end = Number(segment.end || 0)
+      if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) {
+        return null
+      }
+      const rawType = String(segment.type || '').toLowerCase()
+      const type = rawType === 'ed' || rawType === 'outro' ? 'ed' : 'op'
+      return { type, start: Math.max(0, start), end: Math.max(0, end) }
+    })
+    .filter((s: unknown): s is { type: string, start: number, end: number } => s !== null)
+    .sort((a: { start: number }, b: { start: number }) => a.start - b.start)
+
+  activeSegments = []
+  resolveActiveSegments()
+  renderSegments()
+  updateSubtitleOptions()
+  updateModeButtons(data.initial_mode)
+
+  const nextUrl = `/watch/${animeID}/${nextEpisode}`
+  window.history.replaceState(null, '', nextUrl)
 }
 
   const completeAnime = async (episodeNumber: number): Promise<void> => {

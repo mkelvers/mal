@@ -232,11 +232,6 @@ func (h *Handler) HandleProxy(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) HandleSaveProgress(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-
 	user := middleware.GetUser(r.Context())
 	if user == nil {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
@@ -331,6 +326,106 @@ func (h *Handler) HandleCompleteAnime(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusNoContent)
+}
+
+// HandleEpisodeData returns JSON for episode data (for in-player transitions)
+func (h *Handler) HandleEpisodeData(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	path := strings.TrimPrefix(r.URL.Path, "/api/watch/episode/")
+	path = strings.Trim(path, "/")
+	if path == "" {
+		http.Error(w, "Missing anime ID", http.StatusBadRequest)
+		return
+	}
+
+	parts := strings.Split(path, "/")
+	malID, err := strconv.Atoi(parts[0])
+	if err != nil || malID <= 0 {
+		http.Error(w, "Invalid anime ID", http.StatusBadRequest)
+		return
+	}
+
+	episode := "1"
+	if len(parts) >= 2 {
+		episode = strings.TrimSpace(parts[1])
+	}
+	if episode == "" {
+		episode = r.URL.Query().Get("ep")
+	}
+	if episode == "" {
+		episode = "1"
+	}
+
+	mode := strings.TrimSpace(r.URL.Query().Get("mode"))
+
+	ctx, cancel := context.WithTimeout(r.Context(), 30*time.Second)
+	defer cancel()
+
+	anime, err := h.jikanClient.GetAnimeByID(ctx, malID)
+	if err != nil {
+		log.Printf("failed to fetch anime %d: %v", malID, err)
+		http.Error(w, "Failed to fetch anime details", http.StatusInternalServerError)
+		return
+	}
+
+	titleCandidates := playbackTitleCandidates(anime)
+	userID := watchlistUserIDFromRequest(r)
+	data, err := h.svc.BuildWatchPageData(ctx, malID, titleCandidates, episode, mode, userID)
+	if err != nil {
+		log.Printf("episode data error for mal_id=%d ep=%s: %v", malID, episode, err)
+		http.Error(w, "Failed to load episode data", http.StatusBadGateway)
+		return
+	}
+
+	clientModeSources := convertModeSources(data.ModeSources)
+	initialMode := data.InitialMode
+	token := ""
+	if source, ok := clientModeSources[initialMode]; ok {
+		token = source.Token
+	}
+
+response := struct {
+		MalID           int                       `json:"mal_id"`
+		Title          string                   `json:"title"`
+		CurrentEpisode string                  `json:"current_episode"`
+		TotalEpisodes int                     `json:"total_episodes"`
+		InitialMode   string                  `json:"initial_mode"`
+		Token         string                  `json:"token"`
+		AvailableModes []string               `json:"available_modes"`
+		ModeSources  map[string]shared.ModeSource `json:"mode_sources"`
+		Segments     []shared.SkipSegment     `json:"segments"`
+	}{
+		MalID:           malID,
+		Title:          data.Title,
+		CurrentEpisode: data.CurrentEpisode,
+		TotalEpisodes: anime.Episodes,
+		InitialMode:    initialMode,
+		Token:          token,
+		AvailableModes: data.AvailableModes,
+		ModeSources:    clientModeSources,
+		Segments:       convertToSharedSegments(data.Segments),
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		log.Printf("failed to encode episode data: %v", err)
+	}
+}
+
+func convertToSharedSegments(segments []SkipSegment) []shared.SkipSegment {
+	result := make([]shared.SkipSegment, len(segments))
+	for i, s := range segments {
+		result[i] = shared.SkipSegment{
+			Type:  s.Type,
+			Start: s.Start,
+			End:   s.End,
+		}
+	}
+	return result
 }
 
 func (h *Handler) ensureAnimeSeed(ctx context.Context, malID int) (*database.UpsertAnimeParams, error) {
