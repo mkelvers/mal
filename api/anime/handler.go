@@ -265,6 +265,9 @@ func (h *Handler) HandleAPIAnime(w http.ResponseWriter, r *http.Request) {
 	}
 
 	statuses := h.watchlistMap(r.Context(), userIDFromRequest(r))
+	
+	w.Header().Set("Cache-Control", "public, max-age=3600")
+
 	switch section {
 	case "relations":
 		relations, err := h.jikanClient.GetFullRelations(r.Context(), id)
@@ -313,15 +316,14 @@ func (h *Handler) HandleAPIAnime(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) HandleAPIEpisodes(w http.ResponseWriter, r *http.Request) {
 	path := r.URL.Path[len("/api/episodes/"):]
-	path = strings.Trim(path, "/")
-
 	id, err := strconv.Atoi(path)
 	if err != nil || id <= 0 {
 		http.Error(w, "invalid id", http.StatusBadRequest)
 		return
 	}
 
-	currentEpisode := r.URL.Query().Get("current")
+	w.Header().Set("Cache-Control", "public, max-age=3600")
+
 	episodes, err := h.getEpisodes(r.Context(), id)
 	if err != nil {
 		log.Printf("episodes error: %v", err)

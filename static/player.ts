@@ -404,7 +404,7 @@ const initPlayer = (): void => {
     if (!Number.isInteger(episodeNumber) || episodeNumber <= 0) return
 
     const safeTime = displayTimeFromAbsolute(video.currentTime)
-    if (lastSavedProgress.episode === currentEpisode && Math.abs(lastSavedProgress.seconds - safeTime) < 2) {
+    if (lastSavedProgress.episode === currentEpisode && Math.abs(lastSavedProgress.seconds - safeTime) < 5) {
       return
     }
 
@@ -433,7 +433,7 @@ const initPlayer = (): void => {
     progressSaveTimer = window.setTimeout(() => {
       progressSaveTimer = undefined
       saveProgress()
-    }, 1500)
+    }, 30000)
   }
 
   const parseEpisodeFromWatchHref = (href: string): number | null => {

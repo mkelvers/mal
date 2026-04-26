@@ -388,21 +388,21 @@ func (h *Handler) HandleEpisodeData(w http.ResponseWriter, r *http.Request) {
 		token = source.Token
 	}
 
-response := struct {
-		MalID           int                       `json:"mal_id"`
-		Title          string                   `json:"title"`
-		CurrentEpisode string                  `json:"current_episode"`
-		TotalEpisodes int                     `json:"total_episodes"`
-		InitialMode   string                  `json:"initial_mode"`
-		Token         string                  `json:"token"`
-		AvailableModes []string               `json:"available_modes"`
-		ModeSources  map[string]shared.ModeSource `json:"mode_sources"`
-		Segments     []shared.SkipSegment     `json:"segments"`
+	response := struct {
+		MalID          int                          `json:"mal_id"`
+		Title          string                       `json:"title"`
+		CurrentEpisode string                       `json:"current_episode"`
+		TotalEpisodes  int                          `json:"total_episodes"`
+		InitialMode    string                       `json:"initial_mode"`
+		Token          string                       `json:"token"`
+		AvailableModes []string                     `json:"available_modes"`
+		ModeSources    map[string]shared.ModeSource `json:"mode_sources"`
+		Segments       []shared.SkipSegment         `json:"segments"`
 	}{
-		MalID:           malID,
+		MalID:          malID,
 		Title:          data.Title,
 		CurrentEpisode: data.CurrentEpisode,
-		TotalEpisodes: anime.Episodes,
+		TotalEpisodes:  anime.Episodes,
 		InitialMode:    initialMode,
 		Token:          token,
 		AvailableModes: data.AvailableModes,
