@@ -265,7 +265,7 @@ func (h *Handler) HandleAPIAnime(w http.ResponseWriter, r *http.Request) {
 	}
 
 	statuses := h.watchlistMap(r.Context(), userIDFromRequest(r))
-	
+
 	w.Header().Set("Cache-Control", "public, max-age=3600")
 
 	switch section {
@@ -324,6 +324,7 @@ func (h *Handler) HandleAPIEpisodes(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Cache-Control", "public, max-age=3600")
 
+	currentEpisode := r.URL.Query().Get("current")
 	episodes, err := h.getEpisodes(r.Context(), id)
 	if err != nil {
 		log.Printf("episodes error: %v", err)

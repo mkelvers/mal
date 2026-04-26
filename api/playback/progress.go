@@ -103,7 +103,6 @@ func (s *Service) CompleteAnime(ctx context.Context, userID string, animeID int6
 			Status:             "completed",
 			CurrentEpisode:     sql.NullInt64{Int64: 0, Valid: false},
 			CurrentTimeSeconds: 0,
-			UpdatedAt:          sql.NullTime{Valid: true},
 		}); err != nil {
 			return fmt.Errorf("failed to mark watchlist as completed: %w", err)
 		}
