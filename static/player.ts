@@ -32,6 +32,18 @@ interface EpisodeData {
   segments: SkipSegment[]
 }
 
+interface EpisodeData {
+  mal_id: number
+  title: string
+  current_episode: string
+  total_episodes: number
+  initial_mode: string
+  token: string
+  available_modes: string[]
+  mode_sources: Record<string, ModeSource>
+  segments: SkipSegment[]
+}
+
 let playerInitialized = false
 
 const initPlayer = (): void => {
