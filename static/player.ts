@@ -30,6 +30,7 @@ interface EpisodeData {
   available_modes: string[]
   mode_sources: Record<string, ModeSource>
   segments: SkipSegment[]
+  episode_title: string
 }
 
 interface EpisodeData {
@@ -42,6 +43,7 @@ interface EpisodeData {
   available_modes: string[]
   mode_sources: Record<string, ModeSource>
   segments: SkipSegment[]
+  episode_title: string
 }
 
 let playerInitialized = false
@@ -144,6 +146,7 @@ const initPlayer = (): void => {
 
   const previewPopover = container.querySelector('[data-preview-popover]') as HTMLElement
   const previewTime = container.querySelector('[data-preview-time]') as HTMLElement
+  const videoOverlay = container.querySelector('[data-video-overlay]') as HTMLElement
   const streamUrlForMode = (mode: string): string => {
     const modeParam = encodeURIComponent(mode)
     const modeSource = modeSources[mode]
@@ -308,6 +311,17 @@ const initPlayer = (): void => {
       bar.style.width = `${width}%`
       segmentsTrack.appendChild(bar)
     })
+  }
+
+  const updateVideoOverlay = (episode: string, episodeTitle: string): void => {
+    if (!videoOverlay) return
+    const episodeText = episodeTitle
+      ? `Episode ${episode}, ${episodeTitle}`
+      : `Episode ${episode}`
+    const secondLine = videoOverlay.querySelector('p')
+    if (secondLine) {
+      secondLine.textContent = episodeText
+    }
   }
 
   const formatTime = (seconds: number): string => {
@@ -867,6 +881,7 @@ const loadNextEpisodeInPlace = async (animeID: number, nextEpisode: number): Pro
   renderSegments()
   updateSubtitleOptions()
   updateModeButtons(data.initial_mode)
+  updateVideoOverlay(String(nextEpisode), data.episode_title)
 
   const nextUrl = `/watch/${animeID}/${nextEpisode}`
   window.history.replaceState(null, '', nextUrl)

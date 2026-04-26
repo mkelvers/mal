@@ -38,6 +38,7 @@ templ VideoPlayer(data shared.WatchPageData, displayTitle string) {
 				src={ shared.BuildStreamURL(data.InitialMode, streamToken) }
 			></video>
 			<div
+				data-video-overlay
 				class="pointer-events-none absolute inset-x-0 top-0 z-30 flex flex-col items-start bg-linear-to-b from-black/80 via-black/40 to-transparent p-4 opacity-100 transition-opacity duration-300 sm:p-6 sm:opacity-0 group-[.show-controls]/player:opacity-100 sm:group-[.show-controls]/player:opacity-100"
 			>
 				<h2 class="text-lg font-bold text-white drop-shadow-md sm:text-xl md:text-2xl">{ displayTitle }</h2>

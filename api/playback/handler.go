@@ -392,6 +392,15 @@ func (h *Handler) HandleEpisodeData(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	episodeTitle := ""
+	epNum, epErr := strconv.Atoi(episode)
+	if epErr == nil && epNum > 0 {
+		episodeData, epErr := h.jikanClient.GetEpisode(ctx, malID, epNum)
+		if epErr == nil && episodeData.Data.Title != "" {
+			episodeTitle = episodeData.Data.Title
+		}
+	}
+
 	clientModeSources := convertModeSources(data.ModeSources)
 	initialMode := data.InitialMode
 	token := ""
@@ -409,6 +418,7 @@ func (h *Handler) HandleEpisodeData(w http.ResponseWriter, r *http.Request) {
 		AvailableModes []string                     `json:"available_modes"`
 		ModeSources    map[string]shared.ModeSource `json:"mode_sources"`
 		Segments       []shared.SkipSegment         `json:"segments"`
+		EpisodeTitle   string                       `json:"episode_title"`
 	}{
 		MalID:          malID,
 		Title:          data.Title,
@@ -419,6 +429,7 @@ func (h *Handler) HandleEpisodeData(w http.ResponseWriter, r *http.Request) {
 		AvailableModes: data.AvailableModes,
 		ModeSources:    clientModeSources,
 		Segments:       convertToSharedSegments(data.Segments),
+		EpisodeTitle:   episodeTitle,
 	}
 
 	w.Header().Set("Content-Type", "application/json")
