@@ -5,12 +5,13 @@ import (
 	"mal/web/shared"
 )
 
-templ VideoPlayer(data shared.WatchPageData) {
+templ VideoPlayer(data shared.WatchPageData, displayTitle string) {
 	{{ streamToken := shared.ModeToken(data.InitialMode, data.ModeSources) }}
 	{{ hasDub := shared.ModeAvailable(data.AvailableModes, "dub") }}
 	{{ hasSub := shared.ModeAvailable(data.AvailableModes, "sub") }}
+	{{ episodeTitle := data.EpisodeTitle }}
 	<div
-		class="flex w-full flex-col gap-4"
+		class="group/player flex w-full flex-col gap-4"
 		data-mal-id={ fmt.Sprintf("%d", data.MalID) }
 		data-total-episodes={ fmt.Sprintf("%d", data.TotalEpisodes) }
 		data-video-player
@@ -28,7 +29,7 @@ templ VideoPlayer(data shared.WatchPageData) {
 		data-mode-sources={ shared.ToJSON(data.ModeSources) }
 		data-segments={ shared.ToJSON(data.Segments) }
 	>
-		<div class="group relative aspect-video w-full overflow-hidden bg-black">
+		<div class="group relative aspect-video w-full overflow-hidden bg-black cursor-none group-[.show-controls]/player:cursor-auto">
 			<video
 				class="h-full w-full"
 				preload="metadata"
@@ -36,6 +37,18 @@ templ VideoPlayer(data shared.WatchPageData) {
 				playsinline
 				src={ shared.BuildStreamURL(data.InitialMode, streamToken) }
 			></video>
+			<div
+				class="pointer-events-none absolute inset-x-0 top-0 z-30 flex flex-col items-start bg-linear-to-b from-black/80 via-black/40 to-transparent p-4 opacity-100 transition-opacity duration-300 sm:p-6 sm:opacity-0 group-[.show-controls]/player:opacity-100 sm:group-[.show-controls]/player:opacity-100"
+			>
+				<h2 class="text-lg font-bold text-white drop-shadow-md sm:text-xl md:text-2xl">{ displayTitle }</h2>
+				<p class="text-sm font-medium text-white/80 drop-shadow-md sm:text-base">
+					if episodeTitle != "" {
+						{ fmt.Sprintf("Episode %s, %s", data.CurrentEpisode, episodeTitle) }
+					} else {
+						{ fmt.Sprintf("Episode %s", data.CurrentEpisode) }
+					}
+				</p>
+			</div>
 			<div
 				data-loading
 				class="absolute inset-0 flex items-center justify-center bg-black/50"
@@ -53,7 +66,7 @@ templ VideoPlayer(data shared.WatchPageData) {
 				Skip intro
 			</button>
 			<div
-				class="absolute inset-x-0 bottom-0 bg-linear-to-t from-black/90 to-transparent px-3 pb-3 pt-10 opacity-100 transition-opacity sm:px-4 sm:pb-4 sm:pt-12 sm:opacity-0 sm:group-hover:opacity-100 sm:group-[.show-controls]:opacity-100 group-[.show-controls]:opacity-100"
+				class="absolute inset-x-0 bottom-0 bg-linear-to-t from-black/90 to-transparent px-3 pb-3 pt-10 opacity-100 transition-opacity duration-300 sm:px-4 sm:pb-4 sm:pt-12 sm:opacity-0 group-[.show-controls]/player:opacity-100 sm:group-[.show-controls]/player:opacity-100"
 			>
 				<div
 					data-progress-wrap
@@ -108,8 +121,8 @@ templ VideoPlayer(data shared.WatchPageData) {
 								viewBox="0 0 24 24"
 								aria-hidden="true"
 							>
-								<line x1="9" y1="6" x2="9" y2="18" stroke="white" stroke-width="2" stroke-linecap="round"/>
-								<line x1="15" y1="6" x2="15" y2="18" stroke="white" stroke-width="2" stroke-linecap="round"/>
+								<line x1="9" y1="6" x2="9" y2="18" stroke="white" stroke-width="2" stroke-linecap="round"></line>
+								<line x1="15" y1="6" x2="15" y2="18" stroke="white" stroke-width="2" stroke-linecap="round"></line>
 							</svg>
 						</button>
 						<div
@@ -146,9 +159,9 @@ templ VideoPlayer(data shared.WatchPageData) {
 									viewBox="0 0 24 24"
 									aria-hidden="true"
 								>
-									<polygon points="5 10 9 10 13 6 13 18 9 14 5 14" fill="none" stroke="white" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round"/>
-									<path d="M16 9c1.3 1.3 1.3 4.7 0 6" stroke="white" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-									<path d="M18.8 6.5c3 2.9 3 8.1 0 11" stroke="white" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+									<polygon points="5 10 9 10 13 6 13 18 9 14 5 14" fill="none" stroke="white" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round"></polygon>
+									<path d="M16 9c1.3 1.3 1.3 4.7 0 6" stroke="white" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" fill="none"></path>
+									<path d="M18.8 6.5c3 2.9 3 8.1 0 11" stroke="white" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" fill="none"></path>
 								</svg>
 								<svg
 									data-icon-muted
@@ -156,16 +169,16 @@ templ VideoPlayer(data shared.WatchPageData) {
 									viewBox="0 0 24 24"
 									aria-hidden="true"
 								>
-									<polygon points="5 10 9 10 13 6 13 18 9 14 5 14" fill="none" stroke="white" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round"/>
-									<line x1="16" y1="9" x2="20" y2="15" stroke="white" stroke-width="1.85" stroke-linecap="round"/>
-									<line x1="20" y1="9" x2="16" y2="15" stroke="white" stroke-width="1.85" stroke-linecap="round"/>
+									<polygon points="5 10 9 10 13 6 13 18 9 14 5 14" fill="none" stroke="white" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round"></polygon>
+									<line x1="16" y1="9" x2="20" y2="15" stroke="white" stroke-width="1.85" stroke-linecap="round"></line>
+									<line x1="20" y1="9" x2="16" y2="15" stroke="white" stroke-width="1.85" stroke-linecap="round"></line>
 								</svg>
 							</button>
-						<span
-							data-volume-underline
-							class="volume-underline pointer-events-none absolute bottom-0 left-1/2 h-0.5 w-6 -translate-x-1/2 bg-white opacity-0 transition-opacity"
-						></span>
-					</div>
+							<span
+								data-volume-underline
+								class="volume-underline pointer-events-none absolute bottom-0 left-1/2 h-0.5 w-6 -translate-x-1/2 bg-white opacity-0 transition-opacity"
+							></span>
+						</div>
 						<span
 							data-time
 							class="min-w-0 text-sm text-white tabular-nums sm:text-base"
@@ -188,7 +201,7 @@ templ VideoPlayer(data shared.WatchPageData) {
 								viewBox="0 0 24 24"
 								aria-hidden="true"
 							>
-								<path d="M6 9h6M6 15h4M12 9v6M17 7.5c2.2 2 2.2 7 0 9M19.2 5.5c3.4 3.2 3.4 10 0 13" stroke="white" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+								<path d="M6 9h6M6 15h4M12 9v6M17 7.5c2.2 2 2.2 7 0 9M19.2 5.5c3.4 3.2 3.4 10 0 13" stroke="white" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" fill="none"></path>
 							</svg>
 						</button>
 						<button
@@ -205,8 +218,8 @@ templ VideoPlayer(data shared.WatchPageData) {
 								viewBox="0 0 24 24"
 								aria-hidden="true"
 							>
-								<rect x="3.5" y="5.5" width="17" height="13" rx="2" stroke="white" stroke-width="1.85" fill="none"/>
-								<path d="M8 11.5h8M8 14.5h5" stroke="white" stroke-width="1.85" stroke-linecap="round"/>
+								<rect x="3.5" y="5.5" width="17" height="13" rx="2" stroke="white" stroke-width="1.85" fill="none"></rect>
+								<path d="M8 11.5h8M8 14.5h5" stroke="white" stroke-width="1.85" stroke-linecap="round"></path>
 							</svg>
 						</button>
 						<button
@@ -219,8 +232,8 @@ templ VideoPlayer(data shared.WatchPageData) {
 								viewBox="0 0 50 50"
 								aria-hidden="true"
 							>
-								<path d="M29.9199 45H25.2051V26.5391L20.6064 28.3154V24.3975L29.4219 20.7949H29.9199V45ZM48.1013 35.0059C48.1013 38.3483 47.4926 40.9049 46.2751 42.6758C45.0687 44.4466 43.3422 45.332 41.0954 45.332C38.8708 45.332 37.1498 44.4743 35.9323 42.7588C34.726 41.0322 34.1006 38.5641 34.0564 35.3545V30.7891C34.0564 27.4577 34.6596 24.9121 35.8659 23.1523C37.0723 21.3815 38.8044 20.4961 41.0622 20.4961C43.32 20.4961 45.0521 21.3704 46.2585 23.1191C47.4649 24.8678 48.0792 27.3636 48.1013 30.6064V35.0059ZM43.3864 30.1084C43.3864 28.2048 43.1983 26.777 42.822 25.8252C42.4457 24.8734 41.8591 24.3975 41.0622 24.3975C39.5681 24.3975 38.7933 26.1406 38.738 29.627V35.6533C38.738 37.6012 38.9262 39.0511 39.3025 40.0029C39.6898 40.9548 40.2875 41.4307 41.0954 41.4307C41.8591 41.4307 42.4236 40.988 42.7888 40.1025C43.1651 39.2061 43.3643 37.8392 43.3864 36.002V30.1084Z" fill="white"/>
-								<path d="M40.0106 5.45398V0L50 7.79529L40.0106 15.5914V10.3033H4.9114V40.1506H18.7558V45H2.01875e-06V5.45398H40.0106Z" fill="white"/>
+								<path d="M29.9199 45H25.2051V26.5391L20.6064 28.3154V24.3975L29.4219 20.7949H29.9199V45ZM48.1013 35.0059C48.1013 38.3483 47.4926 40.9049 46.2751 42.6758C45.0687 44.4466 43.3422 45.332 41.0954 45.332C38.8708 45.332 37.1498 44.4743 35.9323 42.7588C34.726 41.0322 34.1006 38.5641 34.0564 35.3545V30.7891C34.0564 27.4577 34.6596 24.9121 35.8659 23.1523C37.0723 21.3815 38.8044 20.4961 41.0622 20.4961C43.32 20.4961 45.0521 21.3704 46.2585 23.1191C47.4649 24.8678 48.0792 27.3636 48.1013 30.6064V35.0059ZM43.3864 30.1084C43.3864 28.2048 43.1983 26.777 42.822 25.8252C42.4457 24.8734 41.8591 24.3975 41.0622 24.3975C39.5681 24.3975 38.7933 26.1406 38.738 29.627V35.6533C38.738 37.6012 38.9262 39.0511 39.3025 40.0029C39.6898 40.9548 40.2875 41.4307 41.0954 41.4307C41.8591 41.4307 42.4236 40.988 42.7888 40.1025C43.1651 39.2061 43.3643 37.8392 43.3864 36.002V30.1084Z" fill="white"></path>
+								<path d="M40.0106 5.45398V0L50 7.79529L40.0106 15.5914V10.3033H4.9114V40.1506H18.7558V45H2.01875e-06V5.45398H40.0106Z" fill="white"></path>
 							</svg>
 						</button>
 						<button
@@ -233,8 +246,8 @@ templ VideoPlayer(data shared.WatchPageData) {
 								viewBox="0 0 52 50"
 								aria-hidden="true"
 							>
-								<path d="M11.9199 45H7.20508V26.5391L2.60645 28.3154V24.3975L11.4219 20.7949H11.9199V45ZM30.1013 35.0059C30.1013 38.3483 29.4926 40.9049 28.2751 42.6758C27.0687 44.4466 25.3422 45.332 23.0954 45.332C20.8708 45.332 19.1498 44.4743 17.9323 42.7588C16.726 41.0322 16.1006 38.5641 16.0564 35.3545V30.7891C16.0564 27.4577 16.6596 24.9121 17.8659 23.1523C19.0723 21.3815 20.8044 20.4961 23.0622 20.4961C25.32 20.4961 27.0521 21.3704 28.2585 23.1191C29.4649 24.8678 30.0792 27.3636 30.1013 30.6064V35.0059ZM25.3864 30.1084C25.3864 28.2048 25.1983 26.777 24.822 25.8252C24.4457 24.8734 23.8591 24.3975 23.0622 24.3975C21.5681 24.3975 20.7933 26.1406 20.738 29.627V35.6533C20.738 37.6012 20.9262 39.0511 21.3025 40.0029C21.6898 40.9548 22.2875 41.4307 23.0954 41.4307C23.8591 41.4307 24.4236 40.988 24.7888 40.1025C25.1651 39.2061 25.3643 37.8392 25.3864 36.002V30.1084Z" fill="white"/>
-								<path d="M11.9894 5.45398V0L2 7.79529L11.9894 15.5914V10.3033H47.0886V40.1506H33.2442V45H52V5.45398H11.9894Z" fill="white"/>
+								<path d="M11.9199 45H7.20508V26.5391L2.60645 28.3154V24.3975L11.4219 20.7949H11.9199V45ZM30.1013 35.0059C30.1013 38.3483 29.4926 40.9049 28.2751 42.6758C27.0687 44.4466 25.3422 45.332 23.0954 45.332C20.8708 45.332 19.1498 44.4743 17.9323 42.7588C16.726 41.0322 16.1006 38.5641 16.0564 35.3545V30.7891C16.0564 27.4577 16.6596 24.9121 17.8659 23.1523C19.0723 21.3815 20.8044 20.4961 23.0622 20.4961C25.32 20.4961 27.0521 21.3704 28.2585 23.1191C29.4649 24.8678 30.0792 27.3636 30.1013 30.6064V35.0059ZM25.3864 30.1084C25.3864 28.2048 25.1983 26.777 24.822 25.8252C24.4457 24.8734 23.8591 24.3975 23.0622 24.3975C21.5681 24.3975 20.7933 26.1406 20.738 29.627V35.6533C20.738 37.6012 20.9262 39.0511 21.3025 40.0029C21.6898 40.9548 22.2875 41.4307 23.0954 41.4307C23.8591 41.4307 24.4236 40.988 24.7888 40.1025C25.1651 39.2061 25.3643 37.8392 25.3864 36.002V30.1084Z" fill="white"></path>
+								<path d="M11.9894 5.45398V0L2 7.79529L11.9894 15.5914V10.3033H47.0886V40.1506H33.2442V45H52V5.45398H11.9894Z" fill="white"></path>
 							</svg>
 						</button>
 						<button
@@ -247,7 +260,7 @@ templ VideoPlayer(data shared.WatchPageData) {
 								viewBox="0 0 240 240"
 								aria-hidden="true"
 							>
-								<path d="M96.3,186.1c1.9,1.9,1.3,4-1.4,4.4l-50.6,8.4c-1.8,0.5-3.7-0.6-4.2-2.4c-0.2-0.6-0.2-1.2,0-1.7l8.4-50.6c0.4-2.7,2.4-3.4,4.4-1.4l14.5,14.5l28.2-28.2l14.3,14.3l-28.2,28.2L96.3,186.1z M195.8,39.1l-50.6,8.4c-2.7,0.4-3.4,2.4-1.4,4.4l14.5,14.5l-28.2,28.2l14.3,14.3l28.2-28.2l14.5,14.5c1.9,1.9,4,1.3,4.4-1.4l8.4-50.6c0.5-1.8-0.6-3.6-2.4-4.2C197,39,196.4,39,195.8,39.1L195.8,39.1z" fill="white"/>
+								<path d="M96.3,186.1c1.9,1.9,1.3,4-1.4,4.4l-50.6,8.4c-1.8,0.5-3.7-0.6-4.2-2.4c-0.2-0.6-0.2-1.2,0-1.7l8.4-50.6c0.4-2.7,2.4-3.4,4.4-1.4l14.5,14.5l28.2-28.2l14.3,14.3l-28.2,28.2L96.3,186.1z M195.8,39.1l-50.6,8.4c-2.7,0.4-3.4,2.4-1.4,4.4l14.5,14.5l-28.2,28.2l14.3,14.3l28.2-28.2l14.5,14.5c1.9,1.9,4,1.3,4.4-1.4l8.4-50.6c0.5-1.8-0.6-3.6-2.4-4.2C197,39,196.4,39,195.8,39.1L195.8,39.1z" fill="white"></path>
 							</svg>
 						</button>
 					</div>

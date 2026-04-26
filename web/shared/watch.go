@@ -23,6 +23,7 @@ type WatchPageData struct {
 	AvailableModes   []string
 	ModeSources      map[string]ModeSource
 	Segments         []SkipSegment
+	EpisodeTitle     string
 }
 
 // ModeSource represents a stream source for a specific mode (dub/sub)

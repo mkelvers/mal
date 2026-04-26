@@ -168,6 +168,10 @@ type EpisodesResponse struct {
 	Pagination Pagination `json:"pagination"`
 }
 
+type EpisodeResponse struct {
+	Data Episode `json:"data"`
+}
+
 type JikanRelationEntry struct {
 	MalID int    `json:"mal_id"`
 	Type  string `json:"type"`

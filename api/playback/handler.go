@@ -99,6 +99,16 @@ func (h *Handler) HandleWatchPage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Fetch episode title for the overlay
+	episodeTitle := ""
+	epNum, epErr := strconv.Atoi(episode)
+	if epErr == nil && epNum > 0 {
+		episodeData, epErr := h.jikanClient.GetEpisode(ctx, malID, epNum)
+		if epErr == nil && episodeData.Data.Title != "" {
+			episodeTitle = episodeData.Data.Title
+		}
+	}
+
 	// Convert playback.WatchPageData to shared.WatchPageData
 	pageData := shared.WatchPageData{
 		MalID:            data.MalID,
@@ -115,10 +125,11 @@ func (h *Handler) HandleWatchPage(w http.ResponseWriter, r *http.Request) {
 		AvailableModes:   data.AvailableModes,
 		ModeSources:      convertModeSources(data.ModeSources),
 		Segments:         convertSegments(data.Segments),
+		EpisodeTitle:     episodeTitle,
 	}
 
 	if r.Header.Get("HX-Request") == "true" {
-		if err := watch.VideoPlayer(pageData).Render(r.Context(), w); err != nil {
+		if err := watch.VideoPlayer(pageData, anime.DisplayTitle()).Render(r.Context(), w); err != nil {
 			log.Printf("render error: %v", err)
 			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		}
