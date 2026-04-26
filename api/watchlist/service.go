@@ -71,6 +71,7 @@ func (s *Service) AddEntry(ctx context.Context, userID string, req AddRequest) e
 		Status:             req.Status,
 		CurrentEpisode:     sql.NullInt64{Int64: 0, Valid: false},
 		CurrentTimeSeconds: 0,
+		UpdatedAt:          sql.NullTime{Valid: false},
 	})
 	if err != nil {
 		return fmt.Errorf("failed to update watchlist: %w", err)

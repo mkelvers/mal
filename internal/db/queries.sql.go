@@ -687,8 +687,7 @@ func (q *Queries) MarkRelationsSynced(ctx context.Context, id int64) error {
 const saveWatchProgress = `-- name: SaveWatchProgress :exec
 UPDATE watch_list_entry
 SET current_episode = ?,
-    current_time_seconds = ?,
-    updated_at = CURRENT_TIMESTAMP
+    current_time_seconds = ?
 WHERE user_id = ? AND anime_id = ?
 `
 
@@ -847,12 +846,11 @@ func (q *Queries) UpsertContinueWatchingEntry(ctx context.Context, arg UpsertCon
 
 const upsertWatchListEntry = `-- name: UpsertWatchListEntry :one
 INSERT INTO watch_list_entry (id, user_id, anime_id, status, current_episode, current_time_seconds, updated_at)
-VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+VALUES (?, ?, ?, ?, ?, ?, NULL)
 ON CONFLICT (user_id, anime_id) DO UPDATE SET
     status = excluded.status,
     current_episode = excluded.current_episode,
-    current_time_seconds = excluded.current_time_seconds,
-    updated_at = CURRENT_TIMESTAMP
+    current_time_seconds = excluded.current_time_seconds
 RETURNING id, user_id, anime_id, status, created_at, updated_at, current_episode, last_episode_at, current_time_seconds
 `
 
@@ -863,6 +861,7 @@ type UpsertWatchListEntryParams struct {
 	Status             string        `json:"status"`
 	CurrentEpisode     sql.NullInt64 `json:"current_episode"`
 	CurrentTimeSeconds float64       `json:"current_time_seconds"`
+	UpdatedAt          sql.NullTime  `json:"updated_at"`
 }
 
 func (q *Queries) UpsertWatchListEntry(ctx context.Context, arg UpsertWatchListEntryParams) (WatchListEntry, error) {
@@ -873,6 +872,7 @@ func (q *Queries) UpsertWatchListEntry(ctx context.Context, arg UpsertWatchListE
 		arg.Status,
 		arg.CurrentEpisode,
 		arg.CurrentTimeSeconds,
+		arg.UpdatedAt,
 	)
 	var i WatchListEntry
 	err := row.Scan(
