@@ -23,6 +23,7 @@ templ WatchPage(anime jikan.Anime, data shared.WatchPageData) {
 						<h3 class="text-sm font-semibold tracking-wide text-(--text)">Episodes</h3>
 					</div>
 					<div
+						id="episodes-list"
 						hx-get={ string(templ.URL(fmt.Sprintf("/api/anime/%d/episodes?current=%s", anime.MalID, data.CurrentEpisode))) }
 						hx-trigger="load"
 						class="overflow-y-auto flex-1 [&::-webkit-scrollbar]:hidden"

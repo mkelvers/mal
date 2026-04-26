@@ -858,6 +858,11 @@ const loadNextEpisodeInPlace = async (animeID: number, nextEpisode: number): Pro
 
   const nextUrl = `/watch/${animeID}/${nextEpisode}`
   window.history.replaceState(null, '', nextUrl)
+
+  const episodesList = document.getElementById('episodes-list')
+  if (episodesList) {
+    htmx.ajax('GET', `/api/anime/${animeID}/episodes?current=${nextEpisode}`, episodesList)
+  }
 }
 
   const completeAnime = async (episodeNumber: number): Promise<void> => {
