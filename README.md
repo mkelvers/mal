@@ -16,9 +16,10 @@
 </table>
 
 <p align="center">
-  <img alt="Go" src="https://img.shields.io/badge/go-1.24-00ADD8?style=flat-square&logo=go" />
+  <img alt="Go" src="https://img.shields.io/badge/go-1.25-00ADD8?style=flat-square&logo=go" />
   <img alt="SQLite" src="https://img.shields.io/badge/database-sqlite-003B57?style=flat-square&logo=sqlite" />
   <img alt="templ" src="https://img.shields.io/badge/templ-server--rendered-111111?style=flat-square" />
+  <img alt="Tailwind" src="https://img.shields.io/badge/tailwind-4-06B6D4?style=flat-square&logo=tailwindcss" />
   <img alt="HTMX" src="https://img.shields.io/badge/htmx-partial--updates-3366CC?style=flat-square" />
 </p>
 
@@ -42,9 +43,9 @@ The interface is minimal and functional, featuring a dark theme and quick access
 
 ## Technical approach
 
-The application is written in Go and rendered on the server with `templ`, with SQLite as the primary datastore and `sqlc` for typed query generation. HTMX and small TypeScript modules handle incremental interactions, which keeps the interface responsive without moving the entire product into a heavy client-side architecture.
+The application is written in Go and rendered on the server with `templ`, with SQLite as the primary datastore and `sqlc` for typed query generation. Styling uses Tailwind CSS v4. HTMX and small TypeScript modules handle incremental interactions, which keeps the interface responsive without moving the entire product into a heavy client-side architecture.
 
-The external anime data source is Jikan (`https://api.jikan.moe/v4`). Because reliability is a first-class concern, the client layer includes request pacing, bounded retries, backoff behavior, stale-cache fallback, and a persisted retry queue for failed fetches that should be retried later.
+The external anime data source is Jikan (`https://api.jikan.moe/v4`). Because reliability is a first-class concern, the client layer includes request pacing, bounded retries, backoff behavior, stale-cache fallback, and a persisted retry queue for failed fetches that should be retried later. Playback proxying uses uTLS to bypass Cloudflare protections.
 
 ## Repository structure
 
@@ -103,7 +104,11 @@ The codebase follows standard Go project layout conventions with clear separatio
 
 On startup, the server opens SQLite using `DATABASE_FILE` (defaulting to `mal.db`), runs migrations automatically, initializes core services, starts the background worker, and then serves HTTP traffic on `PORT` (defaulting to `3000`). A request enters the router, passes through global middleware for origin and auth boundaries, reaches a feature handler, and then resolves through service logic that combines database access with upstream data where needed before rendering HTML.
 
-Public access is restricted. Only `/login` and static asset routes (`/static/*`, `/dist/*`) are available without authentication; all other routes require a valid session. There is no public registration; users must be seeded directly in the database.
+Public access is restricted. Only `/login` and static asset routes (`/static/*`, `/dist/*`) are available without authentication; all other routes require a valid session. There is no public registration; users are created via the CLI:
+
+```bash
+go run ./cmd/server create-user <username> <password>
+```
 
 The background worker continuously maintains relation data for sequel awareness, processes queued retryable anime fetches, and periodically removes expired cache records. This keeps user-facing pages stable even when data collection has to happen in multiple phases.
 
@@ -111,25 +116,52 @@ The background worker continuously maintains relation data for sequel awareness,
 
 The hardest part has been balancing freshness and resilience. Upstream APIs can fail transiently with `429` and `5xx` responses, so the app favors graceful degradation over hard failure. Cached values are used when fresh requests fail, retryable failures are persisted and replayed in the worker, and relation synchronization is incremental so one bad fetch does not block the rest of the graph.
 
+Playback proxying originally struggled with Cloudflare challenges; this was solved by switching to uTLS for TLS fingerprinting bypass. HTML sanitization was added to prevent XSS from upstream anime data.
+
 There are still honest limits. Metadata quality depends on external providers, and there is no formal CI pipeline yet, so local validation is the primary quality gate.
 
 ## Getting started
 
-For local development, install Go `1.24+`, Bun, and the `templ` CLI, then generate templates, build frontend assets, and run the server.
+For local development, install Go `1.25+`, Bun, and the `templ` CLI, then generate templates, build frontend assets, and run the server.
 
 ```bash
-bun install # Install Bun dependencies
+bun install                                    # Install Bun dependencies
 go install github.com/a-h/templ/cmd/templ@latest # Install templ CLI
-templ generate # Generate Go templates from .templ files
-bun run build:css && bun run build:ts # Build frontend assets (CSS and TypeScript)
-PLAYBACK_PROXY_SECRET="your-32+char-secret" go run ./cmd/server # Run the Go server
+templ generate                                 # Generate Go templates from .templ files
+bun run build:css && bun run build:ts          # Build frontend assets (CSS and TypeScript)
+PLAYBACK_PROXY_SECRET="your-32+char-secret" go run ./cmd/server  # Run the Go server
 ```
 
-The frontend pipeline uses a single source stylesheet (`static/style.css`) and TypeScript sources in `static/*.ts`, then emits build artifacts into `dist/` for serving.
+The frontend pipeline uses Tailwind CSS v4 (`static/style.css`) and TypeScript sources in `static/*.ts`, then emits build artifacts into `dist/` for serving.
 
 When the server starts, the app is available at `http://localhost:3000`.
 
-**Note:** The app requires at least one user in the database. Seed a user in the `user` table before attempting to login.
+### Creating a user
+
+The app has no public registration. Use the built-in CLI command to create a user:
+
+```bash
+go run ./cmd/server create-user <username> <password>
+# or with a built binary:
+./server create-user <username> <password>
+```
+
+If the username already exists, you will be prompted to confirm overwriting the password.
+
+### Justfile
+
+Common tasks are automated via the `justfile`. Run `just <task>` after installing [`just`](https://github.com/casey/just):
+
+| Task | Description |
+| --- | --- |
+| `just fmt` | Format Go code |
+| `just lint` | Run go fmt and go vet |
+| `just test` | Run Go tests |
+| `just templ` | Regenerate templ files |
+| `just build` | Full build (templ, Go binary, CSS, TS) |
+| `just check` | Run all checks (lint, test, typecheck, build) |
+| `just dev` | Build and start the server |
+| `just install-hooks` | Install lefthook pre-push hooks |
 
 For containerized usage:
 
@@ -148,6 +180,12 @@ docker run --rm \
   myanimelist
 ```
 
+After the container is running, exec into it to create a user:
+
+```bash
+docker exec <container> /server create-user <username> <password>
+```
+
 ## Configuration
 
 | Variable | Default | Description |
@@ -161,6 +199,12 @@ docker run --rm \
 ## Database and testing
 
 Migrations run at startup. Schema history includes auth, watchlist, anime metadata, relation tracking, Jikan cache persistence, and retry-queue support.
+
+To manually run migrations without starting the server:
+
+```bash
+just db_migrate
+```
 
 There is no CI workflow, so validation is local. Use `just check` to run all checks (lint, test, typecheck, build) or `just install-hooks` to set up the pre-push hook that runs them automatically before each push.
 
