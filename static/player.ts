@@ -4,6 +4,8 @@ declare const htmx: {
 
 export {}
 
+import DOMPurify from 'dompurify'
+
 interface ModeSource {
   token: string
   subtitles: SubtitleItem[]
@@ -954,7 +956,7 @@ const loadNextEpisodeInPlace = async (animeID: number, nextEpisode: number): Pro
           const html = await res.text()
           const wrapper = document.createElement('span')
           wrapper.id = 'watch-status-dropdown'
-          wrapper.innerHTML = html
+          wrapper.innerHTML = DOMPurify.sanitize(html)
           watchStatusDropdown.replaceWith(wrapper)
         }).catch(() => {})
       }
