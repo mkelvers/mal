@@ -10,7 +10,10 @@ lint:
 test:
     go test ./...
 
-build-go:
+templ:
+    go run github.com/a-h/templ/cmd/templ@latest generate
+
+build-go: templ
     go build -o server ./cmd/server
 
 build-css:
