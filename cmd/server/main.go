@@ -12,8 +12,10 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/joho/godotenv"
 	_ "github.com/mattn/go-sqlite3"
+	"golang.org/x/crypto/bcrypt"
 
 	"mal/api/auth"
 	"mal/integrations/jikan"
@@ -25,6 +27,35 @@ import (
 
 func main() {
 	_ = godotenv.Load()
+
+	if len(os.Args) > 1 && os.Args[1] == "create-user" {
+		if len(os.Args) != 4 {
+			log.Fatalf("Usage: %s create-user <username> <password>", os.Args[0])
+		}
+
+		username := os.Args[2]
+		password := os.Args[3]
+
+		db, err := sql.Open("sqlite3", fmt.Sprintf("file:%s?_foreign_keys=on", dbFile()))
+		if err != nil {
+			log.Fatalf("failed to open db: %v", err)
+		}
+		defer db.Close()
+
+		hash, err := bcrypt.GenerateFromPassword([]byte(password), 12)
+		if err != nil {
+			log.Fatalf("failed to hash password: %v", err)
+		}
+
+		id := uuid.New().String()
+		_, err = db.Exec("INSERT INTO user (id, username, password_hash) VALUES (?, ?, ?)", id, username, string(hash))
+		if err != nil {
+			log.Fatalf("failed to create user (might already exist): %v", err)
+		}
+
+		fmt.Printf("✅ Brugeren '%s' blev oprettet med succes!\n", username)
+		return
+	}
 
 	db, err := sql.Open("sqlite3", fmt.Sprintf("file:%s?_foreign_keys=on", dbFile()))
 	if err != nil {
