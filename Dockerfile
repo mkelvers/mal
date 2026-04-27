@@ -1,4 +1,4 @@
-FROM golang:1.24-bullseye AS builder
+FROM golang:1.25-bookworm AS builder
 
 WORKDIR /app
 
@@ -36,7 +36,7 @@ RUN sqlc generate
 # Build the server and CLI tools
 RUN go build -o main_server ./cmd/server
 
-FROM debian:bullseye-slim
+FROM debian:bookworm-slim
 
 WORKDIR /app
 
