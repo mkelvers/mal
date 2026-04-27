@@ -99,9 +99,9 @@ func NewRouter(cfg Config) http.Handler {
 	mux.HandleFunc("/api/continue-watching/", watchlistHandler.HandleDeleteContinueWatching)
 	mux.HandleFunc("/watchlist", watchlistHandler.HandleGetWatchlist)
 
-	// Wrap mux with global CSRF origin verification and auth checking,
-	// THEN auth context parsing.
-	protectedHandler := middleware.RequireGlobalAuthWithPolicy(middleware.NewAccessPolicy())(pkgmiddleware.VerifyOrigin(mux))
+	// Wrap mux with CSRF protection, auth checking, and security headers.
+	protectedHandler := middleware.RequireGlobalAuthWithPolicy(middleware.NewAccessPolicy())(pkgmiddleware.CSRFMiddleware(mux))
 	authenticatedHandler := middleware.Auth(cfg.AuthService)(protectedHandler)
-	return pkgmiddleware.RequestLogger(authenticatedHandler)
+	secureHandler := pkgmiddleware.SecurityHeaders(authenticatedHandler)
+	return pkgmiddleware.RequestLogger(secureHandler)
 }
