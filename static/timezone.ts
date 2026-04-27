@@ -1,5 +1,3 @@
-export {}
-
 const jstOffsetMinutes = 9 * 60
 
 type ParsedBroadcast = {
