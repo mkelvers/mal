@@ -4,7 +4,7 @@
   "scripts": {
     "build:css": "bunx @tailwindcss/cli -i ./static/style.css -o ./dist/tailwind.css",
     "watch:css": "bunx @tailwindcss/cli -i ./static/style.css -o ./dist/tailwind.css --watch",
-    "build:ts": "bun build ./static/*.ts --outdir ./dist --target browser",
+    "build:ts": "bun build ./static/player/player.ts ./static/timezone.ts --outdir ./dist --target browser",
     "typecheck": "bunx tsc -p tsconfig.json --noEmit",
     "build:assets": "bun run build:css && bun run build:ts"
   },
