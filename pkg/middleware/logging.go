@@ -73,7 +73,8 @@ func RequestLogger(next http.Handler) http.Handler {
 			strings.HasPrefix(r.URL.Path, "/static/") ||
 			strings.HasPrefix(r.URL.Path, "/watch/proxy/stream") ||
 			strings.HasPrefix(r.URL.Path, "/watch/proxy/segment") ||
-			r.URL.Path == "/favicon.ico" {
+			r.URL.Path == "/favicon.ico" ||
+			r.URL.Path == "/robots.txt" {
 			next.ServeHTTP(w, r)
 			return
 		}
@@ -82,6 +83,8 @@ func RequestLogger(next http.Handler) http.Handler {
 
 		next.ServeHTTP(recorder, r)
 
-		log.Printf("%s %s %d %s", r.Method, r.URL.Path, recorder.statusCode, time.Since(start))
+		if recorder.statusCode >= 400 {
+			log.Printf("%s %s %d %s", r.Method, r.URL.Path, recorder.statusCode, time.Since(start))
+		}
 	})
 }

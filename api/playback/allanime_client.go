@@ -11,6 +11,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net"
 	"net/http"
 	"net/url"
@@ -53,7 +54,6 @@ var (
 type utlsRoundTripper struct{}
 
 func (rt *utlsRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
-	fmt.Printf("[uTLS] RoundTrip: %s %s\n", req.Method, req.URL.Host)
 	dialer := &net.Dialer{Timeout: 10 * time.Second}
 	host := req.URL.Hostname()
 	port := req.URL.Port()
@@ -177,7 +177,6 @@ func (c *allAnimeClient) graphqlRequest(ctx context.Context, query string, varia
 const episodeQueryHash = "d405d0edd690624b66baba3068e0edc3ac90f1597d898a1ec8db4e5c43c00fec"
 
 func (c *allAnimeClient) graphqlRequestWithHash(ctx context.Context, showID, episode, mode string) (map[string]any, error) {
-	fmt.Printf("[ALLANIME] graphqlRequestWithHash called: showID=%s mode=%s ep=%s\n", showID, mode, episode)
 	// Ensure mode is lowercase
 	mode = strings.ToLower(mode)
 
@@ -221,12 +220,6 @@ func (c *allAnimeClient) graphqlRequestWithHash(ctx context.Context, showID, epi
 		return nil, fmt.Errorf("read response: %w", err)
 	}
 
-	bodyPreview := string(respBody)
-	if len(bodyPreview) > 300 {
-		bodyPreview = bodyPreview[:300]
-	}
-	fmt.Printf("[uTLS] Response status=%d body=%s\n", resp.StatusCode, bodyPreview)
-
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("GET status %d: %s", resp.StatusCode, string(respBody))
 	}
@@ -258,13 +251,10 @@ func (c *allAnimeClient) graphqlRequestWithHash(ctx context.Context, showID, epi
 	}
 
 	if toBeParsed != "" {
-		fmt.Printf("[uTLS] Got tobeparsed (len=%d), attempting decrypt...\n", len(toBeParsed))
 		decrypted, err := decryptTobeparsed(toBeParsed)
 		if err != nil {
-			fmt.Printf("[uTLS] Decrypt error: %v\n", err)
 			return nil, fmt.Errorf("decrypt tobeparsed: %w", err)
 		}
-		fmt.Printf("[uTLS] Decrypted OK (len=%d), preview: %s\n", len(decrypted), string(decrypted[:min(len(decrypted), 200)]))
 
 		var ep map[string]any
 		if jerr := json.Unmarshal(decrypted, &ep); jerr != nil {
@@ -281,7 +271,6 @@ func (c *allAnimeClient) graphqlRequestWithHash(ctx context.Context, showID, epi
 			}
 		}
 
-		fmt.Printf("[uTLS] Found sourceUrls: len=%d\n", len(sourceURLs))
 		if len(sourceURLs) > 0 {
 			return map[string]any{
 				"episode": map[string]any{
@@ -373,6 +362,7 @@ func (c *allAnimeClient) extractSourceURLsFromData(data map[string]any) []Stream
 
 		extracted, err := c.extractor.ExtractVideoLinks(ctx, decoded)
 		if err != nil {
+			log.Printf("source extraction failed for %s: %v", decoded, err)
 			continue
 		}
 
@@ -518,13 +508,9 @@ func (c *allAnimeClient) GetEpisodeSources(ctx context.Context, showID string, e
 
 	// First try persistent query approach (GET with query hash)
 	result, err := c.graphqlRequestWithHash(ctx, showID, episode, mode)
-	if err != nil {
-		fmt.Printf("[ALLANIME] graphqlRequestWithHash err: %v\n", err)
-	} else {
-		fmt.Printf("[ALLANIME] graphqlRequestWithHash got result, top keys: %v\n", getMapKeys(result))
+	if err == nil {
 		// Result is already in shape {"episode": {"sourceUrls": [...]}}
 		sources := c.extractSourceURLsFromData(result)
-		fmt.Printf("[ALLANIME] extractSourceURLsFromData returned %d sources\n", len(sources))
 		if len(sources) > 0 {
 			return sources, nil
 		}
