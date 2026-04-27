@@ -198,13 +198,7 @@ docker exec <container> /server create-user <username> <password>
 
 ## Database and testing
 
-Migrations run at startup. Schema history includes auth, watchlist, anime metadata, relation tracking, Jikan cache persistence, and retry-queue support.
-
-To manually run migrations without starting the server:
-
-```bash
-just db_migrate
-```
+Migrations run at startup automatically. Schema history includes auth, watchlist, anime metadata, relation tracking, Jikan cache persistence, and retry-queue support.
 
 There is no CI workflow, so validation is local. Use `just check` to run all checks (lint, test, typecheck, build) or `just install-hooks` to set up the pre-push hook that runs them automatically before each push.
 

@@ -35,8 +35,7 @@ install-hooks:
 dev: build
     ./server
 
-db_migrate:
-    go run ./cmd/server migrate
+# migrations run automatically at server startup
 
 clean:
     rm -rf dist/*
