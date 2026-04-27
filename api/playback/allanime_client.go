@@ -28,7 +28,7 @@ import (
 const (
 	allAnimeBaseURL    = "https://api.allanime.day"
 	allAnimeReferer    = "https://allmanga.to/"
-	allAnimeOrigin    = "https://youtu-chan.com"
+	allAnimeOrigin     = "https://youtu-chan.com"
 	defaultUserAgent   = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/121.0"
 	allAnimeAESKey     = "ALLANIME_AES_KEY"
 	aniCliRawSourceURL = "https://raw.githubusercontent.com/pystardust/ani-cli/master/ani-cli"
@@ -520,7 +520,7 @@ func (c *allAnimeClient) GetEpisodeSources(ctx context.Context, showID string, e
 	result, err = c.graphqlRequest(ctx, episodeQuery, map[string]any{
 		"showId":          showID,
 		"translationType": mode,
-		"episodeString":  episode,
+		"episodeString":   episode,
 	})
 	if err != nil {
 		return nil, err
