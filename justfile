@@ -35,8 +35,6 @@ install-hooks:
 dev: build
     ./server
 
-# migrations run automatically at server startup
-
 clean:
     rm -rf dist/*
     rm -f server
