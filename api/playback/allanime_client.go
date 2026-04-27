@@ -1,6 +1,7 @@
 package playback
 
 import (
+	"bufio"
 	"bytes"
 	"context"
 	"crypto/aes"
@@ -10,17 +11,23 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
+	"net/url"
 	"os"
 	"regexp"
 	"strconv"
 	"strings"
 	"time"
+
+	utls "github.com/refraction-networking/utls"
+	"golang.org/x/net/http2"
 )
 
 const (
 	allAnimeBaseURL    = "https://api.allanime.day"
-	allAnimeReferer    = "https://allmanga.to"
+	allAnimeReferer    = "https://allmanga.to/"
+	allAnimeOrigin    = "https://youtu-chan.com"
 	defaultUserAgent   = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/121.0"
 	allAnimeAESKey     = "ALLANIME_AES_KEY"
 	aniCliRawSourceURL = "https://raw.githubusercontent.com/pystardust/ani-cli/master/ani-cli"
@@ -42,6 +49,58 @@ var (
 	}
 )
 
+// utlsRoundTripper uses uTLS + HTTP/2 to mimic Firefox and bypass Cloudflare JA3 detection
+type utlsRoundTripper struct{}
+
+func (rt *utlsRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
+	fmt.Printf("[uTLS] RoundTrip: %s %s\n", req.Method, req.URL.Host)
+	dialer := &net.Dialer{Timeout: 10 * time.Second}
+	host := req.URL.Hostname()
+	port := req.URL.Port()
+	if port == "" {
+		port = "443"
+	}
+	addr := host + ":" + port
+
+	rawConn, err := dialer.DialContext(req.Context(), "tcp", addr)
+	if err != nil {
+		return nil, fmt.Errorf("tcp dial: %w", err)
+	}
+
+	uconn := utls.UClient(rawConn, &utls.Config{
+		ServerName: host,
+		NextProtos: []string{"h2", "http/1.1"},
+	}, utls.HelloFirefox_120)
+
+	if err := uconn.HandshakeContext(req.Context()); err != nil {
+		uconn.Close()
+		return nil, fmt.Errorf("utls handshake: %w", err)
+	}
+
+	alpn := uconn.ConnectionState().NegotiatedProtocol
+	if alpn == "h2" {
+		t := &http2.Transport{}
+		cc, err := t.NewClientConn(uconn)
+		if err != nil {
+			uconn.Close()
+			return nil, fmt.Errorf("http2 client conn: %w", err)
+		}
+		return cc.RoundTrip(req)
+	}
+
+	// Fallback to HTTP/1.1
+	if err := req.Write(uconn); err != nil {
+		uconn.Close()
+		return nil, fmt.Errorf("http1 write: %w", err)
+	}
+	return http.ReadResponse(bufio.NewReader(uconn), req)
+}
+
+var allAnimeUTLSClient = &http.Client{
+	Transport: &utlsRoundTripper{},
+	Timeout:   15 * time.Second,
+}
+
 type searchResult struct {
 	ID    string
 	MalID string
@@ -55,12 +114,19 @@ type allAnimeClient struct {
 
 func newAllAnimeClient() *allAnimeClient {
 	return &allAnimeClient{
-		httpClient: &http.Client{Timeout: 12 * time.Second},
-		extractor:  newProviderExtractor(),
+		httpClient: &http.Client{
+			Timeout: 12 * time.Second,
+		},
+		extractor: newProviderExtractor(),
 	}
 }
 
 func (c *allAnimeClient) graphqlRequest(ctx context.Context, query string, variables map[string]any) (map[string]any, error) {
+	// Ensure mode is lowercase if present in variables
+	if mode, ok := variables["translationType"].(string); ok {
+		variables["translationType"] = strings.ToLower(mode)
+	}
+
 	payload := map[string]any{
 		"query":     query,
 		"variables": variables,
@@ -105,6 +171,215 @@ func (c *allAnimeClient) graphqlRequest(ctx context.Context, query string, varia
 	}
 
 	return parsed, nil
+}
+
+// query hash for episode embedding (pre-registered query)
+const episodeQueryHash = "d405d0edd690624b66baba3068e0edc3ac90f1597d898a1ec8db4e5c43c00fec"
+
+func (c *allAnimeClient) graphqlRequestWithHash(ctx context.Context, showID, episode, mode string) (map[string]any, error) {
+	fmt.Printf("[ALLANIME] graphqlRequestWithHash called: showID=%s mode=%s ep=%s\n", showID, mode, episode)
+	// Ensure mode is lowercase
+	mode = strings.ToLower(mode)
+
+	// Build JSON strings manually to match ani-cli's exact order and formatting
+	// ani-cli order: showId, translationType, episodeString
+	varsJSON := fmt.Sprintf(`{"showId":"%s","translationType":"%s","episodeString":"%s"}`, showID, mode, episode)
+	extJSON := fmt.Sprintf(`{"persistedQuery":{"version":1,"sha256Hash":"%s"}}`, episodeQueryHash)
+
+	// URL-encode the JSON strings (match ani-cli's sed patterns exactly)
+	// Build GET URL with query parameters using url.QueryEscape
+	apiURL := fmt.Sprintf("%s/api?variables=%s&extensions=%s",
+		allAnimeBaseURL,
+		url.QueryEscape(varsJSON),
+		url.QueryEscape(extJSON))
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, apiURL, nil)
+	if err != nil {
+		return nil, fmt.Errorf("create GET request: %w", err)
+	}
+
+	// Match Firefox headers exactly
+	req.Header.Set("User-Agent", defaultUserAgent)
+	req.Header.Set("Accept", "*/*")
+	req.Header.Set("Accept-Language", "en-US,en;q=0.5")
+	req.Header.Set("Accept-Encoding", "identity")
+	req.Header.Set("Referer", allAnimeReferer)
+	req.Header.Set("Origin", allAnimeOrigin)
+	req.Header.Set("Sec-Fetch-Dest", "empty")
+	req.Header.Set("Sec-Fetch-Mode", "cors")
+	req.Header.Set("Sec-Fetch-Site", "cross-site")
+
+	// Use uTLS + HTTP/2 client to bypass Cloudflare fingerprinting
+	resp, err := allAnimeUTLSClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("execute GET request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	respBody, err := io.ReadAll(io.LimitReader(resp.Body, 2*1024*1022))
+	if err != nil {
+		return nil, fmt.Errorf("read response: %w", err)
+	}
+
+	bodyPreview := string(respBody)
+	if len(bodyPreview) > 300 {
+		bodyPreview = bodyPreview[:300]
+	}
+	fmt.Printf("[uTLS] Response status=%d body=%s\n", resp.StatusCode, bodyPreview)
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("GET status %d: %s", resp.StatusCode, string(respBody))
+	}
+
+	var parsed map[string]any
+	if err := json.Unmarshal(respBody, &parsed); err != nil {
+		return nil, fmt.Errorf("decode response: %w", err)
+	}
+
+	// Check for errors
+	if errs, ok := parsed["errors"].([]any); ok && len(errs) > 0 {
+		return nil, fmt.Errorf("graphql error: %v", errs[0])
+	}
+
+	// Check if we got tobeparsed (indicates success)
+	data, ok := parsed["data"].(map[string]any)
+	if !ok {
+		return nil, fmt.Errorf("no data in response")
+	}
+
+	// tobeparsed can be either at data.tobeparsed or data.episode.tobeparsed
+	var toBeParsed string
+	if s, ok := data["tobeparsed"].(string); ok && s != "" {
+		toBeParsed = s
+	} else if episodeData, ok := data["episode"].(map[string]any); ok {
+		if s, ok := episodeData["tobeparsed"].(string); ok {
+			toBeParsed = s
+		}
+	}
+
+	if toBeParsed != "" {
+		fmt.Printf("[uTLS] Got tobeparsed (len=%d), attempting decrypt...\n", len(toBeParsed))
+		decrypted, err := decryptTobeparsed(toBeParsed)
+		if err != nil {
+			fmt.Printf("[uTLS] Decrypt error: %v\n", err)
+			return nil, fmt.Errorf("decrypt tobeparsed: %w", err)
+		}
+		fmt.Printf("[uTLS] Decrypted OK (len=%d), preview: %s\n", len(decrypted), string(decrypted[:min(len(decrypted), 200)]))
+
+		var ep map[string]any
+		if jerr := json.Unmarshal(decrypted, &ep); jerr != nil {
+			return nil, fmt.Errorf("unmarshal decrypted: %w", jerr)
+		}
+
+		// Decrypted JSON might have sourceUrls directly or under episode
+		var sourceURLs []any
+		if srcs, ok := ep["sourceUrls"].([]any); ok {
+			sourceURLs = srcs
+		} else if epInner, ok := ep["episode"].(map[string]any); ok {
+			if srcs, ok := epInner["sourceUrls"].([]any); ok {
+				sourceURLs = srcs
+			}
+		}
+
+		fmt.Printf("[uTLS] Found sourceUrls: len=%d\n", len(sourceURLs))
+		if len(sourceURLs) > 0 {
+			return map[string]any{
+				"episode": map[string]any{
+					"sourceUrls": sourceURLs,
+				},
+			}, nil
+		}
+	}
+
+	// Maybe sourceUrls came back unencrypted
+	if episodeData, ok := data["episode"].(map[string]any); ok {
+		if srcs, ok := episodeData["sourceUrls"].([]any); ok && len(srcs) > 0 {
+			return parsed, nil
+		}
+	}
+
+	return nil, fmt.Errorf("no usable data in response")
+}
+
+func getMapKeys(m map[string]any) []string {
+	keys := make([]string, 0, len(m))
+	for k := range m {
+		keys = append(keys, k)
+	}
+	return keys
+}
+
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
+}
+
+func (c *allAnimeClient) extractSourceURLsFromData(data map[string]any) []StreamSource {
+	episodeData, ok := data["episode"].(map[string]any)
+	if !ok {
+		return nil
+	}
+
+	sourceURLs, ok := episodeData["sourceUrls"].([]any)
+	if !ok || len(sourceURLs) == 0 {
+		return nil
+	}
+
+	references := buildSourceReferences(sourceURLs)
+	if len(references) == 0 {
+		return nil
+	}
+
+	out := make([]StreamSource, 0, len(references))
+	for _, ref := range references {
+		target := strings.TrimSpace(ref.URL)
+		if target == "" {
+			continue
+		}
+
+		if strings.HasPrefix(target, "http://") || strings.HasPrefix(target, "https://") {
+			sourceType := detectStreamType(target)
+			if sourceType == "unknown" {
+				sourceType = detectEmbedType(target)
+			}
+
+			out = append(out, buildStreamSource(target, sourceType, ref.Name))
+			continue
+		}
+
+		decoded := decodeSourceURL(target)
+		if decoded == "" {
+			continue
+		}
+
+		if strings.HasPrefix(decoded, "http://") || strings.HasPrefix(decoded, "https://") {
+			sourceType := detectStreamType(decoded)
+			if sourceType == "unknown" {
+				sourceType = detectEmbedType(decoded)
+			}
+
+			out = append(out, buildStreamSource(decoded, sourceType, ref.Name))
+			continue
+		}
+
+		if !strings.HasPrefix(decoded, "/") {
+			decoded = "/" + decoded
+		}
+
+		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+		defer cancel()
+
+		extracted, err := c.extractor.ExtractVideoLinks(ctx, decoded)
+		if err != nil {
+			continue
+		}
+
+		out = append(out, extracted...)
+	}
+
+	return out
 }
 
 func (c *allAnimeClient) Search(ctx context.Context, query string, mode string) ([]searchResult, error) {
@@ -235,19 +510,32 @@ func buildStreamSource(url, sourceType, provider string) StreamSource {
 }
 
 func (c *allAnimeClient) GetEpisodeSources(ctx context.Context, showID string, episode string, mode string) ([]StreamSource, error) {
-	graphqlQuery := `query($showId: String!, $translationType: VaildTranslationTypeEnumType!, $episodeString: String!) {
+	episodeQuery := `query($showId: String!, $translationType: VaildTranslationTypeEnumType!, $episodeString: String!) {
 		episode(showId: $showId, translationType: $translationType, episodeString: $episodeString) {
 			sourceUrls
 		}
 	}`
 
-	variables := map[string]any{
-		"showId":          showID,
-		"translationType": mode,
-		"episodeString":   episode,
+	// First try persistent query approach (GET with query hash)
+	result, err := c.graphqlRequestWithHash(ctx, showID, episode, mode)
+	if err != nil {
+		fmt.Printf("[ALLANIME] graphqlRequestWithHash err: %v\n", err)
+	} else {
+		fmt.Printf("[ALLANIME] graphqlRequestWithHash got result, top keys: %v\n", getMapKeys(result))
+		// Result is already in shape {"episode": {"sourceUrls": [...]}}
+		sources := c.extractSourceURLsFromData(result)
+		fmt.Printf("[ALLANIME] extractSourceURLsFromData returned %d sources\n", len(sources))
+		if len(sources) > 0 {
+			return sources, nil
+		}
 	}
 
-	result, err := c.graphqlRequest(ctx, graphqlQuery, variables)
+	// Fall back to standard POST
+	result, err = c.graphqlRequest(ctx, episodeQuery, map[string]any{
+		"showId":          showID,
+		"translationType": mode,
+		"episodeString":  episode,
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -257,17 +545,17 @@ func (c *allAnimeClient) GetEpisodeSources(ctx context.Context, showID string, e
 		return nil, fmt.Errorf("invalid source response")
 	}
 
-	episodeData, err := extractEpisodeData(data)
-	if err != nil {
-		return nil, err
+	rawSourceURLs, ok := data["episode"].(map[string]any)
+	if !ok {
+		return nil, fmt.Errorf("invalid episode response")
 	}
 
-	rawSourceURLs, ok := episodeData["sourceUrls"].([]any)
-	if !ok || len(rawSourceURLs) == 0 {
+	sourceURLs, ok := rawSourceURLs["sourceUrls"].([]any)
+	if !ok || len(sourceURLs) == 0 {
 		return nil, fmt.Errorf("no source urls")
 	}
 
-	references := buildSourceReferences(rawSourceURLs)
+	references := buildSourceReferences(sourceURLs)
 	if len(references) == 0 {
 		return nil, fmt.Errorf("no source references")
 	}
