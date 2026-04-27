@@ -38,7 +38,7 @@ func main() {
 		username := os.Args[2]
 		password := os.Args[3]
 
-		db, err := sql.Open("sqlite3", fmt.Sprintf("file:%s?_foreign_keys=on", dbFile()))
+		db, err := sql.Open("sqlite3", fmt.Sprintf("file:%s?_foreign_keys=on&_journal_mode=WAL&_busy_timeout=5000", dbFile()))
 		if err != nil {
 			log.Fatalf("failed to open db: %v", err)
 		}
@@ -90,7 +90,7 @@ func main() {
 		return
 	}
 
-	db, err := sql.Open("sqlite3", fmt.Sprintf("file:%s?_foreign_keys=on", dbFile()))
+	db, err := sql.Open("sqlite3", fmt.Sprintf("file:%s?_foreign_keys=on&_journal_mode=WAL&_busy_timeout=5000", dbFile()))
 	if err != nil {
 		log.Fatalf("failed to open db: %v", err)
 	}
