@@ -2,51 +2,13 @@ declare const htmx: {
   ajax(verb: string, path: string, target: HTMLElement): Promise<void>
 }
 
-export {}
-
 import DOMPurify from 'dompurify'
-
-interface ModeSource {
-  token: string
-  subtitles: SubtitleItem[]
-}
-
-interface SubtitleItem {
-  lang: string
-  token: string
-}
-
-interface SkipSegment {
-  type: string
-  start: number
-  end: number
-}
-
-interface EpisodeData {
-  mal_id: number
-  title: string
-  current_episode: string
-  total_episodes: number
-  initial_mode: string
-  token: string
-  available_modes: string[]
-  mode_sources: Record<string, ModeSource>
-  segments: SkipSegment[]
-  episode_title: string
-}
-
-interface EpisodeData {
-  mal_id: number
-  title: string
-  current_episode: string
-  total_episodes: number
-  initial_mode: string
-  token: string
-  available_modes: string[]
-  mode_sources: Record<string, ModeSource>
-  segments: SkipSegment[]
-  episode_title: string
-}
+import type { ModeSource, SubtitleTrack, ParsedSegment, EpisodeData } from './types'
+import { safeJsonParse, formatTime, parseEpisodeFromWatchHref } from './utils'
+import { timelineBounds, displayTimeFromAbsolute, absoluteTimeFromDisplay, absoluteTimeFromRatio } from './timeline'
+import { parseSegments, resolveActiveSegments, skipLabel, skipActivationTime } from './segments'
+import { subtitlesForMode, loadSubtitle } from './subtitles'
+import { buildWatchProgressPayload, sendWatchProgressBeacon, saveProgress, markEpisodeTransition } from './watch-progress'
 
 let playerInitialized = false
 
@@ -93,61 +55,48 @@ const initPlayer = (): void => {
   const animeTitleJapanese = container.getAttribute('data-anime-title-japanese') || ''
   const animeImage = container.getAttribute('data-anime-image') || ''
   const animeAiring = (container.getAttribute('data-anime-airing') || '').toLowerCase() === 'true'
-  const safeJsonParse = <T>(raw: string | null, fallback: T): T => {
-    if (!raw) return fallback
-    try {
-      return JSON.parse(raw) as T
-    } catch {
-      return fallback
-    }
-  }
 
-  const modeSources = safeJsonParse(container.getAttribute('data-mode-sources'), {} as Record<string, ModeSource>)
-  const availableModes = safeJsonParse(container.getAttribute('data-available-modes'), [] as string[])
+  const modeSources = safeJsonParse<Record<string, ModeSource>>(
+    container.getAttribute('data-mode-sources'),
+    {} as Record<string, ModeSource>
+  )
+  const availableModes = safeJsonParse<string[]>(
+    container.getAttribute('data-available-modes'),
+    [] as string[]
+  )
   const initialMode = container.getAttribute('data-initial-mode') || 'dub'
-  const segments = safeJsonParse(container.getAttribute('data-segments'), [] as SkipSegment[])
-  const maxIntroStartSeconds = 180
-  const minOutroStartRatio = 0.5
-  const minSegmentDurationSeconds = 20
-  const maxSegmentDurationSeconds = 240
+  const segments = safeJsonParse<any[]>(
+    container.getAttribute('data-segments'),
+    [] as any[]
+  )
 
-  let parsedSegments = segments
-    .map((segment: SkipSegment) => {
-      const start = Number(segment.start || 0)
-      const end = Number(segment.end || 0)
-      if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) {
-        return null
-      }
-      const rawType = String(segment.type || '').toLowerCase()
-      const type = rawType === 'ed' || rawType === 'outro' ? 'ed' : 'op'
-      return { type, start: Math.max(0, start), end: Math.max(0, end) }
-    })
-    .filter((s: unknown): s is { type: string, start: number, end: number } => s !== null)
-    .sort((a: { start: number }, b: { start: number }) => a.start - b.start)
-
+  let parsedSegments = parseSegments(segments)
   let currentMode = availableModes.includes(initialMode) ? initialMode : (availableModes[0] || 'dub')
-  const fallbackMode = Object.keys(modeSources).find((mode) => typeof modeSources[mode]?.token === 'string' && modeSources[mode].token !== '')
+  const fallbackMode = Object.keys(modeSources).find(
+    (mode: string) => typeof modeSources[mode]?.token === 'string' && modeSources[mode].token !== ''
+  )
   if ((!modeSources[currentMode] || !modeSources[currentMode].token) && fallbackMode) {
     currentMode = fallbackMode
   }
+
   let controlsTimeout: number | undefined
   let isScrubbing = false
   let lastKnownVolume = 1
-  let activeSubtitles: Array<{ start: number, end: number, text: string }> = []
-  let currentSubtitleTracks: Array<{ lang: string, label: string, url: string }> = []
+  let activeSubtitles: Array<{ start: number; end: number; text: string }> = []
+  let currentSubtitleTracks: SubtitleTrack[] = []
   let pendingSeekTime: number | null = null
-  let activeSkipSegment: { type: string, start: number, end: number } | null = null
-  let activeSegments: Array<{ type: string, start: number, end: number }> = []
+  let activeSkipSegment: { type: string; start: number; end: number } | null = null
+  let activeSegments: ParsedSegment[] = []
   let lastSavedProgress = { episode: currentEpisode, seconds: -1 }
   let progressSaveTimer: number | undefined
   let transitionEpisode: number | null = null
   let completionSent = false
   let completionAttempts = 0
-  const watchProgressURL = '/api/watch-progress'
 
   const previewPopover = container.querySelector('[data-preview-popover]') as HTMLElement
   const previewTime = container.querySelector('[data-preview-time]') as HTMLElement
   const videoOverlay = container.querySelector('[data-video-overlay]') as HTMLElement
+
   const streamUrlForMode = (mode: string): string => {
     const modeParam = encodeURIComponent(mode)
     const modeSource = modeSources[mode]
@@ -157,127 +106,9 @@ const initPlayer = (): void => {
     return `${streamURL}?mode=${modeParam}&token=${tokenParam}`
   }
 
-  const subtitleProxyURL = (track: SubtitleItem): string => {
-    if (!track || !track.token) return ''
-    return `/watch/proxy/subtitle?token=${encodeURIComponent(track.token)}`
-  }
-
-  const subtitlesForMode = (mode: string): Array<{ lang: string, label: string, url: string }> => {
-    const modeSource = modeSources[mode]
-    if (!modeSource || !Array.isArray(modeSource.subtitles)) return []
-    return modeSource.subtitles
-      .map((track: SubtitleItem) => ({
-        lang: (track.lang || 'unknown').toLowerCase(),
-        label: track.lang || 'Unknown',
-        url: subtitleProxyURL(track),
-      }))
-      .filter((track: { url: string }) => track.url !== '')
-  }
-
-  const skipLabel = (segmentType: string): string => segmentType === 'ed' ? 'Skip outro' : 'Skip intro'
-
-  const timelineBounds = (): { start: number, end: number, duration: number } => {
-    const duration = Number.isFinite(video.duration) && video.duration > 0 ? video.duration : 0
-
-    let start = 0
-    if (video.seekable.length > 0) {
-      const seekableStart = video.seekable.start(0)
-      if (Number.isFinite(seekableStart) && seekableStart > 0) {
-        start = seekableStart
-      }
-    }
-
-    if (duration > start) {
-      return {
-        start,
-        end: duration,
-        duration: duration - start,
-      }
-    }
-
-    if (video.seekable.length > 0) {
-      const seekableEnd = video.seekable.end(video.seekable.length - 1)
-      if (Number.isFinite(seekableEnd) && seekableEnd > start) {
-        return {
-          start,
-          end: seekableEnd,
-          duration: seekableEnd - start,
-        }
-      }
-    }
-
-    return {
-      start: 0,
-      end: duration,
-      duration,
-    }
-  }
-
-  const displayTimeFromAbsolute = (absoluteTime: number): number => {
-    const bounds = timelineBounds()
-    if (!Number.isFinite(absoluteTime) || bounds.duration <= 0) {
-      return 0
-    }
-
-    const safeAbsoluteTime = Math.max(bounds.start, Math.min(bounds.end, absoluteTime))
-    return safeAbsoluteTime - bounds.start
-  }
-
-  const absoluteTimeFromDisplay = (displayTime: number): number => {
-    const bounds = timelineBounds()
-    if (!Number.isFinite(displayTime) || bounds.duration <= 0) {
-      return 0
-    }
-
-    const safeDisplayTime = Math.max(0, Math.min(bounds.duration, displayTime))
-    return bounds.start + safeDisplayTime
-  }
-
-  const absoluteTimeFromRatio = (ratio: number): number => {
-    const bounds = timelineBounds()
-    if (!Number.isFinite(ratio) || bounds.duration <= 0) {
-      return 0
-    }
-
-    const safeRatio = Math.max(0, Math.min(1, ratio))
-    return bounds.start + (safeRatio * bounds.duration)
-  }
-
-  const resolveActiveSegments = (): void => {
-    const bounds = timelineBounds()
-    if (bounds.duration <= 0) {
-      activeSegments = []
-      return
-    }
-
-    activeSegments = parsedSegments.filter((segment: { start: number, end: number, type: string }) => {
-      const start = segment.start
-      const end = segment.end
-      const segmentDuration = end - start
-      if (segmentDuration < minSegmentDurationSeconds || segmentDuration > maxSegmentDurationSeconds) return false
-      if (start < 0 || end <= start || end > bounds.duration + 1) return false
-      if (segment.type === 'op') {
-        if (start > maxIntroStartSeconds) return false
-        if (start > bounds.duration * 0.5) return false
-        return true
-      }
-      if (segment.type === 'ed') {
-        return start >= bounds.duration * minOutroStartRatio
-      }
-      return false
-    })
-  }
-
-  const skipActivationTime = (segment: { start: number, end: number }): number => {
-    const length = Math.max(0, segment.end - segment.start)
-    const delay = Math.min(1, Math.max(0.25, length * 0.02))
-    const boundedDelay = Math.min(delay, length * 0.5)
-    return segment.start + boundedDelay
-  }
-
   const updateSkipButton = (currentTime: number): void => {
-    const currentDisplayTime = displayTimeFromAbsolute(currentTime)
-    const segment = activeSegments.find((item: { start: number, end: number }) => {
+    const currentDisplayTime = displayTimeFromAbsolute(currentTime, video)
+    const segment = activeSegments.find((item: ParsedSegment) => {
       const activationTime = skipActivationTime(item)
       return currentDisplayTime >= activationTime && currentDisplayTime < item.end
     })
@@ -300,10 +131,10 @@ const initPlayer = (): void => {
     if (!segmentsTrack) return
     segmentsTrack.innerHTML = ''
 
-    const bounds = timelineBounds()
+    const bounds = timelineBounds(video)
     if (bounds.duration <= 0) return
 
-    activeSegments.forEach((segment: { start: number, end: number }) => {
+    activeSegments.forEach((segment: ParsedSegment) => {
       const left = (segment.start / bounds.duration) * 100
       const width = ((segment.end - segment.start) / bounds.duration) * 100
       const bar = document.createElement('div')
@@ -325,17 +156,10 @@ const initPlayer = (): void => {
     }
   }
 
-  const formatTime = (seconds: number): string => {
-    if (!Number.isFinite(seconds) || seconds < 0) return '00:00'
-    const mins = Math.floor(seconds / 60)
-    const secs = Math.floor(seconds % 60)
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
-  }
-
   const updateTimeline = (currentTime: number): void => {
     if (!timeDisplay || !progress) return
 
-    const bounds = timelineBounds()
+    const bounds = timelineBounds(video)
     if (bounds.duration <= 0) {
       progress.style.width = '0%'
       if (scrubber) scrubber.style.left = '0%'
@@ -343,7 +167,7 @@ const initPlayer = (): void => {
       return
     }
 
-    const currentDisplayTime = displayTimeFromAbsolute(currentTime)
+    const currentDisplayTime = displayTimeFromAbsolute(currentTime, video)
     const pct = Math.max(0, Math.min(100, (currentDisplayTime / bounds.duration) * 100))
     progress.style.width = `${pct}%`
     if (scrubber) scrubber.style.left = `${pct}%`
@@ -351,7 +175,7 @@ const initPlayer = (): void => {
   }
 
   const seekBy = (delta: number): void => {
-    const bounds = timelineBounds()
+    const bounds = timelineBounds(video)
     if (bounds.duration <= 0) return
 
     const next = Math.max(bounds.start, Math.min(bounds.end, video.currentTime + delta))
@@ -377,7 +201,7 @@ const initPlayer = (): void => {
   const updatePreviewUI = (ratio: number): void => {
     if (!progressWrap || !previewPopover || !previewTime) return
 
-    const bounds = timelineBounds()
+    const bounds = timelineBounds(video)
     if (bounds.duration <= 0) {
       hidePreviewPopover()
       return
@@ -403,155 +227,14 @@ const initPlayer = (): void => {
     previewPopover.style.left = `${clampedOffset}px`
   }
 
-  const buildWatchProgressPayload = (episodeNumber: number, timeSeconds: number): string => {
-    return JSON.stringify({
-      mal_id: malID,
-      episode: episodeNumber,
-      time_seconds: timeSeconds,
-    })
-  }
-
-  const sendWatchProgressBeacon = (payload: string): boolean => {
-    if (!navigator.sendBeacon) {
-      return false
-    }
-
-    const blob = new Blob([payload], { type: 'application/json' })
-    navigator.sendBeacon(watchProgressURL, blob)
-    return true
-  }
-
-  const saveProgress = async (): Promise<void> => {
-    if (!Number.isInteger(malID) || malID <= 0) return
-
-    const bounds = timelineBounds()
-    if (bounds.duration <= 0) return
-
-    const episodeNumber = Number.parseInt(currentEpisode, 10)
-    if (!Number.isInteger(episodeNumber) || episodeNumber <= 0) return
-
-    const safeTime = displayTimeFromAbsolute(video.currentTime)
-    if (lastSavedProgress.episode === currentEpisode && Math.abs(lastSavedProgress.seconds - safeTime) < 5) {
-      return
-    }
-
-    const payload = buildWatchProgressPayload(episodeNumber, safeTime)
-
-    try {
-      const response = await fetch(watchProgressURL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: payload,
-      })
-      if (!response.ok) return
-      lastSavedProgress = {
-        episode: currentEpisode,
-        seconds: safeTime,
-      }
-    } catch {
-      return
-    }
-  }
-
   const scheduleProgressSave = (): void => {
     if (progressSaveTimer !== undefined) return
     progressSaveTimer = window.setTimeout(() => {
       progressSaveTimer = undefined
-      saveProgress()
+      saveProgress(video, malID, currentEpisode, lastSavedProgress).then((result) => {
+        lastSavedProgress = result
+      })
     }, 30000)
-  }
-
-  const parseEpisodeFromWatchHref = (href: string): number | null => {
-    if (!Number.isInteger(malID) || malID <= 0) return null
-
-    try {
-      const targetURL = new URL(href, window.location.origin)
-      const pathParts = targetURL.pathname.split('/').filter(Boolean)
-      if (pathParts.length < 3 || pathParts[0] !== 'watch') return null
-
-      const targetMalID = Number.parseInt(pathParts[1] || '', 10)
-      const targetEpisode = Number.parseInt(pathParts[2] || '', 10)
-      if (!Number.isInteger(targetMalID) || targetMalID !== malID) return null
-      if (!Number.isInteger(targetEpisode) || targetEpisode <= 0) return null
-
-      return targetEpisode
-    } catch {
-      return null
-    }
-  }
-
-  const markEpisodeTransition = (episodeNumber: number): void => {
-    if (!Number.isInteger(malID) || malID <= 0) return
-    if (!Number.isInteger(episodeNumber) || episodeNumber <= 0) return
-
-    transitionEpisode = episodeNumber
-    const payload = buildWatchProgressPayload(episodeNumber, 0)
-
-    if (sendWatchProgressBeacon(payload)) {
-      return
-    }
-
-    fetch(watchProgressURL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      keepalive: true,
-      body: payload,
-    }).catch(() => {})
-  }
-
-  const parseVttTime = (raw: string): number => {
-    const parts = raw.trim().split(':')
-    if (parts.length < 2) return 0
-    const secPart = parts.pop() || '0'
-    const minPart = parts.pop() || '0'
-    const hourPart = parts.pop() || '0'
-    const seconds = Number(secPart.replace(',', '.'))
-    const minutes = Number(minPart)
-    const hours = Number(hourPart)
-    return (hours * 3600) + (minutes * 60) + seconds
-  }
-
-  const parseVtt = (text: string): Array<{ start: number, end: number, text: string }> => {
-    const lines = text.replace(/\r/g, '').split('\n')
-    const cues: Array<{ start: number, end: number, text: string }> = []
-    let i = 0
-    while (i < lines.length) {
-      const line = lines[i].trim()
-      if (!line) { i += 1; continue }
-      let timeLine = line
-      if (!line.includes('-->') && i + 1 < lines.length) {
-        timeLine = lines[i + 1].trim()
-        i += 1
-      }
-      if (!timeLine.includes('-->')) { i += 1; continue }
-      const [startRaw, endRaw] = timeLine.split('-->')
-      const start = parseVttTime(startRaw)
-      const end = parseVttTime(endRaw)
-      i += 1
-      const payload: string[] = []
-      while (i < lines.length && lines[i].trim() !== '') {
-        payload.push(lines[i])
-        i += 1
-      }
-      const textContent = payload.join('\n').replace(/<[^>]+>/g, '').trim()
-      if (textContent) cues.push({ start, end, text: textContent })
-    }
-    return cues
-  }
-
-  const loadSubtitle = async (url: string): Promise<Array<{ start: number, end: number, text: string }>> => {
-    try {
-      const response = await fetch(url)
-      if (!response.ok) return []
-      const text = await response.text()
-      return parseVtt(text)
-    } catch {
-      return []
-    }
   }
 
   const hideSubtitleText = (): void => {
@@ -579,7 +262,7 @@ const initPlayer = (): void => {
 
   const updateSubtitleOptions = (): void => {
     if (!subtitleSelect) return
-    currentSubtitleTracks = subtitlesForMode(currentMode)
+    currentSubtitleTracks = subtitlesForMode(currentMode, modeSources)
     subtitleSelect.innerHTML = ''
     const none = document.createElement('option')
     none.value = 'none'
@@ -622,7 +305,7 @@ const initPlayer = (): void => {
     const nextURL = streamUrlForMode(mode)
     if (!nextURL) return
     const wasPlaying = !video.paused
-    const previousTime = displayTimeFromAbsolute(video.currentTime)
+    const previousTime = displayTimeFromAbsolute(video.currentTime, video)
     currentMode = mode
     hidePreviewPopover()
     video.src = nextURL
@@ -727,13 +410,13 @@ const initPlayer = (): void => {
   if (video) {
     video.addEventListener('loadedmetadata', () => {
       if (loading) loading.style.display = 'none'
-      resolveActiveSegments()
+      resolveActiveSegments(parsedSegments, video)
       renderSegments()
 
       const startTimeSeconds = Number.parseFloat(container.getAttribute('data-start-time-seconds') || '0')
-      const currentDisplayTime = displayTimeFromAbsolute(video.currentTime)
+      const currentDisplayTime = displayTimeFromAbsolute(video.currentTime, video)
       if (Number.isFinite(startTimeSeconds) && startTimeSeconds > 0 && currentDisplayTime <= 0.5) {
-        const nextStart = absoluteTimeFromDisplay(startTimeSeconds)
+        const nextStart = absoluteTimeFromDisplay(startTimeSeconds, video)
         if (nextStart > 0) {
           try {
             video.currentTime = nextStart
@@ -742,7 +425,7 @@ const initPlayer = (): void => {
       }
       if (pendingSeekTime !== null && Number.isFinite(pendingSeekTime)) {
         try {
-          video.currentTime = absoluteTimeFromDisplay(pendingSeekTime)
+          video.currentTime = absoluteTimeFromDisplay(pendingSeekTime, video)
         } catch {}
         pendingSeekTime = null
       }
@@ -763,7 +446,7 @@ const initPlayer = (): void => {
 
     video.addEventListener('timeupdate', () => {
       updateTimeline(video.currentTime)
-      updateSubtitleRender(displayTimeFromAbsolute(video.currentTime))
+      updateSubtitleRender(displayTimeFromAbsolute(video.currentTime, video))
       updateSkipButton(video.currentTime)
       scheduleProgressSave()
     })
@@ -778,7 +461,9 @@ const initPlayer = (): void => {
       showControls()
       window.clearTimeout(progressSaveTimer)
       progressSaveTimer = undefined
-      saveProgress()
+      saveProgress(video, malID, currentEpisode, lastSavedProgress).then((result) => {
+        lastSavedProgress = result
+      })
     })
 
     video.addEventListener('volumechange', () => {
@@ -790,109 +475,96 @@ const initPlayer = (): void => {
     })
   }
 
-const goToNextEpisode = (): void => {
-  const pathParts = window.location.pathname.split('/')
-  if (pathParts.length < 4) return
+  const goToNextEpisode = (): void => {
+    const pathParts = window.location.pathname.split('/')
+    if (pathParts.length < 4) return
 
-  const animeID = pathParts[2]
-  const currentEpisodeNumber = Number.parseInt(pathParts[3], 10)
-  if (Number.isNaN(currentEpisodeNumber)) return
+    const animeID = pathParts[2]
+    const currentEpisodeNumber = Number.parseInt(pathParts[3], 10)
+    if (Number.isNaN(currentEpisodeNumber)) return
 
-  if (Number.isInteger(totalEpisodes) && totalEpisodes > 0 && currentEpisodeNumber >= totalEpisodes) {
-    completeAnime(currentEpisodeNumber)
-    return
+    if (Number.isInteger(totalEpisodes) && totalEpisodes > 0 && currentEpisodeNumber >= totalEpisodes) {
+      completeAnime(currentEpisodeNumber)
+      return
+    }
+
+    const nextEpisode = currentEpisodeNumber + 1
+    markEpisodeTransition(malID, nextEpisode)
+
+    if (document.fullscreenElement) {
+      loadNextEpisodeInPlace(Number(animeID), nextEpisode)
+      return
+    }
+
+    const nextUrl = `/watch/${animeID}/${nextEpisode}`
+    sessionStorage.setItem('mal:autoplay-next', 'true')
+    window.location.href = nextUrl
   }
 
-  const nextEpisode = currentEpisodeNumber + 1
-  markEpisodeTransition(nextEpisode)
+  const loadNextEpisodeInPlace = async (animeID: number, nextEpisode: number): Promise<void> => {
+    if (!Number.isInteger(animeID) || animeID <= 0) return
 
-  if (document.fullscreenElement) {
-    loadNextEpisodeInPlace(Number(animeID), nextEpisode)
-    return
+    const url = `/api/watch/episode/${animeID}/${nextEpisode}`
+    let data: EpisodeData | null = null
+
+    try {
+      const resp = await fetch(url)
+      if (!resp.ok) return
+      data = await resp.json() as EpisodeData
+    } catch {
+      return
+    }
+
+    if (!data) return
+
+    const container = document.querySelector('[data-video-player]') as HTMLElement | null
+    if (!container) return
+
+    const video = container.querySelector('video') as HTMLVideoElement | null
+    if (!video) return
+
+    container.setAttribute('data-current-episode', String(nextEpisode))
+    container.setAttribute('data-mal-id', String(animeID))
+    container.setAttribute('data-total-episodes', String(data.total_episodes))
+    container.setAttribute('data-start-time-seconds', '0')
+    container.setAttribute('data-initial-mode', data.initial_mode)
+    container.setAttribute('data-stream-token', data.token)
+    container.setAttribute('data-available-modes', JSON.stringify(data.available_modes))
+    container.setAttribute('data-mode-sources', JSON.stringify(data.mode_sources))
+    container.setAttribute('data-segments', JSON.stringify(data.segments))
+
+    currentEpisode = String(nextEpisode)
+    totalEpisodes = data.total_episodes
+
+    const newStreamURL = container.getAttribute('data-stream-url') || '/watch/proxy/stream'
+    const streamMode = data.initial_mode
+    const modeSource = data.mode_sources[streamMode]
+
+    if (modeSource?.token) {
+      video.src = `${newStreamURL}?mode=${encodeURIComponent(streamMode)}&token=${encodeURIComponent(modeSource.token)}`
+    } else if (data.token) {
+      video.src = `${newStreamURL}?mode=${encodeURIComponent(streamMode)}&token=${encodeURIComponent(data.token)}`
+    }
+
+    video.load()
+    video.play().catch(() => {})
+
+    parsedSegments = parseSegments(data.segments || [])
+    activeSegments = []
+    resolveActiveSegments(parsedSegments, video)
+    renderSegments()
+    updateSubtitleOptions()
+    updateModeButtons(data.initial_mode)
+    updateVideoOverlay(String(nextEpisode), data.episode_title)
+
+    const nextUrl = `/watch/${animeID}/${nextEpisode}`
+    window.history.replaceState(null, '', nextUrl)
+
+    const episodesList = document.getElementById('episodes-list')
+    if (episodesList) {
+      htmx.ajax('GET', `/api/anime/${animeID}/episodes?current=${nextEpisode}`, episodesList)
+    }
   }
-
-  const nextUrl = `/watch/${animeID}/${nextEpisode}`
-  sessionStorage.setItem('mal:autoplay-next', 'true')
-  window.location.href = nextUrl
-}
-
-const loadNextEpisodeInPlace = async (animeID: number, nextEpisode: number): Promise<void> => {
-  if (!Number.isInteger(animeID) || animeID <= 0) return
-
-  const url = `/api/watch/episode/${animeID}/${nextEpisode}`
-  let data: EpisodeData | null = null
-
-  try {
-    const resp = await fetch(url)
-    if (!resp.ok) return
-    data = await resp.json() as EpisodeData
-  } catch {
-    return
-  }
-
-  if (!data) return
-
-  const container = document.querySelector('[data-video-player]') as HTMLElement | null
-  if (!container) return
-
-  const video = container.querySelector('video') as HTMLVideoElement | null
-  if (!video) return
-
-  container.setAttribute('data-current-episode', String(nextEpisode))
-  container.setAttribute('data-mal-id', String(animeID))
-  container.setAttribute('data-total-episodes', String(data.total_episodes))
-  container.setAttribute('data-start-time-seconds', '0')
-  container.setAttribute('data-initial-mode', data.initial_mode)
-  container.setAttribute('data-stream-token', data.token)
-  container.setAttribute('data-available-modes', JSON.stringify(data.available_modes))
-  container.setAttribute('data-mode-sources', JSON.stringify(data.mode_sources))
-  container.setAttribute('data-segments', JSON.stringify(data.segments))
-
-  currentEpisode = String(nextEpisode)
-  totalEpisodes = data.total_episodes
-
-  const newStreamURL = container.getAttribute('data-stream-url') || '/watch/proxy/stream'
-  const streamMode = data.initial_mode
-  const modeSource = data.mode_sources[streamMode]
-
-  if (modeSource?.token) {
-    video.src = `${newStreamURL}?mode=${encodeURIComponent(streamMode)}&token=${encodeURIComponent(modeSource.token)}`
-  } else if (data.token) {
-    video.src = `${newStreamURL}?mode=${encodeURIComponent(streamMode)}&token=${encodeURIComponent(data.token)}`
-  }
-
-  video.load()
-  video.play().catch(() => {})
-
-  parsedSegments = (data.segments || [])
-    .map((segment: SkipSegment) => {
-      const start = Number(segment.start || 0)
-      const end = Number(segment.end || 0)
-      if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) {
-        return null
-      }
-      const rawType = String(segment.type || '').toLowerCase()
-      const type = rawType === 'ed' || rawType === 'outro' ? 'ed' : 'op'
-      return { type, start: Math.max(0, start), end: Math.max(0, end) }
-    })
-    .filter((s: unknown): s is { type: string, start: number, end: number } => s !== null)
-    .sort((a: { start: number }, b: { start: number }) => a.start - b.start)
-
-  activeSegments = []
-  resolveActiveSegments()
-  renderSegments()
-  updateSubtitleOptions()
-  updateModeButtons(data.initial_mode)
-  updateVideoOverlay(String(nextEpisode), data.episode_title)
-
-  const nextUrl = `/watch/${animeID}/${nextEpisode}`
-  window.history.replaceState(null, '', nextUrl)
-
-  const episodesList = document.getElementById('episodes-list')
-  if (episodesList) {
-    htmx.ajax('GET', `/api/anime/${animeID}/episodes?current=${nextEpisode}`, episodesList)
-  }
-}
 
   const completeAnime = async (episodeNumber: number): Promise<void> => {
     if (completionSent) return
@@ -1025,7 +697,7 @@ const loadNextEpisodeInPlace = async (animeID: number, nextEpisode: number): Pro
   skipSegmentBtn?.addEventListener('click', () => {
     if (!activeSkipSegment) return
 
-    const target = absoluteTimeFromDisplay(activeSkipSegment.end + 0.01)
+    const target = absoluteTimeFromDisplay(activeSkipSegment.end + 0.01, video)
     video.currentTime = target
 
     updateTimeline(video.currentTime)
@@ -1057,7 +729,7 @@ const loadNextEpisodeInPlace = async (animeID: number, nextEpisode: number): Pro
     const rect = progressWrap.getBoundingClientRect()
     const ratio = Math.max(0, Math.min(1, ((event as MouseEvent).clientX - rect.left) / rect.width))
 
-    video.currentTime = absoluteTimeFromRatio(ratio)
+    video.currentTime = absoluteTimeFromRatio(ratio, video)
 
     updateTimeline(video.currentTime)
     updateSkipButton(video.currentTime)
@@ -1084,14 +756,16 @@ const loadNextEpisodeInPlace = async (animeID: number, nextEpisode: number): Pro
     const anchor = targetElement.closest('a[href]')
     if (!(anchor instanceof HTMLAnchorElement)) return
 
-    const nextEpisode = parseEpisodeFromWatchHref(anchor.href)
+    const nextEpisode = parseEpisodeFromWatchHref(anchor.href, malID)
     if (nextEpisode === null) return
-    markEpisodeTransition(nextEpisode)
+    markEpisodeTransition(malID, nextEpisode)
   })
 
   window.addEventListener('mouseup', () => {
     isScrubbing = false
-    saveProgress()
+    saveProgress(video, malID, currentEpisode, lastSavedProgress).then((result) => {
+      lastSavedProgress = result
+    })
   })
 
   window.addEventListener('mousemove', (event) => {
@@ -1099,7 +773,7 @@ const loadNextEpisodeInPlace = async (animeID: number, nextEpisode: number): Pro
     const rect = progressWrap.getBoundingClientRect()
     const ratio = Math.max(0, Math.min(1, (event.clientX - rect.left) / rect.width))
 
-    video.currentTime = absoluteTimeFromRatio(ratio)
+    video.currentTime = absoluteTimeFromRatio(ratio, video)
 
     updateTimeline(video.currentTime)
     updateSkipButton(video.currentTime)
@@ -1128,14 +802,14 @@ const loadNextEpisodeInPlace = async (animeID: number, nextEpisode: number): Pro
     if (completionSent) return
     if (!Number.isInteger(malID) || malID <= 0) return
 
-    const bounds = timelineBounds()
+    const bounds = timelineBounds(video)
     if (bounds.duration <= 0) return
 
     const episodeNumber = Number.parseInt(currentEpisode, 10)
     if (!Number.isInteger(episodeNumber) || episodeNumber <= 0) return
 
-    const safeTime = displayTimeFromAbsolute(video.currentTime)
-    const payload = buildWatchProgressPayload(episodeNumber, safeTime)
+    const safeTime = displayTimeFromAbsolute(video.currentTime, video)
+    const payload = buildWatchProgressPayload(malID, episodeNumber, safeTime)
     sendWatchProgressBeacon(payload)
   })
 
