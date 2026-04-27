@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"context"
 	"database/sql"
 	"fmt"
@@ -9,6 +10,7 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
+	"strings"
 	"syscall"
 	"time"
 
@@ -42,6 +44,37 @@ func main() {
 		}
 		defer db.Close()
 
+		var existingID string
+		err = db.QueryRow("SELECT id FROM user WHERE username = ?", username).Scan(&existingID)
+		if err != nil && err != sql.ErrNoRows {
+			log.Fatalf("database error: %v", err)
+		}
+
+		if err == nil {
+			fmt.Printf("User '%s' already exists. Do you want to overwrite their password? [y/N]: ", username)
+			reader := bufio.NewReader(os.Stdin)
+			response, _ := reader.ReadString('\n')
+			response = strings.TrimSpace(strings.ToLower(response))
+
+			if response != "y" && response != "yes" {
+				fmt.Println("Operation cancelled.")
+				return
+			}
+
+			hash, err := bcrypt.GenerateFromPassword([]byte(password), 12)
+			if err != nil {
+				log.Fatalf("failed to hash password: %v", err)
+			}
+
+			_, err = db.Exec("UPDATE user SET password_hash = ? WHERE id = ?", string(hash), existingID)
+			if err != nil {
+				log.Fatalf("failed to update user: %v", err)
+			}
+
+			fmt.Printf("✅ Password for '%s' updated successfully!\n", username)
+			return
+		}
+
 		hash, err := bcrypt.GenerateFromPassword([]byte(password), 12)
 		if err != nil {
 			log.Fatalf("failed to hash password: %v", err)
@@ -50,7 +83,7 @@ func main() {
 		id := uuid.New().String()
 		_, err = db.Exec("INSERT INTO user (id, username, password_hash) VALUES (?, ?, ?)", id, username, string(hash))
 		if err != nil {
-			log.Fatalf("failed to create user (might already exist): %v", err)
+			log.Fatalf("failed to create user: %v", err)
 		}
 
 		fmt.Printf("✅ Brugeren '%s' blev oprettet med succes!\n", username)
