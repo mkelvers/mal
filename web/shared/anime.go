@@ -21,9 +21,9 @@ func JoinStreamingNames(anime jikan.Anime) string {
 	return strings.Join(names, ", ")
 }
 
-func WatchTargetEpisode(currentStatus string, nextEpisode int) int {
-	if currentStatus == "watching" && nextEpisode > 0 {
-		return nextEpisode
+func WatchTargetEpisode(currentStatus string, currentEpisode int) int {
+	if currentStatus != "" && currentEpisode > 0 {
+		return currentEpisode
 	}
 	return 1
 }
