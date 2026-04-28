@@ -22,6 +22,11 @@ RUN go mod download
 COPY package.json bun.lock ./
 RUN bun install --frozen-lockfile
 
+# Copy key source files first to auto-bust cache when they change
+# This ensures the COPY . . layer is never stale
+COPY web/shared/layout/layout.templ ./
+RUN cat web/shared/layout/layout.templ | md5sum > /tmp/source_hash.txt
+
 COPY . .
 
 # Generate templ files
