@@ -33,7 +33,8 @@ COPY . .
 RUN templ generate
 
 # Build frontend assets (tailwind + ts)
-RUN bun run build:assets
+# Touch input file to force Tailwind to rescan
+RUN touch ./static/style.css && bun run build:assets
 
 # Generate sqlc code
 RUN sqlc generate

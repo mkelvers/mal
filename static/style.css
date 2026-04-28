@@ -3,6 +3,7 @@
 @import '@toolwind/anchors';
 
 @source "..";
+@source "../web/**/*.templ";
 
 :root {
   color-scheme: light dark;
