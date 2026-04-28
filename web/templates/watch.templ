@@ -39,7 +39,19 @@ templ WatchPage(anime jikan.Anime, data shared.WatchPageData) {
 				hx-boost="true"
 			>
 				@watch.VideoPlayer(data, anime.DisplayTitle())
-				<div class="flex flex-wrap items-center justify-between gap-2 sm:justify-end">
+				<div class="flex flex-wrap items-center gap-2">
+					<button
+						data-autoplay
+						class="inline-flex h-8 items-center gap-1.5 bg-(--panel-soft) px-2 text-xs text-(--text) hover:bg-(--panel)"
+						title="Autoplay: On"
+					>
+						<svg class="h-3.5 w-3.5 shrink-0" viewBox="0 0 24 24" aria-hidden="true">
+							<polygon points="5 6 16 12 5 18" fill="currentColor" stroke="none"></polygon>
+							<line x1="19" y1="6" x2="19" y2="18" stroke="currentColor" stroke-width="2" stroke-linecap="round"></line>
+						</svg>
+						Autoplay: On
+					</button>
+					<div class="ml-auto flex flex-wrap items-center gap-2">
 					if shared.CanGoPrevEpisode(data.CurrentEpisode) {
 						<a
 							href={ templ.URL(shared.EpisodeWithOffsetURL(anime.MalID, data.CurrentEpisode, -1)) }
@@ -75,6 +87,7 @@ templ WatchPage(anime jikan.Anime, data shared.WatchPageData) {
 							anime.Airing,
 						)
 					</span>
+					</div>
 				</div>
 				<section>
 					<h3 class="mb-3 text-lg font-semibold tracking-wide text-(--text)">
