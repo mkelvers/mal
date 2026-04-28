@@ -81,7 +81,7 @@ const initPlayer = (): void => {
   const forwardBtn = container.querySelector('[data-forward]') as HTMLButtonElement
   const fullscreenBtn = container.querySelector('[data-fullscreen]') as HTMLButtonElement
   const skipSegmentBtn = container.querySelector('[data-skip]') as HTMLButtonElement
-  const autoplayBtn = container.querySelector('[data-autoplay]') as HTMLButtonElement
+  const autoplayBtn = document.querySelector('[data-autoplay]') as HTMLButtonElement
   const subtitleText = container.querySelector('[data-subtitle-text]') as HTMLElement
 
   const streamURL = container.getAttribute('data-stream-url') || '/watch/proxy/stream'
