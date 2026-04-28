@@ -81,6 +81,7 @@ const initPlayer = (): void => {
   const forwardBtn = container.querySelector('[data-forward]') as HTMLButtonElement
   const fullscreenBtn = container.querySelector('[data-fullscreen]') as HTMLButtonElement
   const skipSegmentBtn = container.querySelector('[data-skip]') as HTMLButtonElement
+  const autoplayBtn = container.querySelector('[data-autoplay]') as HTMLButtonElement
   const subtitleText = container.querySelector('[data-subtitle-text]') as HTMLElement
 
   const streamURL = container.getAttribute('data-stream-url') || '/watch/proxy/stream'
@@ -175,6 +176,15 @@ const initPlayer = (): void => {
   }
 
   const skipLabel = (segmentType: string): string => segmentType === 'ed' ? 'Skip outro' : 'Skip intro'
+
+  const isAutoplayEnabled = (): boolean => localStorage.getItem('mal:autoplay-enabled') !== 'false'
+
+  const updateAutoplayButton = (): void => {
+    if (!autoplayBtn) return
+    const enabled = isAutoplayEnabled()
+    autoplayBtn.title = enabled ? 'Autoplay: On' : 'Autoplay: Off'
+    autoplayBtn.classList.toggle('opacity-40', !enabled)
+  }
 
   const timelineBounds = (): { start: number, end: number, duration: number } => {
     const duration = Number.isFinite(video.duration) && video.duration > 0 ? video.duration : 0
@@ -803,6 +813,8 @@ const goToNextEpisode = (): void => {
     return
   }
 
+  if (!isAutoplayEnabled()) return
+
   const nextEpisode = currentEpisodeNumber + 1
   markEpisodeTransition(nextEpisode)
 
@@ -862,7 +874,9 @@ const loadNextEpisodeInPlace = async (animeID: number, nextEpisode: number): Pro
   }
 
   video.load()
-  video.play().catch(() => {})
+  if (isAutoplayEnabled()) {
+    video.play().catch(() => {})
+  }
 
   parsedSegments = (data.segments || [])
     .map((segment: SkipSegment) => {
@@ -1036,6 +1050,12 @@ const loadNextEpisodeInPlace = async (animeID: number, nextEpisode: number): Pro
   modeDub?.addEventListener('click', toggleDub)
   modeSub?.addEventListener('click', toggleSub)
 
+  autoplayBtn?.addEventListener('click', () => {
+    localStorage.setItem('mal:autoplay-enabled', isAutoplayEnabled() ? 'false' : 'true')
+    updateAutoplayButton()
+    showControls()
+  })
+
   subtitleSelect?.addEventListener('change', async () => {
     const selected = subtitleSelect.value
     if (selected === 'none') {
@@ -1142,6 +1162,7 @@ const loadNextEpisodeInPlace = async (animeID: number, nextEpisode: number): Pro
   updatePlayPauseIcons(false)
   syncVolumeUI()
   updateSkipButton(0)
+  updateAutoplayButton()
   showControls()
 
   playerInitialized = true
