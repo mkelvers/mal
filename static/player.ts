@@ -182,8 +182,14 @@ const initPlayer = (): void => {
   const updateAutoplayButton = (): void => {
     if (!autoplayBtn) return
     const enabled = isAutoplayEnabled()
-    autoplayBtn.title = enabled ? 'Autoplay: On' : 'Autoplay: Off'
-    autoplayBtn.classList.toggle('opacity-40', !enabled)
+    const label = enabled ? 'Autoplay: On' : 'Autoplay: Off'
+    autoplayBtn.title = label
+    autoplayBtn.classList.remove('opacity-40', 'opacity-50')
+    if (!enabled) autoplayBtn.classList.add('opacity-50')
+    const lastChild = autoplayBtn.lastChild
+    if (lastChild && lastChild.nodeType === Node.TEXT_NODE) {
+      lastChild.textContent = label
+    }
   }
 
   const timelineBounds = (): { start: number, end: number, duration: number } => {
