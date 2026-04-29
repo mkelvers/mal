@@ -27,7 +27,7 @@ templ VideoPlayer(data shared.WatchPageData, displayTitle string) {
 		data-mode-sources={ shared.ToJSON(data.ModeSources) }
 		data-segments={ shared.ToJSON(data.Segments) }
 	>
-		<div class="group relative aspect-video w-full max-h-[100vh] overflow-hidden bg-black cursor-none group-[.show-controls]/player:cursor-auto">
+		<div class="group relative h-full w-full overflow-hidden bg-black cursor-none group-[.show-controls]/player:cursor-auto">
 			<video
 				class="h-full w-full object-cover"
 				preload="metadata"

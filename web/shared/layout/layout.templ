@@ -29,7 +29,7 @@ templ Layout(title string, showHeader bool, fullBleed bool) {
 			class="min-h-screen bg-(--bg) text-(--text) font-(--font) text-sm leading-normal flex flex-col"
 		>
 			if showHeader {
-				<header class="sticky top-0 z-100 bg-(--header)">
+				<header id="site-header" class="sticky top-0 z-100 bg-(--header)">
 					<div
 						class="mx-auto flex w-full max-w-(--breakpoint-2xl) items-center gap-4 px-4 py-3 max-lg:flex-wrap max-lg:gap-3"
 					>
@@ -88,6 +88,16 @@ templ Layout(title string, showHeader bool, fullBleed bool) {
 
 					</div>
 				</header>
+				<script>
+					(function() {
+						function update() {
+							const h = document.getElementById('site-header')
+							if (h) document.documentElement.style.setProperty('--header-height', h.offsetHeight + 'px')
+						}
+						update()
+						window.addEventListener('resize', update)
+					})()
+				</script>
 			}
 			<main class={
 				"flex-1",
