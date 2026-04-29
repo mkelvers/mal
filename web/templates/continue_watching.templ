@@ -10,7 +10,7 @@ import (
 )
 
 templ ContinueWatching(entries []db.GetContinueWatchingEntriesRow) {
-	@layout.Layout("mal - continue watching", true) {
+	@layout.Layout("mal - continue watching", true, false) {
 		<div class="grid gap-4">
 			<h1>Continue watching</h1>
 			<p class="m-0 text-sm text-(--text-muted)">Pick up where you left off.</p>

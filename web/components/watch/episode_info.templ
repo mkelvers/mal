@@ -1,0 +1,32 @@
+package watch
+
+import (
+	"mal/web/shared"
+)
+
+templ EpisodeInfo(data shared.WatchPageData) {
+	<div class="mb-4 space-y-1">
+		<h2 class="text-xl font-semibold text-(--text)">
+			if data.EpisodeTitle != "" {
+				E{ data.CurrentEpisode } - { data.EpisodeTitle }
+			} else {
+				E{ data.CurrentEpisode } - Episode { data.CurrentEpisode }
+			}
+		</h2>
+		<p class="text-sm text-(--text-muted)">
+			{ shared.EpisodeModeLabel(data.AvailableModes, data.InitialMode) }
+		</p>
+	</div>
+	if formatted := shared.FormatEpisodeAired(data.EpisodeAired); formatted != "" {
+		<p class="mb-4 text-sm text-(--text)">Released on { formatted }</p>
+	} else {
+		<p class="mb-4 text-sm text-(--text-muted)">Release date unknown</p>
+	}
+	<p class="text-sm leading-relaxed text-(--text-muted)">
+		if data.EpisodeTitle != "" {
+			{ data.EpisodeTitle }.
+		} else {
+			Episode { data.CurrentEpisode }.
+		}
+	</p>
+}

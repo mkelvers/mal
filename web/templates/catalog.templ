@@ -6,7 +6,7 @@ import "fmt"
 import "mal/web/shared/layout"
 
 templ Catalog() {
-	@layout.Layout("mal - catalog", true) {
+	@layout.Layout("mal - catalog", true, false) {
 		<div class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:gap-4 lg:grid-cols-4 xl:grid-cols-6" id="catalog-content">
 			<div class="col-span-full" hx-get="/api/catalog?page=1" hx-trigger="load" hx-swap="outerHTML">
 				@ui.LoadingIndicator("Loading catalog")

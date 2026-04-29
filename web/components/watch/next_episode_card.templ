@@ -1,0 +1,83 @@
+package watch
+
+import (
+	"fmt"
+
+	"mal/integrations/jikan"
+	"mal/web/shared"
+)
+
+templ NextEpisodeCard(anime jikan.Anime, data shared.WatchPageData) {
+	{{ nextNum, _ := nextEpisodeNumber(data.CurrentEpisode) }}
+	if shared.CanGoNextEpisode(data.CurrentEpisode, anime.Episodes) && nextNum > 0 {
+		<div>
+			<h3 class="mb-3 text-sm font-medium text-(--text)">NEXT EPISODE</h3>
+			<a
+				href={ templ.URL(fmt.Sprintf("/watch/%d/%d", anime.MalID, nextNum)) }
+				class="flex w-full gap-4 text-left no-underline transition-opacity hover:opacity-80 hover:no-underline"
+			>
+				<div class="relative h-24 w-40 shrink-0 overflow-hidden rounded bg-(--panel-soft)">
+					if anime.ImageURL() != "" {
+						<img
+							src={ anime.ImageURL() }
+							alt={ fmt.Sprintf("Episode %d", nextNum) }
+							class="h-full w-full object-cover"
+							loading="lazy"
+						/>
+					} else {
+						<div class="flex h-full w-full items-center justify-center text-(--text-faint)">
+							<svg class="h-8 w-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+								<rect x="3" y="3" width="18" height="18" rx="2"></rect>
+								<circle cx="8.5" cy="8.5" r="1.5"></circle>
+								<path d="M21 15l-5-5L5 21"></path>
+							</svg>
+						</div>
+					}
+				</div>
+				<div class="flex flex-col justify-center">
+					<p class="font-medium text-(--text)">
+						if data.NextEpisodeTitle != "" {
+							E{ fmt.Sprintf("%d", nextNum) } - { data.NextEpisodeTitle }
+						} else {
+							E{ fmt.Sprintf("%d", nextNum) } - Episode { fmt.Sprintf("%d", nextNum) }
+						}
+					</p>
+					<p class="mt-1 text-sm text-(--text-muted)">
+						{ shared.EpisodeModeLabel(data.AvailableModes, data.InitialMode) }
+					</p>
+				</div>
+			</a>
+		</div>
+	}
+}
+
+templ SeeMoreEpisodesButton(animeID int, currentEpisode string) {
+	<button
+		type="button"
+		class="mt-4 flex w-full items-center justify-center gap-2 border border-(--text) bg-transparent px-4 py-3 text-sm font-medium tracking-wide text-(--text) transition-colors hover:bg-(--panel-soft)"
+		data-episodes-toggle
+		data-label-more="SEE MORE EPISODES"
+		data-label-less="SEE LESS"
+		hx-get={ string(templ.URL(fmt.Sprintf("/api/anime/%d/episodes?current=%s", animeID, currentEpisode))) }
+		hx-target="#episode-list-drawer"
+		hx-swap="innerHTML"
+		hx-trigger="click once"
+	>
+		<svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+			<rect x="4" y="3" width="16" height="18" rx="2"></rect>
+			<line x1="8" y1="7" x2="16" y2="7"></line>
+			<line x1="8" y1="11" x2="16" y2="11"></line>
+			<line x1="8" y1="15" x2="12" y2="15"></line>
+		</svg>
+		<span data-toggle-label>SEE MORE EPISODES</span>
+	</button>
+}
+
+func nextEpisodeNumber(currentEpisode string) (int, error) {
+	var n int
+	_, err := fmt.Sscanf(currentEpisode, "%d", &n)
+	if err != nil {
+		return 0, err
+	}
+	return n + 1, nil
+}

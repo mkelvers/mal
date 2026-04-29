@@ -57,4 +57,67 @@ const initWatchlistDropdown = (): void => {
   document.addEventListener('click', closeDropdownOnOutsideClick)
 }
 
+const initSynopsisToggle = (): void => {
+  document.addEventListener('click', (event: MouseEvent) => {
+    const target = event.target
+    if (!(target instanceof HTMLElement)) {
+      return
+    }
+
+    const button = target.closest('[data-synopsis-toggle]')
+    if (!(button instanceof HTMLElement)) {
+      return
+    }
+
+    const container = button.parentElement
+    if (!container) {
+      return
+    }
+
+    const synopsis = container.querySelector('[data-synopsis]')
+    if (!(synopsis instanceof HTMLElement)) {
+      return
+    }
+
+    const expanded = synopsis.classList.toggle('line-clamp-none')
+    synopsis.classList.toggle('max-md:line-clamp-3', !expanded)
+
+    const moreLabel = button.getAttribute('data-label-more') ?? 'Read more'
+    const lessLabel = button.getAttribute('data-label-less') ?? 'Show less'
+    button.textContent = expanded ? lessLabel : moreLabel
+  })
+}
+
+const initEpisodeListToggle = (): void => {
+  document.addEventListener('click', (event: MouseEvent) => {
+    const target = event.target
+    if (!(target instanceof HTMLElement)) {
+      return
+    }
+
+    const button = target.closest('[data-episodes-toggle]')
+    if (!(button instanceof HTMLElement)) {
+      return
+    }
+
+    const drawer = document.getElementById('episode-list-drawer')
+    if (!drawer) {
+      return
+    }
+
+    const isHidden = drawer.classList.toggle('hidden')
+
+    const moreLabel = button.getAttribute('data-label-more') ?? 'SEE MORE EPISODES'
+    const lessLabel = button.getAttribute('data-label-less') ?? 'SEE LESS'
+    const labelSpan = button.querySelector('[data-toggle-label]')
+    if (labelSpan) {
+      labelSpan.textContent = isHidden ? moreLabel : lessLabel
+    } else {
+      button.textContent = isHidden ? moreLabel : lessLabel
+    }
+  })
+}
+
 initWatchlistDropdown()
+initSynopsisToggle()
+initEpisodeListToggle()

@@ -1,0 +1,48 @@
+package watch
+
+import (
+	"fmt"
+
+	"mal/integrations/jikan"
+	"mal/web/components/watchlist"
+)
+
+templ AnimeHeader(anime jikan.Anime, inWatchlist bool) {
+	<div class="mb-4 flex items-start justify-between gap-4">
+		<div class="flex flex-wrap items-center gap-x-3 gap-y-1">
+			<a
+				href={ templ.URL(fmt.Sprintf("/anime/%d", anime.MalID)) }
+				class="text-lg font-medium text-blue-500 no-underline hover:underline"
+			>{ anime.DisplayTitle() }</a>
+			if anime.Score > 0 {
+				<span class="text-(--text-faint)">|</span>
+				<div class="flex items-center gap-1 text-sm">
+					<span class="text-(--text-muted)">{ fmt.Sprintf("%.2f", anime.Score) }</span>
+					<span class="font-medium text-(--text)">★</span>
+					if anime.ScoredBy > 0 {
+						<span class="text-(--text-muted)">({ formatScoredBy(anime.ScoredBy) })</span>
+					}
+				</div>
+			}
+		</div>
+		@watchlist.HeroButton(
+			anime.MalID,
+			anime.Title,
+			anime.TitleEnglish,
+			anime.TitleJapanese,
+			anime.ImageURL(),
+			anime.Airing,
+			inWatchlist,
+		)
+	</div>
+}
+
+func formatScoredBy(n int) string {
+	if n >= 1_000_000 {
+		return fmt.Sprintf("%.1fM", float64(n)/1_000_000)
+	}
+	if n >= 1_000 {
+		return fmt.Sprintf("%.1fK", float64(n)/1_000)
+	}
+	return fmt.Sprintf("%d", n)
+}

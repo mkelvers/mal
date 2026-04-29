@@ -3,7 +3,7 @@ package templates
 import "mal/web/shared/layout"
 
 templ Login(formError string, username string) {
-	@layout.Layout("Login", false) {
+	@layout.Layout("Login", false, false) {
 		<div class="w-full max-w-xl">
 			<div class="mx-auto w-full bg-(--panel) p-6">
 				<h2 class="m-0 text-2xl">Sign in</h2>

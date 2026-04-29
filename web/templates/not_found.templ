@@ -3,7 +3,7 @@ package templates
 import "mal/web/shared/layout"
 
 templ NotFoundPage() {
-	@layout.Layout("mal - not found", false) {
+	@layout.Layout("mal - not found", false, false) {
 		<section class="w-full max-w-3xl min-h-dvh mx-auto grid content-center justify-items-center gap-3 px-7 py-8 text-center">
 			<p class="m-0 text-6xl leading-none tracking-wider text-(--text-muted) sm:text-7xl md:text-8xl lg:text-9xl">404</p>
 			<h1 class="m-0 text-3xl sm:text-4xl md:text-5xl">Page not found</h1>

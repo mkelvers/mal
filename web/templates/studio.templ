@@ -10,7 +10,7 @@ import (
 )
 
 templ StudioDetails(producer jikan.ProducerResponse, animes []jikan.Anime, watchlistStatuses map[int]string, hasNext bool, nextPage int) {
-	@layout.Layout("mal - "+shared.GetProducerName(producer), true) {
+	@layout.Layout("mal - "+shared.GetProducerName(producer), true, false) {
 		<div class="grid gap-5">
 			<div class="grid gap-4 bg-(--panel) p-4">
 				<div class="flex items-start gap-4">

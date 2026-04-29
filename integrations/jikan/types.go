@@ -47,6 +47,8 @@ type Anime struct {
 		} `json:"webp"`
 	} `json:"images"`
 	Synopsis     string        `json:"synopsis"`
+	Score        float64       `json:"score"`
+	ScoredBy     int           `json:"scored_by"`
 	Rank         int           `json:"rank"`
 	Popularity   int           `json:"popularity"`
 	Status       string        `json:"status"`
@@ -159,6 +161,7 @@ type TopAnimeResponse struct {
 type Episode struct {
 	MalID  int    `json:"mal_id"`
 	Title  string `json:"title"`
+	Aired  string `json:"aired"`
 	Filler bool   `json:"filler"`
 	Recap  bool   `json:"recap"`
 }

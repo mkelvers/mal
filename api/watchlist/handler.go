@@ -149,6 +149,64 @@ func (h *Handler) HandleCardWatchlist(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func (h *Handler) HandleHeroWatchlist(w http.ResponseWriter, r *http.Request) {
+	if !requireMethod(w, r, http.MethodPost) {
+		return
+	}
+
+	user := middleware.GetUser(r.Context())
+	if user == nil {
+		w.Header().Set("HX-Redirect", "/login")
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	if err := r.ParseForm(); err != nil {
+		http.Error(w, "invalid form", http.StatusBadRequest)
+		return
+	}
+
+	animeIDStr := r.FormValue("anime_id")
+	animeTitle := r.FormValue("anime_title")
+	animeTitleEnglish := r.FormValue("anime_title_english")
+	animeTitleJapanese := r.FormValue("anime_title_japanese")
+	animeImage := r.FormValue("anime_image")
+	airingStr := r.FormValue("airing")
+	airing := airingStr == "true"
+
+	animeID, err := strconv.ParseInt(animeIDStr, 10, 64)
+	if err != nil || animeID <= 0 {
+		http.Error(w, "invalid anime ID", http.StatusBadRequest)
+		return
+	}
+
+	req := AddRequest{
+		AnimeID:       animeID,
+		TitleOriginal: animeTitle,
+		TitleEnglish:  animeTitleEnglish,
+		TitleJapanese: animeTitleJapanese,
+		ImageURL:      animeImage,
+		Status:        "plan_to_watch",
+		Airing:        airing,
+	}
+
+	if err := h.svc.AddEntry(r.Context(), user.ID, req); err != nil {
+		if errors.Is(err, ErrInvalidAnimeID) || errors.Is(err, ErrInvalidStatus) {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		log.Printf("watchlist hero add failed: user_id=%s anime_id=%d err=%v", user.ID, animeID, err)
+		http.Error(w, "failed to update watchlist", http.StatusInternalServerError)
+		return
+	}
+
+	if err := watchlist.HeroButton(int(animeID), animeTitle, animeTitleEnglish, animeTitleJapanese, animeImage, airing, true).Render(r.Context(), w); err != nil {
+		log.Printf("render error: %v", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+}
+
 func (h *Handler) HandleDeleteWatchlist(w http.ResponseWriter, r *http.Request) {
 	if !requireMethod(w, r, http.MethodDelete) {
 		return
@@ -193,6 +251,14 @@ func (h *Handler) HandleDeleteWatchlist(w http.ResponseWriter, r *http.Request) 
 
 	if from == "card" {
 		if err := watchlist.CardButton(int(animeID), anime.TitleOriginal, title, "", anime.ImageUrl, airing, false).Render(r.Context(), w); err != nil {
+			log.Printf("render error: %v", err)
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		}
+		return
+	}
+
+	if from == "hero" {
+		if err := watchlist.HeroButton(int(animeID), anime.TitleOriginal, title, "", anime.ImageUrl, airing, false).Render(r.Context(), w); err != nil {
 			log.Printf("render error: %v", err)
 			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		}

@@ -99,13 +99,22 @@ func (h *Handler) HandleWatchPage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Fetch episode title for the overlay
+	// Fetch episode title + aired date for the overlay and episode-info section
 	episodeTitle := ""
+	episodeAired := ""
+	nextEpisodeTitle := ""
 	epNum, epErr := strconv.Atoi(episode)
 	if epErr == nil && epNum > 0 {
 		episodeData, epErr := h.jikanClient.GetEpisode(ctx, malID, epNum)
-		if epErr == nil && episodeData.Data.Title != "" {
+		if epErr == nil {
 			episodeTitle = episodeData.Data.Title
+			episodeAired = episodeData.Data.Aired
+		}
+		if shared.CanGoNextEpisode(episode, anime.Episodes) {
+			nextData, nextErr := h.jikanClient.GetEpisode(ctx, malID, epNum+1)
+			if nextErr == nil {
+				nextEpisodeTitle = nextData.Data.Title
+			}
 		}
 	}
 
@@ -126,6 +135,8 @@ func (h *Handler) HandleWatchPage(w http.ResponseWriter, r *http.Request) {
 		ModeSources:      convertModeSources(data.ModeSources),
 		Segments:         convertSegments(data.Segments),
 		EpisodeTitle:     episodeTitle,
+		EpisodeAired:     episodeAired,
+		NextEpisodeTitle: nextEpisodeTitle,
 	}
 
 	if r.Header.Get("HX-Request") == "true" {

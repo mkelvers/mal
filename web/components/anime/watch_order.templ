@@ -1,0 +1,29 @@
+package anime
+
+import (
+	"mal/integrations/jikan"
+	ui "mal/web/components"
+)
+
+templ WatchOrder(animes []jikan.Anime, watchlistStatuses map[int]string) {
+	<div class="mt-8">
+		<h2 class="mb-4 text-xl font-bold text-(--text)">Watch Order</h2>
+		if len(animes) > 0 {
+			<div class="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+				for _, anime := range animes {
+					@ui.AnimeCard(ui.AnimeCardProps{
+						ID:              anime.MalID,
+						Title:           anime.DisplayTitle(),
+						ImageURL:        anime.ImageURL(),
+						TitleEnglish:    anime.TitleEnglish,
+						TitleJapanese:   anime.TitleJapanese,
+						Airing:          anime.Airing,
+						WatchlistStatus: watchlistStatuses[anime.MalID],
+					})
+				}
+			</div>
+		} else {
+			<p class="text-sm text-(--text-faint)">No watch order data available.</p>
+		}
+	</div>
+}

@@ -1,0 +1,58 @@
+package watchlist
+
+import (
+	"fmt"
+
+	"mal/web/shared"
+)
+
+templ HeroButton(
+	animeID int,
+	title string,
+	titleEnglish string,
+	titleJapanese string,
+	imageURL string,
+	airing bool,
+	inWatchlist bool,
+) {
+	<button
+		class={
+			"border-2 border-(--text) p-2 transition-colors hover:text-white disabled:opacity-50",
+			templ.KV("text-white", inWatchlist),
+			templ.KV("text-(--text)", !inWatchlist),
+		}
+		if inWatchlist {
+			hx-delete={ string(templ.URL(fmt.Sprintf("/api/watchlist/%d?from=hero", animeID))) }
+		} else {
+			hx-post="/api/watchlist/hero"
+			hx-vals={ shared.HxVals(map[string]interface{}{
+				"anime_id":             animeID,
+				"anime_title":          title,
+				"anime_title_english":  titleEnglish,
+				"anime_title_japanese": titleJapanese,
+				"anime_image":          imageURL,
+				"airing":               airing,
+			}) }
+		}
+		hx-target="this"
+		hx-swap="outerHTML"
+		aria-label={ getHeroLabel(inWatchlist) }
+	>
+		<svg
+			class="h-6 w-6"
+			viewBox="0 0 24 24"
+			fill={ getWatchlistFill(inWatchlist) }
+			stroke="currentColor"
+			stroke-width="2"
+		>
+			<path d="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z"></path>
+		</svg>
+	</button>
+}
+
+func getHeroLabel(inWatchlist bool) string {
+	if inWatchlist {
+		return "Remove from watchlist"
+	}
+	return "Add to watchlist"
+}

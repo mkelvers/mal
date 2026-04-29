@@ -1,0 +1,24 @@
+package anime
+
+import (
+	"fmt"
+
+	"mal/integrations/jikan"
+)
+
+templ TagList(label string, items []jikan.NamedEntity, hrefPrefix string) {
+	if len(items) > 0 {
+		<div class="leading-relaxed">
+			<span class="font-medium text-(--text)">{ label }: </span>
+			for i, item := range items {
+				<a
+					href={ templ.URL(fmt.Sprintf("%s/%d", hrefPrefix, item.MalID)) }
+					class="text-(--text-muted) decoration-(--text-faint) hover:text-(--text) hover:decoration-(--text) underline"
+				>{ item.Name }</a>
+				if i < len(items)-1 {
+					<span class="text-(--text-muted)">,&nbsp;</span>
+				}
+			}
+		</div>
+	}
+}

@@ -69,6 +69,7 @@ const initPlayer = (): void => {
   const volumePanel = container.querySelector('[data-volume-panel]') as HTMLElement
   const volumeRange = container.querySelector('[data-volume-range]') as HTMLInputElement
   const iconVolume = container.querySelector('[data-icon-volume]') as SVGElement
+  const iconVolumeLow = container.querySelector('[data-icon-volume-low]') as SVGElement
   const iconMuted = container.querySelector('[data-icon-muted]') as SVGElement
   const volumeUnderline = container.querySelector('[data-volume-underline]') as HTMLElement
   const timeDisplay = container.querySelector('[data-time]') as HTMLElement
@@ -661,15 +662,18 @@ const initPlayer = (): void => {
     }
   }
 
-  const updateMuteIcons = (isMuted: boolean): void => {
-    if (iconVolume && iconMuted) {
-      if (isMuted) {
-        iconVolume.classList.add('hidden')
-        iconMuted.classList.remove('hidden')
-      } else {
-        iconVolume.classList.remove('hidden')
-        iconMuted.classList.add('hidden')
-      }
+  const updateMuteIcons = (): void => {
+    const muted = video.muted || video.volume === 0
+    const low = !muted && video.volume <= 0.5
+    const high = !muted && video.volume > 0.5
+    if (iconVolume) {
+      iconVolume.classList.toggle('hidden', !high)
+    }
+    if (iconVolumeLow) {
+      iconVolumeLow.classList.toggle('hidden', !low)
+    }
+    if (iconMuted) {
+      iconMuted.classList.toggle('hidden', !muted)
     }
   }
 
@@ -682,7 +686,7 @@ const initPlayer = (): void => {
     if (!video.muted && video.volume > 0) {
       lastKnownVolume = video.volume
     }
-    updateMuteIcons(video.muted || video.volume === 0)
+    updateMuteIcons()
   }
 
   const toggleDub = (): void => {

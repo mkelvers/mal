@@ -2,174 +2,143 @@ package templates
 
 import (
 	"fmt"
-	"strings"
-	
+
 	"mal/integrations/jikan"
 	animecomponents "mal/web/components/anime"
 	components "mal/web/components"
-	watchlistcomponents "mal/web/components/watchlist"
+	"mal/web/components/watchlist"
 	"mal/web/shared"
 	"mal/web/shared/layout"
 )
 
 templ AnimeDetails(anime jikan.Anime, currentStatus string, nextEpisode int) {
-	@layout.Layout("mal - " + anime.DisplayTitle(), true) {
-		<div class="grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_300px]">
-			<div class="order-2 grid min-w-0 gap-8 xl:order-1">
-				<div class="grid gap-5 lg:grid-cols-[220px_minmax(0,1fr)]">
-					<div class="w-56">
-						if anime.ImageURL() != "" {
-							<img class="w-full" src={ anime.ImageURL() } alt={ anime.DisplayTitle() }/>
-						} else {
-							<div class="flex aspect-2/3 max-h-(--poster-max-height) w-full justify-center overflow-hidden text-transparent">No image</div>
+	@layout.Layout("mal - "+anime.DisplayTitle(), true, true) {
+		<div class="flex min-h-screen flex-col">
+			<div class="relative h-[48vh] w-full overflow-hidden md:h-[60vh] lg:h-[75vh]">
+				if anime.ImageURL() != "" {
+					<img
+						src={ anime.ImageURL() }
+						alt=""
+						class="absolute inset-0 h-full w-full scale-110 object-cover opacity-40 blur-xl"
+						loading="lazy"
+						decoding="async"
+					/>
+				}
+				<div class="absolute inset-0 bg-linear-to-t from-(--bg) via-(--bg)/40 to-transparent"></div>
+				<a
+					href="/"
+					class="absolute top-4 left-4 z-20 p-2 text-(--text) hover:text-(--text-muted) sm:top-8 sm:left-8"
+					aria-label="Go back"
+				>
+					<svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							stroke-width="2"
+							d="M10 19l-7-7m0 0l7-7m-7 7h18"
+						></path>
+					</svg>
+				</a>
+				if anime.ImageURL() != "" {
+					<img
+						src={ anime.ImageURL() }
+						alt={ anime.DisplayTitle() }
+						class="absolute top-4 right-4 z-20 w-20 sm:top-8 sm:right-8 sm:w-32 md:w-48"
+					/>
+				}
+				<div class="absolute bottom-4 left-4 z-20 flex gap-4 sm:bottom-8 sm:left-12">
+					<a
+						href={ templ.URL(fmt.Sprintf("/watch/%d/%d", anime.MalID, shared.WatchTargetEpisode(currentStatus, nextEpisode))) }
+						class="bg-(--accent) px-4 py-2 text-(--text-on-accent) no-underline hover:no-underline"
+					>
+						<div class="flex items-center gap-2 whitespace-nowrap">
+							<svg
+								class="h-6 w-6 fill-current"
+								xmlns="http://www.w3.org/2000/svg"
+								viewBox="0 0 24 24"
+								aria-hidden="true"
+								role="img"
+							>
+								<path d="M5.944 3C5.385 3 5 3.445 5 4.22v16.018c0 .771.384 1.22.945 1.22.234 0 .499-.078.779-.243l13.553-7.972c.949-.558.952-1.468 0-2.028L6.724 3.243C6.444 3.078 6.178 3 5.944 3m1.057 2.726l11.054 6.503L7 18.732l.001-13.006"></path>
+							</svg>
+							<span class="font-medium uppercase">
+								if currentStatus != "" && nextEpisode > 1 {
+									{ fmt.Sprintf("Continue Episode %d", nextEpisode) }
+								} else {
+									Start Watching
+								}
+							</span>
+						</div>
+					</a>
+					@watchlist.HeroButton(
+						anime.MalID,
+						anime.Title,
+						anime.TitleEnglish,
+						anime.TitleJapanese,
+						anime.ImageURL(),
+						anime.Airing,
+						currentStatus != "",
+					)
+				</div>
+			</div>
+			<div class="px-4 pt-8 pb-12 sm:px-6 md:px-12">
+				<h1 class="mb-8 text-3xl font-bold md:text-4xl lg:text-5xl">{ anime.DisplayTitle() }</h1>
+				<div class="grid grid-cols-1 gap-6 md:grid-cols-2 md:gap-12">
+					<div>
+						if anime.Synopsis != "" {
+							<p class="leading-relaxed text-(--text)/90 max-md:line-clamp-3" data-synopsis>
+								{ anime.Synopsis }
+							</p>
+							<button
+								type="button"
+								class="mt-1 text-xs text-(--text-muted) underline md:hidden"
+								data-synopsis-toggle
+								data-label-more="Read more"
+								data-label-less="Show less"
+							>
+								Read more
+							</button>
 						}
 					</div>
-					<div>
-						<h1>{ anime.DisplayTitle() }</h1>
-						if anime.TitleJapanese != "" {
-							<p class="my-2 mb-3 text-sm text-(--text-muted)">{ anime.TitleJapanese }</p>
-						}
-						<div class="flex flex-wrap gap-2">
-							if anime.ShortRating() != "" {
-								<span class="text-xs text-(--text-faint)">{ anime.ShortRating() }</span>
-							}
-							if anime.Type != "" {
-								<span class="text-xs text-(--text-faint)">{ anime.Type }</span>
-							}
-							if anime.Episodes > 0 {
-								<span class="text-xs text-(--text-faint)">{ fmt.Sprintf("%d ep", anime.Episodes) }</span>
-							}
-							if anime.ShortDuration() != "" {
-								<span class="text-xs text-(--text-faint)">{ anime.ShortDuration() }</span>
-							}
-						</div>
-						<div class="mt-3">
-							<div class="flex flex-wrap items-center gap-2">
-								@watchlistcomponents.WatchlistDropdown(anime.MalID, anime.Title, anime.TitleEnglish, anime.TitleJapanese, anime.ImageURL(), currentStatus, anime.Airing)
-								<a
-									href={ templ.URL(fmt.Sprintf("/watch/%d/%d", anime.MalID, shared.WatchTargetEpisode(currentStatus, nextEpisode))) }
-									class="inline-flex h-8 items-center bg-(--panel-soft) px-2 text-xs text-(--text) no-underline hover:text-(--text) hover:no-underline"
-								>Watch</a>
+					<div class="space-y-3 text-xs sm:text-sm">
+						@animecomponents.TagList("Genres", anime.Genres, "/genre")
+						@animecomponents.TagList("Themes", anime.Themes, "/theme")
+						@animecomponents.TagList("Demographics", anime.Demographics, "/demographic")
+						@animecomponents.TagList("Studios", anime.Studios, "/studio")
+						@animecomponents.TagList("Producers", anime.Producers, "/producer")
+						if anime.Rating != "" {
+							<div class="flex items-center gap-2 leading-relaxed">
+								<span class="font-medium text-(--text)">Content Advisory: </span>
+								<span class="bg-(--panel-soft) px-1.5 py-0.5 text-xs text-(--text)">{ anime.Rating }</span>
 							</div>
-						</div>
-						<section class="mt-4 max-w-4xl">
-							if anime.Synopsis != "" {
-								<p>{ anime.Synopsis }</p>
-							} else {
-								<p class="text-(--text-faint)">No synopsis available.</p>
-							}
-						</section>
+						}
+						if anime.Status != "" {
+							<div class="leading-relaxed">
+								<span class="font-medium text-(--text)">Status: </span>
+								<span class="text-(--text-muted)">{ anime.Status }</span>
+							</div>
+						}
+						if anime.Aired.String != "" {
+							<div class="leading-relaxed">
+								<span class="font-medium text-(--text)">Aired: </span>
+								<span class="text-(--text-muted)">{ anime.Aired.String }</span>
+							</div>
+						}
 					</div>
 				</div>
-				<section>
-					<h3 class="mb-3 text-lg font-semibold tracking-wide text-(--text)">Related</h3>
+				<section class="mt-8">
+					<h2 class="mb-4 text-xl font-bold text-(--text)">Watch Order</h2>
 					<div hx-get={ string(templ.URL(fmt.Sprintf("/api/anime/%d/relations", anime.MalID))) } hx-trigger="load">
-						@components.LoadingIndicator("Loading relations")
+						@components.LoadingIndicator("Loading watch order")
 					</div>
 				</section>
-				<section>
-					<h3 class="mb-3 text-lg font-semibold tracking-wide text-(--text)">Recommendations</h3>
+				<section class="mt-8">
+					<h2 class="mb-4 text-xl font-bold text-(--text)">Recommendations</h2>
 					<div hx-get={ string(templ.URL(fmt.Sprintf("/api/anime/%d/recommendations", anime.MalID))) } hx-trigger="load">
 						@components.LoadingIndicator("Loading recommendations")
 					</div>
 				</section>
 			</div>
-			<aside class="order-1 grid gap-4 bg-(--panel) p-3 max-xl:static xl:order-2">
-				<div class="grid gap-3">
-					<h3 class="mb-2 text-base font-semibold tracking-wide text-(--text)">Details</h3>
-					if anime.Aired.String != "" {
-						<div class="mt-1 grid gap-1">
-							<span class="mt-0.5 text-sm text-(--text-faint)">Aired</span>
-							<span class="text-sm text-(--text-muted)">{ anime.Aired.String }</span>
-						</div>
-					}
-					if anime.Premiered() != "" {
-						<div class="mt-1 grid gap-1">
-							<span class="mt-0.5 text-sm text-(--text-faint)">Premiered</span>
-							<span class="text-sm text-(--text-muted)">{ anime.Premiered() }</span>
-						</div>
-					}
-					if anime.Status != "" {
-						<div class="mt-1 grid gap-1">
-							<span class="mt-0.5 text-sm text-(--text-faint)">Status</span>
-							<span class="text-sm text-(--text-muted)">{ anime.Status }</span>
-						</div>
-					}
-					if anime.Duration != "" {
-						<div class="mt-1 grid gap-1">
-							<span class="mt-0.5 text-sm text-(--text-faint)">Duration</span>
-							<span class="text-sm text-(--text-muted)">{ anime.Duration }</span>
-						</div>
-					}
-					if len(anime.Genres) > 0 {
-						<div class="mt-1 grid gap-1">
-							<span class="mt-0.5 text-sm text-(--text-faint)">Genres</span>
-							<span class="text-sm text-(--text-muted)">{ shared.JoinNames(anime.Genres) }</span>
-						</div>
-					}
-				</div>
-				if shared.HasExtraSidebarDetails(anime) {
-					<details class="grid gap-3">
-						<summary class="cursor-pointer text-xs text-(--text-muted)">More metadata</summary>
-						if anime.TitleJapanese != "" {
-							<div class="mt-1 grid gap-1">
-								<span class="mt-0.5 text-sm text-(--text-faint)">Japanese</span>
-								<span class="text-sm text-(--text-muted)">{ anime.TitleJapanese }</span>
-							</div>
-						}
-						if len(anime.TitleSynonyms) > 0 {
-							<div class="mt-1 grid gap-1">
-								<span class="mt-0.5 text-sm text-(--text-faint)">Synonyms</span>
-								<span class="text-sm text-(--text-muted)">{ strings.Join(anime.TitleSynonyms, ", ") }</span>
-							</div>
-						}
-						if len(anime.Studios) > 0 {
-							<div class="mt-1 grid gap-1">
-								<span class="mt-0.5 text-sm text-(--text-faint)">Studios</span>
-								<span class="text-sm text-(--text-muted)">
-									@animecomponents.StudioLinks(anime.Studios)
-								</span>
-							</div>
-						}
-						if len(anime.Producers) > 0 {
-							<div class="mt-1 grid gap-1">
-								<span class="mt-0.5 text-sm text-(--text-faint)">Producers</span>
-								<span class="text-sm text-(--text-muted)">{ shared.JoinNames(anime.Producers) }</span>
-							</div>
-						}
-						if anime.Source != "" {
-							<div class="mt-1 grid gap-1">
-								<span class="mt-0.5 text-sm text-(--text-faint)">Source</span>
-								<span class="text-sm text-(--text-muted)">{ anime.Source }</span>
-							</div>
-						}
-						if len(anime.Demographics) > 0 {
-							<div class="mt-1 grid gap-1">
-								<span class="mt-0.5 text-sm text-(--text-faint)">Demographics</span>
-								<span class="text-sm text-(--text-muted)">{ shared.JoinNames(anime.Demographics) }</span>
-							</div>
-						}
-						if len(anime.Themes) > 0 {
-							<div class="mt-1 grid gap-1">
-								<span class="mt-0.5 text-sm text-(--text-faint)">Themes</span>
-								<span class="text-sm text-(--text-muted)">{ shared.JoinNames(anime.Themes) }</span>
-							</div>
-						}
-						if anime.Broadcast.String != "" {
-							<div class="mt-1 grid gap-1">
-								<span class="mt-0.5 text-sm text-(--text-faint)">Broadcast</span>
-								<span class="text-sm text-(--text-muted)" data-jst-text={ anime.Broadcast.String }>{ anime.Broadcast.String }</span>
-							</div>
-						}
-						if len(anime.Streaming) > 0 {
-							<div class="mt-1 grid gap-1">
-								<span class="mt-0.5 text-sm text-(--text-faint)">Streaming</span>
-								<span class="text-sm text-(--text-muted)">{ shared.JoinStreamingNames(anime) }</span>
-							</div>
-						}
-					</details>
-				}
-			</aside>
 		</div>
 	}
 }

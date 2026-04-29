@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-templ Layout(title string, showHeader bool) {
+templ Layout(title string, showHeader bool, fullBleed bool) {
 	<!DOCTYPE html>
 	<html lang="en">
 		<head>
@@ -13,7 +13,7 @@ templ Layout(title string, showHeader bool) {
 			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 			<title>{ title }</title>
 			<link rel="icon" type="image/svg+xml" href="/static/favicon.svg"/>
-			<link rel="stylesheet" href="/dist/tailwind.css?v=1.0.4"/>
+			<link rel="stylesheet" href="/dist/tailwind.css?v=1.0.6"/>
 			<script src="https://unpkg.com/htmx.org@1.9.11" integrity="sha384-0gxUXCCR8yv9FM2b+U3FDbsKthCI66oH5IA9fHppQq9DDMHuMauqq1ZHBpJxQ0J0" crossorigin="anonymous"></script>
 			<script>
 				var t = localStorage.getItem('theme');
@@ -21,9 +21,9 @@ templ Layout(title string, showHeader bool) {
 			</script>
 			<script src="/dist/static/theme.js?v=1.0.3" defer></script>
 			<script src="/dist/static/discover.js?v=1.0.3" defer></script>
-			<script src="/dist/static/anime.js?v=1.0.3" defer></script>
+			<script src="/dist/static/anime.js?v=1.0.4" defer></script>
 			<script src="/dist/static/timezone.js?v=1.0.3" defer></script>
-			<script src="/dist/static/player.js?v=1.0.3" defer></script>
+			<script src="/dist/static/player.js?v=1.0.4" defer></script>
 		</head>
 		<body
 			class="min-h-screen bg-(--bg) text-(--text) font-(--font) text-sm leading-normal flex flex-col"
@@ -90,7 +90,9 @@ templ Layout(title string, showHeader bool) {
 				</header>
 			}
 			<main class={
-				"mx-auto w-full max-w-(--breakpoint-2xl) px-4 pt-5 pb-8 max-lg:px-3 max-lg:pb-6 flex-1",
+				"flex-1",
+				templ.KV("mx-auto w-full max-w-(--breakpoint-2xl) px-4 pt-5 pb-8 max-lg:px-3 max-lg:pb-6", showHeader && !fullBleed),
+				templ.KV("w-full", fullBleed),
 				templ.KV("flex min-h-screen items-center justify-center px-4 py-0", !showHeader),
 			}>
 				{ children... }
