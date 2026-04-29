@@ -11,7 +11,7 @@ import (
 
 templ WatchPage(anime jikan.Anime, data shared.WatchPageData) {
 	@layout.Layout(fmt.Sprintf("%s - episode %s", anime.DisplayTitle(), data.CurrentEpisode), true, true) {
-		<div class="w-full" style="height: calc(100dvh - var(--header-height, 56px))">
+		<div class="w-full">
 			@watch.VideoPlayer(data, anime.DisplayTitle())
 		</div>
 		<div class="container mx-auto px-4 py-6">
