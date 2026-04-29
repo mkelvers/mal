@@ -72,7 +72,8 @@ const initPlayer = (): void => {
   const iconVolumeLow = container.querySelector('[data-icon-volume-low]') as SVGElement
   const iconMuted = container.querySelector('[data-icon-muted]') as SVGElement
   const volumeUnderline = container.querySelector('[data-volume-underline]') as HTMLElement
-  const timeDisplay = container.querySelector('[data-time]') as HTMLElement
+  const timeCurrent = container.querySelector('[data-time-current]') as HTMLElement
+  const timeDuration = container.querySelector('[data-time-duration]') as HTMLElement
   const progressWrap = container.querySelector('[data-progress-wrap]') as HTMLElement
   const progress = container.querySelector('[data-progress]') as HTMLElement
   const scrubber = container.querySelector('[data-scrubber]') as HTMLElement
@@ -350,13 +351,14 @@ const initPlayer = (): void => {
   }
 
   const updateTimeline = (currentTime: number): void => {
-    if (!timeDisplay || !progress) return
+    if (!timeCurrent || !timeDuration || !progress) return
 
     const bounds = timelineBounds()
     if (bounds.duration <= 0) {
       progress.style.width = '0%'
       if (scrubber) scrubber.style.left = '0%'
-      timeDisplay.textContent = `00:00 / 00:00`
+      timeCurrent.textContent = '00:00'
+      timeDuration.textContent = '00:00'
       return
     }
 
@@ -364,7 +366,8 @@ const initPlayer = (): void => {
     const pct = Math.max(0, Math.min(100, (currentDisplayTime / bounds.duration) * 100))
     progress.style.width = `${pct}%`
     if (scrubber) scrubber.style.left = `${pct}%`
-    timeDisplay.textContent = `${formatTime(currentDisplayTime)} / ${formatTime(bounds.duration)}`
+    timeCurrent.textContent = formatTime(currentDisplayTime)
+    timeDuration.textContent = formatTime(bounds.duration)
   }
 
   const seekBy = (delta: number): void => {

@@ -67,38 +67,7 @@ templ VideoPlayer(data shared.WatchPageData, displayTitle string) {
 			<div
 				class="absolute inset-x-0 bottom-0 bg-linear-to-t from-black/90 to-transparent px-3 pb-3 pt-10 opacity-100 transition-opacity duration-300 sm:px-4 sm:pb-4 sm:pt-12 sm:opacity-0 group-[.show-controls]/player:opacity-100 sm:group-[.show-controls]/player:opacity-100"
 			>
-				<div
-					data-progress-wrap
-					class="group/progress relative mb-3 h-1 cursor-pointer bg-white/30 sm:mb-5"
-				>
-					<div
-						data-preview-popover
-						class="pointer-events-none absolute bottom-[calc(100%+10px)] left-0 z-40 hidden -translate-x-1/2"
-					>
-						<div class="overflow-hidden border border-white/20 bg-black shadow-xl">
-							<div
-								data-preview-time
-								class="bg-white px-2 py-1 text-center text-xs font-semibold text-black tabular-nums"
-							>
-								00:00
-							</div>
-						</div>
-					</div>
-					<div
-						data-segments
-						class="pointer-events-none absolute inset-0 z-20"
-					></div>
-					<div
-						data-progress
-						class="pointer-events-none absolute inset-y-0 left-0 z-10 bg-blue-500"
-					></div>
-					<div
-						data-scrubber
-						class="pointer-events-none absolute -top-1.5 z-30 h-5 w-5 rounded-full -translate-x-1/2 bg-white opacity-0 transition-opacity group-hover/progress:opacity-100"
-						style="left: 0%"
-					></div>
-				</div>
-				<div class="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 sm:flex-nowrap sm:gap-4">
+				<div class="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 sm:flex-nowrap sm:gap-4 mb-2 sm:mb-3">
 					<div class="flex min-w-0 items-center gap-2 sm:gap-4">
 						<button
 							data-play-pause
@@ -187,13 +156,52 @@ templ VideoPlayer(data shared.WatchPageData, displayTitle string) {
 								class="volume-underline pointer-events-none absolute bottom-0 left-1/2 h-0.5 w-6 -translate-x-1/2 bg-white opacity-0 transition-opacity"
 							></span>
 						</div>
-						<span
-							data-time
-							class="min-w-0 text-sm text-white tabular-nums sm:text-base"
-						>
-							00:00 / 00:00
-						</span>
 					</div>
+				</div>
+				<div class="flex items-center gap-3 sm:gap-4">
+					<span
+						data-time-current
+						class="select-none text-xs font-medium text-white/90 tabular-nums"
+					>
+						00:00
+					</span>
+					<div
+						data-progress-wrap
+						class="group/progress relative h-1 flex-1 cursor-pointer bg-white/30"
+					>
+						<div
+							data-preview-popover
+							class="pointer-events-none absolute bottom-[calc(100%+10px)] left-0 z-40 hidden -translate-x-1/2"
+						>
+							<div class="overflow-hidden border border-white/20 bg-black shadow-xl">
+								<div
+									data-preview-time
+									class="bg-white px-2 py-1 text-center text-xs font-semibold text-black tabular-nums"
+								>
+									00:00
+								</div>
+							</div>
+						</div>
+						<div
+							data-segments
+							class="pointer-events-none absolute inset-0 z-20"
+						></div>
+						<div
+							data-progress
+							class="pointer-events-none absolute inset-y-0 left-0 z-10 bg-blue-500"
+						></div>
+						<div
+							data-scrubber
+							class="pointer-events-none absolute -top-1.5 z-30 h-5 w-5 rounded-full -translate-x-1/2 bg-white opacity-0 transition-opacity group-hover/progress:opacity-100"
+							style="left: 0%"
+						></div>
+					</div>
+					<span
+						data-time-duration
+						class="select-none text-xs font-medium text-white/90 tabular-nums"
+					>
+						00:00
+					</span>
 				</div>
 			</div>
 		</div>
