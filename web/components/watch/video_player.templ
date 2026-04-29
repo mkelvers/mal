@@ -27,7 +27,7 @@ templ VideoPlayer(data shared.WatchPageData, displayTitle string) {
 		data-mode-sources={ shared.ToJSON(data.ModeSources) }
 		data-segments={ shared.ToJSON(data.Segments) }
 	>
-		<div class="group relative h-full w-full overflow-hidden bg-black cursor-none group-[.show-controls]/player:cursor-auto">
+		<div class="group relative aspect-video w-full max-w-h-[calc(100dvh-var(--header-height,64px))] overflow-hidden cursor-none group-[.show-controls]/player:cursor-auto">
 			<video
 				class="h-full w-full object-contain"
 				preload="metadata"
@@ -58,12 +58,12 @@ templ VideoPlayer(data shared.WatchPageData, displayTitle string) {
 				data-subtitle-text
 				class="absolute bottom-16 left-1/2 z-20 hidden max-w-[92vw] -translate-x-1/2 px-3 text-center text-sm font-semibold text-white drop-shadow-lg sm:bottom-20 sm:max-w-[88vw] sm:px-4 sm:text-lg md:text-xl"
 			></div>
-		<button
-			data-skip
-			class="absolute bottom-20 right-3 z-20 hidden border border-white bg-transparent px-3 py-1.5 text-sm font-semibold text-white shadow-xl drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)] transition-opacity hover:opacity-90 sm:bottom-24 sm:right-5 sm:px-4 sm:py-2 sm:text-base"
-		>
-			Skip intro
-		</button>
+			<button
+				data-skip
+				class="absolute bottom-20 right-3 z-20 hidden border border-white bg-transparent px-3 py-1.5 text-sm font-semibold text-white shadow-xl drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)] transition-opacity hover:opacity-90 sm:bottom-24 sm:right-5 sm:px-4 sm:py-2 sm:text-base"
+			>
+				Skip intro
+			</button>
 			<div
 				class="absolute inset-x-0 bottom-0 bg-linear-to-t from-black/90 to-transparent px-3 pb-3 pt-10 opacity-100 transition-opacity duration-300 sm:px-4 sm:pb-4 sm:pt-12 sm:opacity-0 group-[.show-controls]/player:opacity-100 sm:group-[.show-controls]/player:opacity-100"
 			>
@@ -131,26 +131,26 @@ templ VideoPlayer(data shared.WatchPageData, displayTitle string) {
 									<path d="M16 9c1.3 1.3 1.3 4.7 0 6" stroke="white" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" fill="none"></path>
 									<path d="M18.8 6.5c3 2.9 3 8.1 0 11" stroke="white" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" fill="none"></path>
 								</svg>
-							<svg
-								data-icon-volume-low
-								class="hidden h-5 w-5 sm:h-6 sm:w-6"
-								viewBox="0 0 24 24"
-								aria-hidden="true"
-							>
-								<polygon points="5 10 9 10 13 6 13 18 9 14 5 14" fill="none" stroke="white" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round"></polygon>
-								<path d="M16 9c1.3 1.3 1.3 4.7 0 6" stroke="white" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" fill="none"></path>
-							</svg>
-							<svg
-								data-icon-muted
-								class="hidden h-5 w-5 sm:h-6 sm:w-6"
-								viewBox="0 0 24 24"
-								aria-hidden="true"
-							>
-								<polygon points="5 10 9 10 13 6 13 18 9 14 5 14" fill="none" stroke="white" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round"></polygon>
-								<line x1="16" y1="9" x2="20" y2="15" stroke="white" stroke-width="1.85" stroke-linecap="round"></line>
-								<line x1="20" y1="9" x2="16" y2="15" stroke="white" stroke-width="1.85" stroke-linecap="round"></line>
-							</svg>
-						</button>
+								<svg
+									data-icon-volume-low
+									class="hidden h-5 w-5 sm:h-6 sm:w-6"
+									viewBox="0 0 24 24"
+									aria-hidden="true"
+								>
+									<polygon points="5 10 9 10 13 6 13 18 9 14 5 14" fill="none" stroke="white" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round"></polygon>
+									<path d="M16 9c1.3 1.3 1.3 4.7 0 6" stroke="white" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" fill="none"></path>
+								</svg>
+								<svg
+									data-icon-muted
+									class="hidden h-5 w-5 sm:h-6 sm:w-6"
+									viewBox="0 0 24 24"
+									aria-hidden="true"
+								>
+									<polygon points="5 10 9 10 13 6 13 18 9 14 5 14" fill="none" stroke="white" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round"></polygon>
+									<line x1="16" y1="9" x2="20" y2="15" stroke="white" stroke-width="1.85" stroke-linecap="round"></line>
+									<line x1="20" y1="9" x2="16" y2="15" stroke="white" stroke-width="1.85" stroke-linecap="round"></line>
+								</svg>
+							</button>
 							<span
 								data-volume-underline
 								class="volume-underline pointer-events-none absolute bottom-0 left-1/2 h-0.5 w-6 -translate-x-1/2 bg-white opacity-0 transition-opacity"
