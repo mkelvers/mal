@@ -271,6 +271,12 @@ func (c *Client) getWithCache(ctx context.Context, cacheKey string, ttl time.Dur
 		return err
 	}
 
+	// Don't cache empty results to avoid caching failures
+	if isEmptyResult(out) {
+		log.Printf("jikan: fetched data for %s is empty, not caching", cacheKey)
+		return fmt.Errorf("jikan: empty response for %s", cacheKey)
+	}
+
 	c.setCache(ctx, cacheKey, out, ttl)
 	return nil
 }
