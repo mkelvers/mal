@@ -87,11 +87,11 @@
           <div data-preview-popover class="pointer-events-none absolute bottom-full mb-2 -translate-x-1/2 bg-white px-2 py-1 text-xs font-bold text-black shadow-md opacity-0 transition-opacity duration-200">
             <span data-preview-time>0:00</span>
           </div>
-          <div data-segments class="absolute inset-0 z-10 pointer-events-none"></div>
-          <div class="h-1.5 w-full rounded-full bg-white/30 transition-all group-hover/progress:h-2">
-            <div data-progress class="bg-accent h-full rounded-full" style="width: 0%"></div>
+          <div class="relative flex h-1.5 w-full items-center rounded-full bg-white/30 transition-all group-hover/progress:h-2">
+            <div data-segments class="absolute inset-0 z-10 pointer-events-none overflow-hidden rounded-full"></div>
+            <div data-progress class="bg-accent relative z-20 h-full rounded-full" style="width: 0%"></div>
           </div>
-          <div data-scrubber class="bg-accent pointer-events-none absolute top-1/2 h-3.5 w-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full opacity-0 shadow-sm transition-[opacity,transform] group-hover/progress:scale-110 group-hover/progress:opacity-100" style="left: 0%"></div>
+          <div data-scrubber class="bg-accent pointer-events-none absolute top-1/2 z-30 h-3.5 w-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full opacity-0 shadow-sm transition-[opacity,transform] group-hover/progress:scale-110 group-hover/progress:opacity-100" style="left: 0%"></div>
         </div>
         <span class="w-12 text-center" data-duration>0:00</span>
       </div>
