@@ -138,6 +138,13 @@ const initPlayer = (): void => {
   let preloadAttemptedForEpisode: number | null = null
   let activeSkipSegment: { type: string, start: number, end: number } | null = null
   let activeSubtitles: Array<{ start: number, end: number, text: string }> = []
+  let currentSubtitleTracks: Array<{ lang: string, label: string, url: string }> = []
+
+  let currentMode = availableModes.includes(initialMode) ? initialMode : (availableModes[0] || 'dub')
+  const fallbackMode = Object.keys(modeSources).find((mode) => typeof modeSources[mode]?.token === 'string' && modeSources[mode].token !== '')
+  if ((!modeSources[currentMode] || !modeSources[currentMode].token) && fallbackMode) {
+    currentMode = fallbackMode
+  }
   const watchProgressURL = '/api/watch-progress'
 
   const previewPopover = container.querySelector('[data-preview-popover]') as HTMLElement
