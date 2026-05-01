@@ -43,7 +43,7 @@ malago
 *.db-shm
 *.db-wal
 tmp/
-server
+/server
 *.log
 *.pid
 *_templ.go
