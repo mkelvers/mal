@@ -363,11 +363,25 @@ const initPlayer = (): void => {
     if (durationDisplay) durationDisplay.textContent = formatTime(bounds.duration)
 
     if (buffered && video) {
-      let maxBuffered = 0
+      let bufferedEnd = 0
       for (let i = 0; i < video.buffered.length; i++) {
-        maxBuffered = Math.max(maxBuffered, video.buffered.end(i))
+        if (video.buffered.start(i) <= currentTime && video.buffered.end(i) >= currentTime) {
+          bufferedEnd = video.buffered.end(i)
+          break
+        }
       }
-      const bufferedDisplayTime = displayTimeFromAbsolute(maxBuffered)
+      
+      // If we couldn't find a range containing current time (can happen immediately after seeking), 
+      // fallback to the highest buffered end that is greater than current time
+      if (bufferedEnd === 0) {
+        for (let i = 0; i < video.buffered.length; i++) {
+          if (video.buffered.end(i) > currentTime) {
+            bufferedEnd = Math.max(bufferedEnd, video.buffered.end(i))
+          }
+        }
+      }
+
+      const bufferedDisplayTime = displayTimeFromAbsolute(bufferedEnd)
       const bufferedPct = Math.max(0, Math.min(100, (bufferedDisplayTime / bounds.duration) * 100))
       buffered.style.width = `${bufferedPct}%`
     }
