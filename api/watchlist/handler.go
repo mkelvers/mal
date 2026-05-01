@@ -32,7 +32,9 @@ func (h *Handler) HandleDeleteContinueWatching(w http.ResponseWriter, r *http.Re
 }
 
 func (h *Handler) HandleGetWatchlist(w http.ResponseWriter, r *http.Request) {
-	if err := templates.GetRenderer().ExecuteTemplate(w, "not_found.gohtml", nil); err != nil {
+	if err := templates.GetRenderer().ExecuteTemplate(w, "not_found.gohtml", map[string]any{
+		"CurrentPath": r.URL.Path,
+	}); err != nil {
 		log.Printf("render error: %v", err)
 	}
 }

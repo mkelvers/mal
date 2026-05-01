@@ -1,0 +1,46 @@
+{{define "title"}}Watch {{.Anime.Title}} - MyAnimeList{{end}}
+{{define "content"}}
+{{$anime := .Anime}}
+{{$episodes := .Episodes}}
+{{$currentEpID := .CurrentEpID}}
+
+<div class="flex flex-col gap-8 pb-12">
+  <div id="video-player-container">
+    {{template "video_player" dict "WatchData" .WatchData "TotalEpisodes" $anime.Episodes}}
+  </div>
+
+  {{if eq (len $episodes) 0}}
+    <div class="flex flex-col items-center justify-center gap-2 py-24 text-neutral-400">
+      <svg class="h-12 w-12 opacity-30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+      <p class="text-lg">No episodes found for this anime.</p>
+    </div>
+  {{else}}
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+      {{range $episodes}}
+        {{$isCurrent := eq (printf "%v" .MalID) $currentEpID}}
+        <a href="/anime/{{$anime.MalID}}/watch?ep={{.MalID}}" class="group flex flex-col overflow-hidden bg-white/5 transition-colors hover:bg-white/10 {{if $isCurrent}}ring-accent ring-2{{end}}">
+          <div class="relative aspect-video w-full overflow-hidden bg-black/50">
+            {{if and .Images .Images.Jpg.ImageURL}}
+              <img src="{{.Images.Jpg.ImageURL}}" alt="{{.Title}}" class="h-full w-full object-cover transition-transform group-hover:scale-105" loading="lazy" />
+            {{else}}
+              <div class="flex h-full w-full items-center justify-center text-neutral-600">
+                <svg class="h-8 w-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+              </div>
+            {{end}}
+            <div class="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity group-hover:opacity-100">
+              <div class="bg-accent flex h-12 w-12 items-center justify-center rounded-full text-white shadow-lg">
+                <svg class="ml-1 h-6 w-6" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z" /></svg>
+              </div>
+            </div>
+          </div>
+          <div class="flex flex-col gap-1 p-3">
+            <!-- Note: Jikan episodes don't always have .episode or .title cleanly named in my Go struct, but I will map them dynamically -->
+            <span class="text-accent text-xs font-semibold">Episode {{.MalID}}</span>
+            <span class="line-clamp-2 text-sm font-medium text-neutral-200">{{.Title}}</span>
+          </div>
+        </a>
+      {{end}}
+    </div>
+  {{end}}
+</div>
+{{end}}

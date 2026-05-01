@@ -1,0 +1,87 @@
+{{define "navigation"}}
+{{$currentPath := .CurrentPath}}
+{{$isCollapsed := .IsCollapsed}}
+{{$navItems := dict 
+  "home" (dict "href" "/" "label" "Home")
+  "browse" (dict "href" "/browse" "label" "Browse")
+  "discover" (dict "href" "/discover" "label" "Discover")
+  "watchlist" (dict "href" "/watchlist" "label" "Watchlist")
+}}
+
+<nav class="bg-background-sidebar h-full py-6">
+  <div class="flex flex-col">
+    {{/* Home */}}
+    {{$isActive := eq $currentPath "/"}}
+    <a href="/" class="group relative flex items-center px-7 py-3 transition-colors hover:bg-white/5" {{if $isCollapsed}}title="Home"{{end}}>
+      {{if $isActive}}
+        <div class="bg-accent absolute top-1/2 left-0 h-8 w-0.5 -translate-y-1/2 rounded-r-sm shadow-[0_0_8px_rgba(163,230,53,0.6)]"></div>
+      {{end}}
+      <svg class="size-6 shrink-0 transition-colors duration-200 {{if $isActive}}text-accent{{else}}text-foreground-muted{{end}}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+        <polyline points="9 22 9 12 15 12 15 22" />
+      </svg>
+      <div class="grid transition-all duration-300 ease-in-out {{if $isCollapsed}}grid-cols-[0fr] opacity-0 ml-0{{else}}grid-cols-[1fr] opacity-100 ml-4{{end}}">
+        <div class="overflow-hidden min-w-0">
+          <span class="whitespace-nowrap text-sm font-medium transition-colors duration-200 {{if $isActive}}text-accent{{else}}text-foreground-muted{{end}}">Home</span>
+        </div>
+      </div>
+    </a>
+
+    {{/* Browse */}}
+    {{$isActive := eq $currentPath "/browse"}}
+    <a href="/browse" class="group relative flex items-center px-7 py-3 transition-colors hover:bg-white/5" {{if $isCollapsed}}title="Browse"{{end}}>
+      {{if $isActive}}
+        <div class="bg-accent absolute top-1/2 left-0 h-8 w-0.5 -translate-y-1/2 rounded-r-sm shadow-[0_0_8px_rgba(163,230,53,0.6)]"></div>
+      {{end}}
+      <svg class="size-6 shrink-0 transition-colors duration-200 {{if $isActive}}text-accent{{else}}text-foreground-muted{{end}}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="2" y="2" width="20" height="20" rx="2" ry="2" />
+        <line x1="7" y1="2" x2="7" y2="22" />
+        <line x1="17" y1="2" x2="17" y2="22" />
+        <line x1="2" y1="12" x2="22" y2="12" />
+        <line x1="2" y1="7" x2="7" y2="7" />
+        <line x1="2" y1="17" x2="7" y2="17" />
+        <line x1="17" y1="17" x2="22" y2="17" />
+        <line x1="17" y1="7" x2="22" y2="7" />
+      </svg>
+      <div class="grid transition-all duration-300 ease-in-out {{if $isCollapsed}}grid-cols-[0fr] opacity-0 ml-0{{else}}grid-cols-[1fr] opacity-100 ml-4{{end}}">
+        <div class="overflow-hidden min-w-0">
+          <span class="whitespace-nowrap text-sm font-medium transition-colors duration-200 {{if $isActive}}text-accent{{else}}text-foreground-muted{{end}}">Browse</span>
+        </div>
+      </div>
+    </a>
+
+    {{/* Discover */}}
+    {{$isActive := eq $currentPath "/discover"}}
+    <a href="/discover" class="group relative flex items-center px-7 py-3 transition-colors hover:bg-white/5" {{if $isCollapsed}}title="Discover"{{end}}>
+      {{if $isActive}}
+        <div class="bg-accent absolute top-1/2 left-0 h-8 w-0.5 -translate-y-1/2 rounded-r-sm shadow-[0_0_8px_rgba(163,230,53,0.6)]"></div>
+      {{end}}
+      <svg class="size-6 shrink-0 transition-colors duration-200 {{if $isActive}}text-accent{{else}}text-foreground-muted{{end}}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10" />
+        <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" />
+      </svg>
+      <div class="grid transition-all duration-300 ease-in-out {{if $isCollapsed}}grid-cols-[0fr] opacity-0 ml-0{{else}}grid-cols-[1fr] opacity-100 ml-4{{end}}">
+        <div class="overflow-hidden min-w-0">
+          <span class="whitespace-nowrap text-sm font-medium transition-colors duration-200 {{if $isActive}}text-accent{{else}}text-foreground-muted{{end}}">Discover</span>
+        </div>
+      </div>
+    </a>
+
+    {{/* Watchlist */}}
+    {{$isActive := eq $currentPath "/watchlist"}}
+    <a href="/watchlist" class="group relative flex items-center px-7 py-3 transition-colors hover:bg-white/5" {{if $isCollapsed}}title="Watchlist"{{end}}>
+      {{if $isActive}}
+        <div class="bg-accent absolute top-1/2 left-0 h-8 w-0.5 -translate-y-1/2 rounded-r-sm shadow-[0_0_8px_rgba(163,230,53,0.6)]"></div>
+      {{end}}
+      <svg class="size-6 shrink-0 transition-colors duration-200 {{if $isActive}}text-accent{{else}}text-foreground-muted{{end}}" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M17 18.113l-3.256-2.326A2.989 2.989 0 0 0 12 15.228c-.629 0-1.232.194-1.744.559L7 18.113V4h10v14.113zM18 2H6a1 1 0 0 0-1 1v17.056c0 .209.065.412.187.581a.994.994 0 0 0 1.394.233l4.838-3.455a1 1 0 0 1 1.162 0l4.838 3.455A1 1 0 0 0 19 20.056V3a1 1 0 0 0-1-1z" />
+      </svg>
+      <div class="grid transition-all duration-300 ease-in-out {{if $isCollapsed}}grid-cols-[0fr] opacity-0 ml-0{{else}}grid-cols-[1fr] opacity-100 ml-4{{end}}">
+        <div class="overflow-hidden min-w-0">
+          <span class="whitespace-nowrap text-sm font-medium transition-colors duration-200 {{if $isActive}}text-accent{{else}}text-foreground-muted{{end}}">Watchlist</span>
+        </div>
+      </div>
+    </a>
+  </div>
+</nav>
+{{end}}

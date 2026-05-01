@@ -1,22 +1,49 @@
 {{define "title"}}Login{{end}}
+{{define "header"}}{{end}}
+{{define "sidebar"}}{{end}}
 {{define "content"}}
-  <div class="max-w-md mx-auto mt-20">
-    <h2 class="text-3xl font-bold mb-8 text-center">Login</h2>
-    {{if .Error}}
-      <div class="bg-red-500 text-white p-3 rounded mb-4">{{.Error}}</div>
-    {{end}}
-    <form method="POST" action="/login" class="space-y-4">
-      <div>
-        <label for="username" class="block text-sm font-medium mb-2">Username</label>
-        <input type="text" id="username" name="username" value="{{.Username}}" class="w-full p-2 rounded bg-gray-800 border border-gray-700 focus:border-blue-500 outline-none">
-      </div>
-      <div>
-        <label for="password" class="block text-sm font-medium mb-2">Password</label>
-        <input type="password" id="password" name="password" class="w-full p-2 rounded bg-gray-800 border border-gray-700 focus:border-blue-500 outline-none">
-      </div>
-      <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-        Login
+<div class="flex min-h-screen items-center justify-center p-4">
+  <div class="w-full max-w-md">
+    <h1 class="mb-2 text-3xl font-medium text-white">Sign in</h1>
+    <p class="text-neutral-400 mb-8">Enter your credentials to continue.</p>
+
+    <form method="POST" action="/login" class="flex flex-col gap-6">
+      <label class="flex flex-col gap-2">
+        <span class="text-white text-sm">Username</span>
+        <input
+          type="text"
+          name="username"
+          value="{{.Username}}"
+          required
+          placeholder="username"
+          class="bg-background-surface text-white placeholder-neutral-500 border-none px-4 py-3 focus:outline-none focus-within:ring-2 focus-within:ring-accent rounded-sm"
+        />
+      </label>
+
+      <label class="flex flex-col gap-2">
+        <span class="text-white text-sm">Password</span>
+        <div class="relative group focus-within:ring-2 focus-within:ring-accent rounded-sm">
+          <input
+            type="password"
+            name="password"
+            required
+            placeholder="Password"
+            class="bg-background-surface text-white placeholder-neutral-500 w-full border-none px-4 py-3 focus:outline-none rounded-sm"
+          />
+        </div>
+      </label>
+
+      <button
+        type="submit"
+        class="hover:bg-gray-200 mt-2 bg-white px-4 py-3 font-medium text-black transition-colors rounded-sm"
+      >
+        Sign in
       </button>
     </form>
+
+    {{if .Error}}
+      <p class="mt-6 text-sm text-red-500">{{.Error}}</p>
+    {{end}}
   </div>
+</div>
 {{end}}

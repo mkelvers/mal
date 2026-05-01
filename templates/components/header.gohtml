@@ -1,0 +1,77 @@
+{{define "header"}}
+<header class="bg-background-header flex flex-col border-b border-white/5 relative z-50">
+  <div class="flex h-16 items-center justify-between px-4 md:px-6">
+    <div class="flex items-center gap-4 lg:w-72">
+      <button onclick="toggleMobileMenu()" class="block text-neutral-400 transition-colors hover:text-white focus:outline-none md:hidden">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
+      </button>
+      <a href="/" class="group flex items-center gap-2 focus:outline-none">
+        <svg class="h-7 w-7 transition-transform group-hover:scale-110" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M15 80 L25 30 L50 60 L75 30 L85 80" stroke="currentColor" class="text-accent" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="50" cy="25" r="8" fill="white" />
+        </svg>
+        <span class="text-xl font-bold tracking-tight text-white hidden sm:block">MyAnime<span class="text-accent">List</span></span>
+      </a>
+    </div>
+
+    <div class="hidden max-w-3xl flex-1 items-center justify-center px-4 md:flex">
+      <form action="/search" method="GET" class="w-full max-w-lg">
+        <div class="focus-within:border-accent bg-background-surface flex h-10 w-full items-center overflow-hidden border border-transparent transition-colors">
+          <div class="pr-2 pl-4 text-neutral-400">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          </div>
+          <input type="text" name="q" placeholder="Search..." class="h-full w-full bg-transparent px-1 text-sm text-white focus:outline-none" />
+        </div>
+      </form>
+    </div>
+
+    <div class="flex items-center justify-end lg:w-72 relative">
+      <ui-dropdown class="relative block">
+        <div data-trigger class="cursor-pointer">
+          <button class="flex items-center gap-1 rounded-full p-1 transition-colors hover:bg-white/5 focus:outline-none">
+            {{if .User}}
+              <div class="bg-accent flex h-8 w-8 items-center justify-center overflow-hidden rounded-full text-sm font-semibold text-white">
+                {{slice .User.Username 0 1}}
+              </div>
+            {{else}}
+              <div class="bg-accent flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold text-white">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              </div>
+            {{end}}
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-neutral-400"><path d="m6 9 6 6 6-6"/></svg>
+          </button>
+        </div>
+
+        <div data-content class="hidden absolute z-50 min-w-[320px] bg-background-button rounded-none shadow-2xl right-0 top-full mt-2">
+          <div class="flex flex-col py-1">
+            {{if .User}}
+              <a href="/logout" class="flex w-full items-center px-5 py-3.5 transition-colors focus:outline-none hover:bg-red-500/10 focus:bg-red-500/10">
+                <div class="flex w-full items-center justify-between text-left">
+                  <span class="font-medium text-[15px] text-red-500">Log out</span>
+                </div>
+              </a>
+            {{else}}
+              <a href="/login" class="flex w-full items-center px-5 py-3.5 transition-colors focus:outline-none hover:bg-white/10 focus:bg-white/10">
+                <div class="flex w-full items-center justify-between text-left">
+                  <span class="font-medium text-[15px] text-white">Log in</span>
+                </div>
+              </a>
+            {{end}}
+          </div>
+        </div>
+      </ui-dropdown>
+    </div>
+  </div>
+
+  <div class="flex border-t border-white/5 p-3 md:hidden">
+    <form action="/search" method="GET" class="w-full">
+      <div class="focus-within:border-accent bg-background-surface flex h-10 w-full items-center overflow-hidden border border-transparent transition-colors">
+        <div class="pr-2 pl-4 text-neutral-400">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        </div>
+        <input type="text" name="q" placeholder="Search..." class="h-full w-full bg-transparent px-1 text-sm text-white focus:outline-none" />
+      </div>
+    </form>
+  </div>
+</header>
+{{end}}

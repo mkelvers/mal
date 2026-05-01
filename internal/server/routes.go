@@ -68,8 +68,16 @@ func NewRouter(cfg Config) http.Handler {
 
 	mux.HandleFunc("/", animeHandler.HandleCatalog)
 	mux.HandleFunc("/search", animeHandler.HandleSearch)
+	mux.HandleFunc("/browse", animeHandler.HandleBrowse)
 	mux.HandleFunc("/api/search-quick", animeHandler.HandleQuickSearch)
-	mux.HandleFunc("/anime/", animeHandler.HandleAnimeDetails)
+	mux.HandleFunc("/anime/", func(w http.ResponseWriter, r *http.Request) {
+		if strings.HasSuffix(r.URL.Path, "/watch") {
+			playbackHandler.HandleWatchPage(w, r)
+			return
+		}
+		animeHandler.HandleAnimeDetails(w, r)
+	})
+	mux.HandleFunc("/api/watch-order", animeHandler.HandleHTMLWatchOrder)
 	mux.HandleFunc("/watch/", playbackHandler.HandleWatchPage)
 	mux.HandleFunc("/watch/proxy/stream", playbackHandler.HandleProxy)
 	mux.HandleFunc("/watch/proxy/segment", playbackHandler.HandleProxy)

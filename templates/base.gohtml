@@ -4,14 +4,52 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{{template "title" .}} - MAL</title>
-  <link rel="stylesheet" href="/static/style.css">
+  <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+  <link rel="stylesheet" href="/dist/tailwind.css">
+  <script type="module" src="/dist/static/theme.js" defer></script>
+  <script type="module" src="/dist/static/dropdown.js" defer></script>
+  <script type="module" src="/dist/static/discover.js" defer></script>
+  <script type="module" src="/dist/static/anime.js" defer></script>
+  <script type="module" src="/dist/static/timezone.js" defer></script>
+  <script type="module" src="/dist/static/player.js" defer></script>
+  <script type="module" src="/dist/static/search.js" defer></script>
+  <script type="module" src="/dist/static/sort_filter.js" defer></script>
+  <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+  <script>
+    function toggleMobileMenu() {
+      const menu = document.getElementById('mobile-menu');
+      if (menu.classList.contains('-translate-x-full')) {
+        menu.classList.remove('-translate-x-full');
+        document.getElementById('mobile-overlay').classList.remove('hidden');
+      } else {
+        menu.classList.add('-translate-x-full');
+        document.getElementById('mobile-overlay').classList.add('hidden');
+      }
+    }
+  </script>
 </head>
-<body class="bg-gray-900 text-white">
-  <header class="p-4">
-    <h1 class="text-2xl font-bold">MAL</h1>
-  </header>
-  <main class="container mx-auto px-4 py-8">
-    {{template "content" .}}
-  </main>
+<body class="bg-background text-neutral-200">
+  <div class="flex min-h-screen flex-col">
+    <div class="sticky top-0 z-50">
+      {{block "header" .}}
+        {{template "header" .}}
+      {{end}}
+    </div>
+    
+    <div class="flex flex-1">
+      <button id="mobile-overlay" class="hidden fixed inset-0 z-40 w-full cursor-default border-none bg-black/60 backdrop-blur-sm outline-none lg:hidden" onclick="toggleMobileMenu()" aria-label="Close mobile menu"></button>
+
+      <!-- Sidebar -->
+      <div id="mobile-menu" class="fixed inset-y-0 left-0 z-50 shrink-0 overflow-hidden transform transition-all duration-300 lg:sticky lg:top-16 lg:z-auto lg:h-[calc(100vh-4rem)] -translate-x-full lg:shadow-none lg:w-64 lg:translate-x-0 w-64 shadow-2xl">
+        {{block "sidebar" .}}
+          {{template "navigation" dict "CurrentPath" .CurrentPath "IsCollapsed" false}}
+        {{end}}
+      </div>
+
+      <main class="w-full flex-1 overflow-x-hidden p-4 md:p-8 lg:p-12">
+        {{template "content" .}}
+      </main>
+    </div>
+  </div>
 </body>
 </html>
