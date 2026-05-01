@@ -104,8 +104,8 @@ const initPlayer = (): void => {
     }
   }
 
-  const modeSources = safeJsonParse(container.getAttribute('data-mode-sources'), {} as Record<string, ModeSource>)
-  const availableModes = safeJsonParse(container.getAttribute('data-available-modes'), [] as string[])
+  let modeSources = safeJsonParse(container.getAttribute('data-mode-sources'), {} as Record<string, ModeSource>)
+  let availableModes = safeJsonParse(container.getAttribute('data-available-modes'), [] as string[])
   const initialMode = container.getAttribute('data-initial-mode') || 'dub'
   const segments = safeJsonParse(container.getAttribute('data-segments'), [] as SkipSegment[])
   const maxIntroStartSeconds = 180
@@ -893,31 +893,40 @@ const initPlayer = (): void => {
     const video = container.querySelector('video') as HTMLVideoElement | null
     if (!video) return
 
-    container.setAttribute('data-current-episode', String(nextEpisode))
+    // Update component state
+    currentEpisode = String(nextEpisode)
+    totalEpisodes = data.total_episodes
+    
+    // We must update the module level variables, not just the DOM attributes
+    modeSources = data.mode_sources
+    availableModes = data.available_modes || []
+    currentMode = availableModes.includes(data.initial_mode) ? data.initial_mode : (availableModes[0] || 'dub')
+    const fallbackMode = Object.keys(modeSources).find((m) => typeof modeSources[m]?.token === 'string' && modeSources[m].token !== '')
+    if ((!modeSources[currentMode] || !modeSources[currentMode].token) && fallbackMode) {
+      currentMode = fallbackMode
+    }
+
+    container.setAttribute('data-current-episode', currentEpisode)
     container.setAttribute('data-mal-id', String(animeID))
-    container.setAttribute('data-total-episodes', String(data.total_episodes))
+    container.setAttribute('data-total-episodes', String(totalEpisodes))
     container.setAttribute('data-start-time-seconds', '0')
     container.setAttribute('data-initial-mode', data.initial_mode)
     container.setAttribute('data-stream-token', data.token)
-    container.setAttribute('data-available-modes', JSON.stringify(data.available_modes))
-    container.setAttribute('data-mode-sources', JSON.stringify(data.mode_sources))
+    container.setAttribute('data-available-modes', JSON.stringify(availableModes))
+    container.setAttribute('data-mode-sources', JSON.stringify(modeSources))
     container.setAttribute('data-segments', JSON.stringify(data.segments))
-
-    currentEpisode = String(nextEpisode)
-    totalEpisodes = data.total_episodes
 
     // Reset preloader for next time
     preloadedNextEpisodeData = null
     preloadAttemptedForEpisode = null
 
     const newStreamURL = container.getAttribute('data-stream-url') || '/watch/proxy/stream'
-    const streamMode = data.initial_mode
-    const modeSource = data.mode_sources[streamMode]
+    const modeSource = modeSources[currentMode]
 
   if (modeSource?.token) {
-    video.src = `${newStreamURL}?mode=${encodeURIComponent(streamMode)}&token=${encodeURIComponent(modeSource.token)}`
+    video.src = `${newStreamURL}?mode=${encodeURIComponent(currentMode)}&token=${encodeURIComponent(modeSource.token)}`
   } else if (data.token) {
-    video.src = `${newStreamURL}?mode=${encodeURIComponent(streamMode)}&token=${encodeURIComponent(data.token)}`
+    video.src = `${newStreamURL}?mode=${encodeURIComponent(currentMode)}&token=${encodeURIComponent(data.token)}`
   }
 
   video.load()
