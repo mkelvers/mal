@@ -52,7 +52,11 @@ func NewRouter(cfg Config) http.Handler {
 	middleware.InitAuth(cfg.AuthService)
 
 	animeHandler := anime.NewHandler(cfg.JikanClient, cfg.DB)
-	playbackHandler := playback.NewHandler(nil, cfg.JikanClient)
+	
+	playbackSvc := playback.NewService(cfg.DB, cfg.SQLDB, playback.Config{
+		ProxyTokenSecret: cfg.PlaybackProxySecret,
+	})
+	playbackHandler := playback.NewHandler(playbackSvc, cfg.JikanClient)
 
 	// Serve static files
 	fs := http.FileServer(http.Dir("./static"))

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strconv"
 	"strings"
 )
 
@@ -40,11 +41,16 @@ func (s *Service) ProxyStream(ctx context.Context, targetURL string, referer str
 		}
 
 		headers := cloneHeaders(resp.Header)
+		headers.Del("Content-Length")
+		headers.Del("Transfer-Encoding")
 		headers.Set("Content-Type", "application/vnd.apple.mpegurl")
+		headers.Set("Content-Length", strconv.Itoa(len(rewritten)))
 		return resp.StatusCode, headers, []byte(rewritten), nil, nil
 	}
 
 	headers := cloneHeaders(resp.Header)
+	// Some upstream servers send transfer-encoding chunked, we should let go's http server handle it
+	headers.Del("Transfer-Encoding")
 	return resp.StatusCode, headers, nil, resp.Body, nil
 }
 
@@ -58,7 +64,6 @@ func isM3U8(targetURL string, contentType string) bool {
 
 var hopHeaders = map[string]struct{}{
 	"connection":          {},
-	"transfer-encoding":   {},
 	"keep-alive":          {},
 	"proxy-authenticate":  {},
 	"proxy-authorization": {},
