@@ -317,7 +317,7 @@ const initPlayer = (): void => {
       const left = (segment.start / bounds.duration) * 100
       const width = ((segment.end - segment.start) / bounds.duration) * 100
       const bar = document.createElement('div')
-      bar.className = 'absolute top-0 h-full bg-white/70'
+      bar.className = 'absolute top-0 h-full bg-white/80'
       bar.style.left = `${left}%`
       bar.style.width = `${width}%`
       segmentsTrack.appendChild(bar)
@@ -365,9 +365,7 @@ const initPlayer = (): void => {
     if (buffered && video) {
       let maxBuffered = 0
       for (let i = 0; i < video.buffered.length; i++) {
-        if (video.buffered.start(i) <= currentTime + 1) { // Adding small tolerance
-          maxBuffered = Math.max(maxBuffered, video.buffered.end(i))
-        }
+        maxBuffered = Math.max(maxBuffered, video.buffered.end(i))
       }
       const bufferedDisplayTime = displayTimeFromAbsolute(maxBuffered)
       const bufferedPct = Math.max(0, Math.min(100, (bufferedDisplayTime / bounds.duration) * 100))
