@@ -6,8 +6,10 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"mal/integrations/jikan"
+	ctxpkg "mal/internal/context"
 	"mal/internal/db"
 	"mal/templates"
 )
@@ -26,7 +28,9 @@ type quickSearchResult struct {
 
 func renderNotFoundPage(r *http.Request, w http.ResponseWriter) {
 	w.WriteHeader(http.StatusNotFound)
-	if err := templates.GetRenderer().ExecuteTemplate(w, "not_found.gohtml", nil); err != nil {
+	if err := templates.GetRenderer().ExecuteTemplate(w, "not_found.gohtml", map[string]any{
+		"CurrentPath": r.URL.Path,
+	}); err != nil {
 		log.Printf("render error: %v", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 	}
@@ -62,12 +66,63 @@ func (h *Handler) HandleCatalog(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if len(animes.Animes) > 4 {
-		animes.Animes = animes.Animes[:4]
+	currentlyAiring, err := h.jikanClient.GetSeasonsNow(r.Context(), 1)
+	if err != nil {
+		log.Printf("seasons now error: %v", err)
+		// non-fatal
+	}
+
+	if len(animes.Animes) > 6 {
+		animes.Animes = animes.Animes[:6]
+	}
+	if len(currentlyAiring.Animes) > 6 {
+		currentlyAiring.Animes = currentlyAiring.Animes[:6]
+	}
+
+	// Fetch continue watching if logged in (user ID in context, handle this safely)
+	// We'll skip DB fetch for continue watching for now if it requires complex session parsing
+	// Actually we should try to fetch it if we can.
+	var cw []database.GetContinueWatchingEntriesRow
+	user, userOk := r.Context().Value(ctxpkg.UserKey).(*database.User)
+	if userOk && user != nil {
+		cw, _ = h.db.GetContinueWatchingEntries(r.Context(), user.ID)
 	}
 
 	if err := templates.GetRenderer().ExecuteTemplate(w, "index.gohtml", map[string]any{
-		"Animes": animes.Animes,
+		"MostPopular":      animes.Animes,
+		"CurrentlyAiring":  currentlyAiring.Animes,
+		"ContinueWatching": cw,
+		"User":             user,
+		"CurrentPath":      r.URL.Path,
+	}); err != nil {
+		log.Printf("render error: %v", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+	}
+}
+
+func (h *Handler) HandleBrowse(w http.ResponseWriter, r *http.Request) {
+	user, _ := r.Context().Value(ctxpkg.UserKey).(*database.User)
+
+	q := r.URL.Query().Get("q")
+	animeType := r.URL.Query().Get("type")
+	status := r.URL.Query().Get("status")
+	orderBy := r.URL.Query().Get("order_by")
+	sort := r.URL.Query().Get("sort")
+
+	res, err := h.jikanClient.SearchAdvanced(r.Context(), q, animeType, status, orderBy, sort, 1, 24)
+	if err != nil {
+		log.Printf("browse error: %v", err)
+	}
+
+	if err := templates.GetRenderer().ExecuteTemplate(w, "browse.gohtml", map[string]any{
+		"User":        user,
+		"CurrentPath": r.URL.Path,
+		"Query":       q,
+		"Type":        animeType,
+		"Status":      status,
+		"OrderBy":     orderBy,
+		"Sort":        sort,
+		"Animes":      res.Animes,
 	}); err != nil {
 		log.Printf("render error: %v", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
@@ -87,11 +142,65 @@ func (h *Handler) HandleAPICatalog(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) HandleAnimeDetails(w http.ResponseWriter, r *http.Request) {
-	renderNotFoundPage(r, w)
+	idStr := strings.TrimPrefix(r.URL.Path, "/anime/")
+	idStr = strings.TrimSuffix(idStr, "/")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		renderNotFoundPage(r, w)
+		return
+	}
+
+	anime, err := h.jikanClient.GetAnimeByID(r.Context(), id)
+	if err != nil {
+		renderNotFoundPage(r, w)
+		return
+	}
+
+	user, _ := r.Context().Value(ctxpkg.UserKey).(*database.User)
+
+	var status string
+	if user != nil {
+		entry, err := h.db.GetWatchListEntry(r.Context(), database.GetWatchListEntryParams{
+			UserID:  user.ID,
+			AnimeID: int64(id),
+		})
+		if err == nil {
+			status = entry.Status
+		}
+	}
+
+	if err := templates.GetRenderer().ExecuteTemplate(w, "anime.gohtml", map[string]any{
+		"Anime":       anime,
+		"User":        user,
+		"Status":      status,
+		"CurrentPath": r.URL.Path,
+	}); err != nil {
+		log.Printf("render error: %v", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+	}
 }
 
-func (h *Handler) HandleAPIAnime(w http.ResponseWriter, r *http.Request) {
-	renderNotFoundPage(r, w)
+func (h *Handler) HandleHTMLWatchOrder(w http.ResponseWriter, r *http.Request) {
+	animeIdStr := r.URL.Query().Get("animeId")
+	id, err := strconv.Atoi(animeIdStr)
+	if err != nil {
+		http.Error(w, `<div class="mt-8 text-sm text-red-400">Invalid anime ID.</div>`, http.StatusBadRequest)
+		return
+	}
+
+	relations, err := h.jikanClient.GetFullRelations(r.Context(), id)
+	if err != nil {
+		log.Printf("watch order error: %v", err)
+		http.Error(w, `<div class="mt-8 text-sm text-red-400">Failed to load watch order.</div>`, http.StatusInternalServerError)
+		return
+	}
+
+	if err := templates.GetRenderer().ExecuteFragment(w, "anime.gohtml", "watch_order", map[string]any{
+		"Relations": relations,
+		"AnimeID":   id,
+	}); err != nil {
+		log.Printf("render error: %v", err)
+	}
 }
 
 func (h *Handler) HandleAPIEpisodes(w http.ResponseWriter, r *http.Request) {
@@ -106,7 +215,7 @@ func (h *Handler) HandleQuickSearch(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode([]quickSearchResult{})
 		return
 	}
-	res, err := h.jikanClient.SearchWithLimit(r.Context(), query, 1, 5)
+	res, err := h.jikanClient.SearchAdvanced(r.Context(), query, "", "", "", "", 1, 5)
 	if err != nil {
 		log.Printf("quick search error: %v", err)
 		w.WriteHeader(http.StatusOK)

@@ -1,0 +1,25 @@
+{{define "title"}}Browse{{end}}
+{{define "content"}}
+<div class="flex flex-col gap-6">
+  <div class="flex items-end justify-between">
+    <h1 class="text-lg font-normal text-neutral-300">Browse</h1>
+  </div>
+
+  {{template "filter_bar" .}}
+
+  <main class="w-full">
+    {{if eq (len .Animes) 0}}
+      <div class="flex h-64 flex-col items-center justify-center gap-2 text-neutral-400">
+        <svg class="h-12 w-12 opacity-50" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>
+        <p>No anime found matching your filters.</p>
+      </div>
+    {{else}}
+      <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
+        {{range .Animes}}
+          {{template "anime_card" dict "Anime" . "WithActions" true}}
+        {{end}}
+      </div>
+    {{end}}
+  </main>
+</div>
+{{end}}

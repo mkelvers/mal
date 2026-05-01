@@ -1,0 +1,13 @@
+{{define "dropdown"}}
+<ui-dropdown class="relative block" data-align="{{if .Align}}{{.Align}}{{else}}right{{end}}" data-position="{{if .Position}}{{.Position}}{{else}}bottom{{end}}" data-width="{{if .Width}}{{.Width}}{{else}}min-w-[320px]{{end}}">
+  <div data-trigger>
+    {{template "dropdown_trigger" .}}
+  </div>
+
+  <div data-content class="hidden absolute z-50 {{if .Width}}{{.Width}}{{else}}min-w-[320px]{{end}} bg-background-button rounded-none shadow-2xl {{if eq .Align "left"}}left-0{{else}}right-0{{end}} {{if eq .Position "top"}}bottom-full mb-2{{else}}top-full mt-2{{end}}">
+    <div class="flex flex-col py-1">
+      {{template "dropdown_children" .}}
+    </div>
+  </div>
+</ui-dropdown>
+{{end}}

@@ -1,0 +1,65 @@
+{{define "title"}}{{.Anime.DisplayTitle}}{{end}}
+{{define "content"}}
+{{$anime := .Anime}}
+
+<div class="flex flex-col gap-10">
+  <div class="flex flex-col gap-8 md:flex-row lg:gap-12">
+    <div class="flex w-64 shrink-0 flex-col items-center gap-6 md:w-80 md:items-start lg:w-96">
+      <div class="aspect-[2/3] w-full overflow-hidden bg-white/5 shadow-lg">
+        {{$imageUrl := "https://placehold.co/400x600?text=No+Image"}}
+        {{if $anime.Images.Webp.LargeImageURL}}
+          {{$imageUrl = $anime.Images.Webp.LargeImageURL}}
+        {{else if $anime.Images.Jpg.LargeImageURL}}
+          {{$imageUrl = $anime.Images.Jpg.LargeImageURL}}
+        {{end}}
+        <img src="{{$imageUrl}}" alt="{{$anime.Title}}" class="h-full w-full object-cover" />
+      </div>
+    </div>
+
+    <div class="flex grow flex-col">
+      <h1 class="mb-4 text-2xl font-bold text-white md:text-4xl">
+        {{$anime.DisplayTitle}}
+      </h1>
+
+      {{if and $anime.TitleEnglish (ne $anime.Title $anime.TitleEnglish)}}
+        <h2 class="text-foreground-muted mb-4 text-base">{{$anime.Title}}</h2>
+      {{end}}
+
+      {{template "watchlist_actions" dict "Anime" $anime "User" .User "Status" .Status}}
+
+      <div class="space-y-4">
+        <div>
+          <h2 class="mb-2 text-lg font-medium text-neutral-300">Synopsis</h2>
+          <p id="synopsis-container" class="text-foreground-muted max-w-4xl text-base leading-relaxed whitespace-pre-line line-clamp-5 md:line-clamp-none">
+            {{if $anime.Synopsis}}{{$anime.Synopsis}}{{else}}No synopsis available.{{end}}
+          </p>
+          {{if and $anime.Synopsis (gt (len $anime.Synopsis) 200)}}
+            <button id="synopsis-toggle" class="mt-2 text-sm font-medium text-neutral-300 transition-colors hover:text-white md:hidden" onclick="
+              const container = document.getElementById('synopsis-container');
+              const btn = document.getElementById('synopsis-toggle');
+              if (container.classList.contains('line-clamp-5')) {
+                container.classList.remove('line-clamp-5');
+                btn.textContent = 'Show less';
+              } else {
+                container.classList.add('line-clamp-5');
+                btn.textContent = 'Read more';
+              }
+            ">
+              Read more
+            </button>
+          {{end}}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="w-full">
+    <div hx-get="/api/watch-order?animeId={{$anime.MalID}}" hx-trigger="load">
+      <div class="mt-8 flex items-center gap-3 text-neutral-400">
+        <div class="border-t-accent size-5 animate-spin rounded-full border-2 border-neutral-600"></div>
+        <span class="text-sm">Loading watch order sequence...</span>
+      </div>
+    </div>
+  </div>
+</div>
+{{end}}

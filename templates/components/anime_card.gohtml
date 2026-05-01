@@ -1,9 +1,87 @@
 {{define "anime_card"}}
-  <div class="bg-gray-800 rounded-lg overflow-hidden shadow-lg">
-    <img src="{{.ImageURL}}" alt="{{.DisplayTitle}}" class="w-full h-48 object-cover">
-    <div class="p-4">
-      <h3 class="text-lg font-semibold mb-2">{{.DisplayTitle}}</h3>
-      <p class="text-sm text-gray-400">{{.Type}}</p>
-    </div>
-  </div>
+{{$anime := .Anime}}
+{{$withActions := .WithActions}}
+{{$compact := .Compact}}
+{{$hideTitle := .HideTitle}}
+{{$isWatchlist := .IsWatchlist}}
+{{$hasTopBadge := .HasTopBadge}}
+
+{{$imageUrl := "https://placehold.co/400x600?text=No+Image"}}
+{{if $anime.Images.Webp.LargeImageURL}}
+  {{$imageUrl = $anime.Images.Webp.LargeImageURL}}
+{{else if $anime.Images.Jpg.LargeImageURL}}
+  {{$imageUrl = $anime.Images.Jpg.LargeImageURL}}
+{{end}}
+
+{{$displayTitle := $anime.Title}}
+{{if $anime.TitleEnglish}}
+  {{$displayTitle = $anime.TitleEnglish}}
+{{end}}
+
+<div class="flex w-full flex-col gap-2">
+  <a href="/anime/{{$anime.MalID}}" class="group relative flex aspect-[2/3] w-full flex-col overflow-hidden bg-white/5 after:absolute after:inset-0 {{if $withActions}}after:bg-black/80 after:opacity-0 hover:after:opacity-100{{else}}after:bg-linear-to-t after:from-black/80 after:via-black/20 after:to-transparent after:opacity-80 hover:after:opacity-100{{end}} after:transition-opacity">
+    <img src="{{$imageUrl}}" alt="{{$displayTitle}}" class="h-full w-full object-cover" loading="lazy" />
+
+    {{if $withActions}}
+      <div class="absolute inset-0 z-10 flex flex-col p-3 {{if $hasTopBadge}}pt-10{{end}} opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+        {{if $isWatchlist}}
+          <div class="flex justify-end">
+            <button class="text-white/70 transition-colors hover:text-white focus:outline-none disabled:opacity-50" aria-label="Remove from Watchlist">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="size-5 shadow-black drop-shadow-md"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+            </button>
+          </div>
+        {{end}}
+
+        {{if not $isWatchlist}}
+          <h3 class="mb-1.5 line-clamp-2 text-sm font-medium text-white shadow-black drop-shadow-md">
+            {{$displayTitle}}
+          </h3>
+        {{end}}
+
+        {{if $anime.Synopsis}}
+          <p class="line-clamp-4 text-xs leading-relaxed text-white/80 shadow-black drop-shadow-md">
+            {{$anime.Synopsis}}
+          </p>
+        {{end}}
+
+        {{if not $isWatchlist}}
+          <div class="mt-auto flex items-center justify-start pb-2 pl-2">
+            <button class="text-accent hover:text-accent/80 transition-colors focus:outline-none disabled:opacity-50" aria-label="Add to Watchlist">
+              <svg class="size-6 shadow-black drop-shadow-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z" /></svg>
+            </button>
+          </div>
+        {{end}}
+      </div>
+    {{else}}
+      <div class="absolute bottom-0 left-0 z-10 w-full p-4">
+        <h3 class="line-clamp-2 text-sm font-medium text-white shadow-black drop-shadow-md {{if $compact}}mb-0{{end}}">
+          {{$displayTitle}}
+        </h3>
+        {{if not $compact}}
+          <div class="mt-1 flex items-center gap-2 text-xs text-white/70">
+            {{if $anime.Score}}
+              <span class="flex items-center gap-1">
+                <svg class="text-accent h-3 w-3" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                {{$anime.Score}}
+              </span>
+            {{end}}
+            {{if $anime.Year}}
+              <span>•</span>
+              <span>{{$anime.Year}}</span>
+            {{end}}
+            {{if $anime.Episodes}}
+              <span>•</span>
+              <span>{{$anime.Episodes}} ep</span>
+            {{end}}
+          </div>
+        {{end}}
+      </div>
+    {{end}}
+  </a>
+  {{if and $withActions (not $hideTitle)}}
+    <h3 class="line-clamp-2 text-sm font-medium text-white">
+      {{$displayTitle}}
+    </h3>
+  {{end}}
+</div>
 {{end}}

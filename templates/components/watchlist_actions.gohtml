@@ -1,0 +1,77 @@
+{{define "watchlist_actions"}}
+{{$anime := .Anime}}
+{{$user := .User}}
+{{$status := .Status}}
+
+<div class="mb-4 flex gap-2">
+  <ui-dropdown class="relative block" data-align="left" data-width="min-w-[160px]">
+    <div data-trigger class="cursor-pointer">
+      <button class="bg-background-button hover:bg-background-button-hover flex items-center justify-between gap-3 px-4 py-2.5 text-sm font-medium text-white transition-colors disabled:opacity-50">
+        <span id="watchlist-status-display-{{$anime.MalID}}">
+          {{if $status}}
+            {{if eq $status "watching"}}Watching{{end}}
+            {{if eq $status "completed"}}Completed{{end}}
+            {{if eq $status "plan to watch"}}Plan to Watch{{end}}
+            {{if eq $status "dropped"}}Dropped{{end}}
+          {{else}}
+            Add to Watchlist
+          {{end}}
+        </span>
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-neutral-400"><path d="m6 9 6 6 6-6"/></svg>
+      </button>
+    </div>
+
+    <div data-content class="hidden absolute z-50 min-w-[160px] bg-background-button rounded-none shadow-2xl left-0 top-full mt-2">
+      <div class="flex flex-col py-1">
+        <button class="flex w-full items-center px-5 py-2.5 transition-colors focus:outline-none hover:bg-white/10 focus:bg-white/10" onclick="updateWatchlist({{$anime.MalID}}, 'watching', 'Watching')">
+          <span class="font-medium text-sm text-white">Watching</span>
+        </button>
+        <button class="flex w-full items-center px-5 py-2.5 transition-colors focus:outline-none hover:bg-white/10 focus:bg-white/10" onclick="updateWatchlist({{$anime.MalID}}, 'completed', 'Completed')">
+          <span class="font-medium text-sm text-white">Completed</span>
+        </button>
+        <button class="flex w-full items-center px-5 py-2.5 transition-colors focus:outline-none hover:bg-white/10 focus:bg-white/10" onclick="updateWatchlist({{$anime.MalID}}, 'plan to watch', 'Plan to Watch')">
+          <span class="font-medium text-sm text-white">Plan to Watch</span>
+        </button>
+        <button class="flex w-full items-center px-5 py-2.5 transition-colors focus:outline-none hover:bg-white/10 focus:bg-white/10" onclick="updateWatchlist({{$anime.MalID}}, 'dropped', 'Dropped')">
+          <span class="font-medium text-sm text-white">Dropped</span>
+        </button>
+        
+        <div id="remove-watchlist-container-{{$anime.MalID}}" class="{{if not $status}}hidden{{end}}">
+          <div class="my-1 h-px bg-white/10"></div>
+          <button class="flex w-full items-center px-5 py-2.5 transition-colors focus:outline-none hover:bg-red-500/10 focus:bg-red-500/10" onclick="removeWatchlist({{$anime.MalID}})">
+            <span class="font-medium text-sm text-red-500 text-left whitespace-nowrap">Remove from Watchlist</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </ui-dropdown>
+
+  <a href="/anime/{{$anime.MalID}}/watch" class="bg-background-button hover:bg-background-button-hover px-5 py-2.5 text-sm font-medium text-white transition-colors">
+    Watch
+  </a>
+</div>
+
+<script>
+  function updateWatchlist(id, status, display) {
+    fetch('/api/watchlist', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ animeId: id, status: status })
+    }).then(res => {
+      if (res.ok) {
+        document.getElementById('watchlist-status-display-' + id).textContent = display;
+        document.getElementById('remove-watchlist-container-' + id).classList.remove('hidden');
+      }
+    });
+  }
+
+  function removeWatchlist(id) {
+    fetch('/api/watchlist/' + id, { method: 'DELETE' }).then(res => {
+      if (res.ok) {
+        document.getElementById('watchlist-status-display-' + id).textContent = 'Add to Watchlist';
+        document.getElementById('remove-watchlist-container-' + id).classList.add('hidden');
+      }
+    });
+  }
+</script>
+{{end}}
