@@ -52,6 +52,7 @@ type Anime struct {
 	Status       string        `json:"status"`
 	Airing       bool          `json:"airing"`
 	Episodes     int           `json:"episodes"`
+	Score        float64       `json:"score"`
 	Season       string        `json:"season"`
 	Year         int           `json:"year"`
 	Type         string        `json:"type"`
@@ -157,10 +158,16 @@ type TopAnimeResponse struct {
 }
 
 type Episode struct {
-	MalID  int    `json:"mal_id"`
-	Title  string `json:"title"`
-	Filler bool   `json:"filler"`
-	Recap  bool   `json:"recap"`
+	MalID   int    `json:"mal_id"`
+	Title   string `json:"title"`
+	Episode string `json:"episode"`
+	Filler  bool   `json:"filler"`
+	Recap   bool   `json:"recap"`
+	Images  *struct {
+		Jpg struct {
+			ImageURL string `json:"image_url"`
+		} `json:"jpg"`
+	} `json:"images,omitempty"`
 }
 
 type EpisodesResponse struct {

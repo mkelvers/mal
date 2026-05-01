@@ -19,6 +19,19 @@ func (c *Client) GetEpisodes(ctx context.Context, animeID int, page int) (Episod
 	return result, err
 }
 
+func (c *Client) GetVideoEpisodes(ctx context.Context, animeID int, page int) (EpisodesResponse, error) {
+	if page < 1 {
+		page = 1
+	}
+
+	cacheKey := fmt.Sprintf("anime:%d:videos:episodes:%d", animeID, page)
+	var result EpisodesResponse
+	reqURL := fmt.Sprintf("%s/anime/%d/videos/episodes?page=%d", c.baseURL, animeID, page)
+
+	err := c.getWithCache(ctx, cacheKey, 12*time.Hour, reqURL, &result)
+	return result, err
+}
+
 func (c *Client) GetEpisode(ctx context.Context, animeID int, episode int) (EpisodeResponse, error) {
 	cacheKey := fmt.Sprintf("anime:%d:episode:%d", animeID, episode)
 	var result EpisodeResponse

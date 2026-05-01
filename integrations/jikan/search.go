@@ -10,8 +10,53 @@ func (c *Client) Search(ctx context.Context, query string, page int) (SearchResu
 	return c.search(ctx, query, page, 0)
 }
 
-func (c *Client) SearchWithLimit(ctx context.Context, query string, page int, limit int) (SearchResult, error) {
-	return c.search(ctx, query, page, limit)
+func (c *Client) SearchAdvanced(ctx context.Context, query, animeType, status, orderBy, sort string, page, limit int) (SearchResult, error) {
+	if page < 1 {
+		page = 1
+	}
+	if limit < 0 {
+		limit = 0
+	}
+
+	cacheKey := fmt.Sprintf("search:%s:%s:%s:%s:%s:%d:%d", query, animeType, status, orderBy, sort, page, limit)
+
+	var result SearchResponse
+	reqURL := fmt.Sprintf("%s/anime?page=%d", c.baseURL, page)
+	if query != "" {
+		reqURL += "&q=" + url.QueryEscape(query)
+	}
+	if animeType != "" {
+		reqURL += "&type=" + url.QueryEscape(animeType)
+	}
+	if status != "" {
+		reqURL += "&status=" + url.QueryEscape(status)
+	}
+	if orderBy != "" {
+		reqURL += "&order_by=" + url.QueryEscape(orderBy)
+	}
+	if sort != "" {
+		reqURL += "&sort=" + url.QueryEscape(sort)
+	}
+	if limit > 0 {
+		reqURL += fmt.Sprintf("&limit=%d", limit)
+	}
+
+	if err := c.getWithCache(ctx, cacheKey, shortCacheTTL, reqURL, &result); err != nil {
+		if IsRetryableError(err) {
+			if fallbackErr := c.fetchWithRetry(ctx, reqURL, &result); fallbackErr == nil {
+				return SearchResult{
+					Animes:      result.Data,
+					HasNextPage: result.Pagination.HasNextPage,
+				}, nil
+			}
+		}
+		return SearchResult{}, err
+	}
+
+	return SearchResult{
+		Animes:      result.Data,
+		HasNextPage: result.Pagination.HasNextPage,
+	}, nil
 }
 
 func (c *Client) search(ctx context.Context, query string, page int, limit int) (SearchResult, error) {
