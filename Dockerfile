@@ -16,6 +16,7 @@ RUN apt-get update && apt-get install -y ca-certificates sqlite3 curl unzip && r
 RUN curl -fsSL https://bun.sh/install | bash
 ENV PATH="/root/.bun/bin:${PATH}"
 
+ENV GOPROXY=direct
 COPY go.mod go.sum ./
 RUN go mod download
 
