@@ -118,33 +118,26 @@ const initPlayer = (): void => {
       const start = Number(segment.start || 0)
       const end = Number(segment.end || 0)
       if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) {
-        return null
+        return { ...segment, start: 0, end: 0 }
       }
-      const rawType = String(segment.type || '').toLowerCase()
-      const type = rawType === 'ed' || rawType === 'outro' ? 'ed' : 'op'
-      return { type, start: Math.max(0, start), end: Math.max(0, end) }
+      return { ...segment, start, end }
     })
-    .filter((s: unknown): s is { type: string, start: number, end: number } => s !== null)
-    .sort((a: { start: number }, b: { start: number }) => a.start - b.start)
+    .filter((s: SkipSegment) => s.start > 0 || s.end > 0)
 
-  let currentMode = availableModes.includes(initialMode) ? initialMode : (availableModes[0] || 'dub')
-  const fallbackMode = Object.keys(modeSources).find((mode) => typeof modeSources[mode]?.token === 'string' && modeSources[mode].token !== '')
-  if ((!modeSources[currentMode] || !modeSources[currentMode].token) && fallbackMode) {
-    currentMode = fallbackMode
-  }
-  let controlsTimeout: number | undefined
-  let isScrubbing = false
-  let lastKnownVolume = 1
-  let activeSubtitles: Array<{ start: number, end: number, text: string }> = []
-  let currentSubtitleTracks: Array<{ lang: string, label: string, url: string }> = []
-  let pendingSeekTime: number | null = null
-  let activeSkipSegment: { type: string, start: number, end: number } | null = null
   let activeSegments: Array<{ type: string, start: number, end: number }> = []
   let lastSavedProgress = { episode: currentEpisode, seconds: -1 }
   let progressSaveTimer: number | undefined
   let transitionEpisode: number | null = null
   let completionSent = false
   let completionAttempts = 0
+  let playerControlsTimeout: number | undefined
+  let playerInitialized = false
+  let lastKnownVolume = 1
+  let pendingSeekTime: number | null = null
+  let preloadedNextEpisodeData: EpisodeData | null = null
+  let preloadAttemptedForEpisode: number | null = null
+  let activeSkipSegment: { type: string, start: number, end: number } | null = null
+  let activeSubtitles: Array<{ start: number, end: number, text: string }> = []
   const watchProgressURL = '/api/watch-progress'
 
   const previewPopover = container.querySelector('[data-preview-popover]') as HTMLElement
@@ -183,14 +176,8 @@ const initPlayer = (): void => {
   const updateAutoplayButton = (): void => {
     if (!autoplayBtn) return
     const enabled = isAutoplayEnabled()
-    const label = enabled ? 'Autoplay: On' : 'Autoplay: Off'
-    autoplayBtn.title = label
-    autoplayBtn.classList.remove('opacity-40', 'opacity-50')
-    if (!enabled) autoplayBtn.classList.add('opacity-50')
-    const lastChild = autoplayBtn.lastChild
-    if (lastChild && lastChild.nodeType === Node.TEXT_NODE) {
-      lastChild.textContent = label
-    }
+    const checkbox = autoplayBtn as unknown as HTMLInputElement
+    checkbox.checked = enabled
   }
 
   const timelineBounds = (): { start: number, end: number, duration: number } => {
@@ -809,72 +796,116 @@ const initPlayer = (): void => {
     })
   }
 
-const goToNextEpisode = (): void => {
-  const pathParts = window.location.pathname.split('/')
-  if (pathParts.length < 4) return
+  const preloadNextEpisode = async (): Promise<void> => {
+    const currentEpNum = Number.parseInt(currentEpisode, 10)
+    if (Number.isNaN(currentEpNum)) return
+    
+    const nextEpisode = currentEpNum + 1
+    if (totalEpisodes > 0 && nextEpisode > totalEpisodes) return
+    if (preloadAttemptedForEpisode === nextEpisode) return
+    
+    preloadAttemptedForEpisode = nextEpisode
+    
+    if (!Number.isInteger(malID) || malID <= 0) return
 
-  const animeID = pathParts[2]
-  const currentEpisodeNumber = Number.parseInt(pathParts[3], 10)
-  if (Number.isNaN(currentEpisodeNumber)) return
-
-  if (Number.isInteger(totalEpisodes) && totalEpisodes > 0 && currentEpisodeNumber >= totalEpisodes) {
-    completeAnime(currentEpisodeNumber)
-    return
+    const url = `/api/watch/episode/${malID}/${nextEpisode}`
+    try {
+      const resp = await fetch(url)
+      if (resp.ok) {
+        const data = await resp.json() as EpisodeData
+        preloadedNextEpisodeData = data
+        
+        // Prefetch the m3u8 playlist to the browser cache
+        const streamMode = data.initial_mode
+        const modeSource = data.mode_sources[streamMode]
+        const token = modeSource?.token || data.token
+        if (token) {
+          const streamURL = container.getAttribute('data-stream-url') || '/watch/proxy/stream'
+          const src = `${streamURL}?mode=${encodeURIComponent(streamMode)}&token=${encodeURIComponent(token)}`
+          fetch(src).catch(() => {})
+        }
+      }
+    } catch {
+      // ignore
+    }
   }
 
-  if (!isAutoplayEnabled()) return
+  const goToNextEpisode = async (): Promise<void> => {
+    const currentEpNum = Number.parseInt(currentEpisode, 10)
+    if (Number.isNaN(currentEpNum)) return
 
-  const nextEpisode = currentEpisodeNumber + 1
-  markEpisodeTransition(nextEpisode)
+    if (Number.isInteger(totalEpisodes) && totalEpisodes > 0 && currentEpNum >= totalEpisodes) {
+      completeAnime(currentEpNum)
+      return
+    }
 
-  if (document.fullscreenElement) {
-    loadNextEpisodeInPlace(Number(animeID), nextEpisode)
-    return
+    if (!isAutoplayEnabled()) return
+
+    const nextEpisode = currentEpNum + 1
+    markEpisodeTransition(nextEpisode)
+
+    await loadNextEpisodeInPlace(Number(malID), nextEpisode)
   }
 
-  const nextUrl = `/watch/${animeID}/${nextEpisode}`
-  sessionStorage.setItem('mal:autoplay-next', 'true')
-  window.location.href = nextUrl
-}
+  const loadNextEpisodeInPlace = async (animeID: number, nextEpisode: number): Promise<void> => {
+    if (!Number.isInteger(animeID) || animeID <= 0) return
 
-const loadNextEpisodeInPlace = async (animeID: number, nextEpisode: number): Promise<void> => {
-  if (!Number.isInteger(animeID) || animeID <= 0) return
+    let data = preloadedNextEpisodeData
+    if (!data || preloadAttemptedForEpisode !== nextEpisode) {
+      const url = `/api/watch/episode/${animeID}/${nextEpisode}`
+      try {
+        const resp = await fetch(url)
+        if (!resp.ok) return
+        data = await resp.json() as EpisodeData
+      } catch {
+        return
+      }
+    }
 
-  const url = `/api/watch/episode/${animeID}/${nextEpisode}`
-  let data: EpisodeData | null = null
+    if (!data) return
 
-  try {
-    const resp = await fetch(url)
-    if (!resp.ok) return
-    data = await resp.json() as EpisodeData
-  } catch {
-    return
-  }
+    // Update URL without reloading
+    const newUrl = new URL(window.location.href)
+    newUrl.searchParams.set('ep', String(nextEpisode))
+    window.history.pushState({}, '', newUrl.toString())
 
-  if (!data) return
+    // Highlight the current episode in the UI
+    const episodeLinks = document.querySelectorAll('a[href*="ep="]')
+    episodeLinks.forEach(link => {
+      const linkUrl = new URL((link as HTMLAnchorElement).href)
+      if (linkUrl.searchParams.get('ep') === String(nextEpisode)) {
+        link.classList.add('ring-accent', 'ring-2')
+      } else {
+        link.classList.remove('ring-accent', 'ring-2')
+      }
+    })
 
-  const container = document.querySelector('[data-video-player]') as HTMLElement | null
-  if (!container) return
+    const container = document.querySelector('[data-video-player]') as HTMLElement | null
+    if (!container) return
 
-  const video = container.querySelector('video') as HTMLVideoElement | null
-  if (!video) return
+    const video = container.querySelector('video') as HTMLVideoElement | null
+    if (!video) return
 
-  container.setAttribute('data-current-episode', String(nextEpisode))
-  container.setAttribute('data-mal-id', String(animeID))
-  container.setAttribute('data-total-episodes', String(data.total_episodes))
-  container.setAttribute('data-start-time-seconds', '0')
-  container.setAttribute('data-initial-mode', data.initial_mode)
-  container.setAttribute('data-stream-token', data.token)
-  container.setAttribute('data-available-modes', JSON.stringify(data.available_modes))
-  container.setAttribute('data-mode-sources', JSON.stringify(data.mode_sources))
-  container.setAttribute('data-segments', JSON.stringify(data.segments))
+    container.setAttribute('data-current-episode', String(nextEpisode))
+    container.setAttribute('data-mal-id', String(animeID))
+    container.setAttribute('data-total-episodes', String(data.total_episodes))
+    container.setAttribute('data-start-time-seconds', '0')
+    container.setAttribute('data-initial-mode', data.initial_mode)
+    container.setAttribute('data-stream-token', data.token)
+    container.setAttribute('data-available-modes', JSON.stringify(data.available_modes))
+    container.setAttribute('data-mode-sources', JSON.stringify(data.mode_sources))
+    container.setAttribute('data-segments', JSON.stringify(data.segments))
 
-  currentEpisode = String(nextEpisode)
-  totalEpisodes = data.total_episodes
+    currentEpisode = String(nextEpisode)
+    totalEpisodes = data.total_episodes
 
-  const newStreamURL = container.getAttribute('data-stream-url') || '/watch/proxy/stream'
-  const streamMode = data.initial_mode
-  const modeSource = data.mode_sources[streamMode]
+    // Reset preloader for next time
+    preloadedNextEpisodeData = null
+    preloadAttemptedForEpisode = null
+
+    const newStreamURL = container.getAttribute('data-stream-url') || '/watch/proxy/stream'
+    const streamMode = data.initial_mode
+    const modeSource = data.mode_sources[streamMode]
 
   if (modeSource?.token) {
     video.src = `${newStreamURL}?mode=${encodeURIComponent(streamMode)}&token=${encodeURIComponent(modeSource.token)}`
@@ -1059,9 +1090,9 @@ const loadNextEpisodeInPlace = async (animeID: number, nextEpisode: number): Pro
   modeDub?.addEventListener('click', toggleDub)
   modeSub?.addEventListener('click', toggleSub)
 
-  autoplayBtn?.addEventListener('click', () => {
-    localStorage.setItem('mal:autoplay-enabled', isAutoplayEnabled() ? 'false' : 'true')
-    updateAutoplayButton()
+  autoplayBtn?.addEventListener('change', (e) => {
+    const isChecked = (e.target as HTMLInputElement).checked
+    localStorage.setItem('mal:autoplay-enabled', isChecked ? 'true' : 'false')
     showControls()
   })
 
