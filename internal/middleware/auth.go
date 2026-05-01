@@ -6,9 +6,15 @@ import (
 	"strings"
 
 	"mal/api/auth"
+	ctxpkg "mal/internal/context"
 	"mal/internal/db"
-	webcontext "mal/web/context"
 )
+
+var authSvc *auth.Service
+
+func InitAuth(service *auth.Service) {
+	authSvc = service
+}
 
 func Auth(authService *auth.Service) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
@@ -25,7 +31,7 @@ func Auth(authService *auth.Service) func(http.Handler) http.Handler {
 				return
 			}
 
-			ctx := context.WithValue(r.Context(), webcontext.UserKey, user)
+			ctx := context.WithValue(r.Context(), ctxpkg.UserKey, user)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}
@@ -33,7 +39,26 @@ func Auth(authService *auth.Service) func(http.Handler) http.Handler {
 
 func RequireAuth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		user, ok := r.Context().Value(webcontext.UserKey).(*database.User)
+		cookie, err := r.Cookie("session_id")
+		if err != nil {
+			if strings.HasPrefix(r.URL.Path, "/api/") {
+				w.Header().Set("HX-Redirect", "/login")
+				http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			} else {
+				http.Redirect(w, r, "/login", http.StatusFound)
+			}
+			return
+		}
+
+		if authSvc != nil {
+			user, err := authSvc.ValidateSession(r.Context(), cookie.Value)
+			if err == nil {
+				ctx := context.WithValue(r.Context(), ctxpkg.UserKey, user)
+				r = r.WithContext(ctx)
+			}
+		}
+		
+		user, ok := r.Context().Value(ctxpkg.UserKey).(*database.User)
 		if !ok || user == nil {
 			if strings.HasPrefix(r.URL.Path, "/api/") {
 				w.Header().Set("HX-Redirect", "/login")
@@ -43,12 +68,13 @@ func RequireAuth(next http.Handler) http.Handler {
 			}
 			return
 		}
+
 		next.ServeHTTP(w, r)
 	})
 }
 
-func GetUser(ctx context.Context) *database.User {
-	user, ok := ctx.Value(webcontext.UserKey).(*database.User)
+func GetUser(ctx interface{}) *database.User {
+	user, ok := ctx.(*database.User)
 	if !ok {
 		return nil
 	}

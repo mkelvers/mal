@@ -1,0 +1,9 @@
+{{define "title"}}Hello World{{end}}
+{{define "content"}}
+  <h2 class="text-3xl font-bold mb-8 text-center">Hello World</h2>
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+    {{range .Animes}}
+      {{template "anime_card" .}}
+    {{end}}
+  </div>
+{{end}}

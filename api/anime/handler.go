@@ -1,34 +1,16 @@
 package anime
 
 import (
-	"context"
 	"encoding/json"
-	"errors"
 	"html"
 	"log"
 	"net/http"
 	"strconv"
-	"strings"
 
 	"mal/integrations/jikan"
 	"mal/internal/db"
-	animecomponents "mal/web/components/anime"
-	watchcomponents "mal/web/components/watch"
-	webcontext "mal/web/context"
-	"mal/web/templates"
+	"mal/templates"
 )
-
-func deduplicateAnimes(animes []jikan.Anime) []jikan.Anime {
-	seen := make(map[int]bool)
-	var result []jikan.Anime
-	for _, a := range animes {
-		if !seen[a.MalID] {
-			seen[a.MalID] = true
-			result = append(result, a)
-		}
-	}
-	return result
-}
 
 type Handler struct {
 	jikanClient *jikan.Client
@@ -44,7 +26,7 @@ type quickSearchResult struct {
 
 func renderNotFoundPage(r *http.Request, w http.ResponseWriter) {
 	w.WriteHeader(http.StatusNotFound)
-	if err := templates.NotFoundPage().Render(r.Context(), w); err != nil {
+	if err := templates.GetRenderer().ExecuteTemplate(w, "not_found.gohtml", nil); err != nil {
 		log.Printf("render error: %v", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 	}
@@ -60,17 +42,7 @@ func parsePageParam(r *http.Request) int {
 	if page < 1 {
 		return 1
 	}
-
 	return page
-}
-
-func userIDFromRequest(r *http.Request) string {
-	user, ok := r.Context().Value(webcontext.UserKey).(*database.User)
-	if !ok || user == nil {
-		return ""
-	}
-
-	return user.ID
 }
 
 func NewHandler(jikanClient *jikan.Client, db database.Querier) *Handler {
@@ -82,312 +54,67 @@ func (h *Handler) HandleCatalog(w http.ResponseWriter, r *http.Request) {
 		renderNotFoundPage(r, w)
 		return
 	}
-	if err := templates.Catalog().Render(r.Context(), w); err != nil {
+
+	animes, err := h.jikanClient.GetTopAnime(r.Context(), 1)
+	if err != nil {
+		log.Printf("top anime error: %v", err)
+		http.Error(w, "Failed to fetch anime", http.StatusInternalServerError)
+		return
+	}
+
+	if len(animes.Animes) > 4 {
+		animes.Animes = animes.Animes[:4]
+	}
+
+	if err := templates.GetRenderer().ExecuteTemplate(w, "index.gohtml", map[string]any{
+		"Animes": animes.Animes,
+	}); err != nil {
 		log.Printf("render error: %v", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 	}
-}
-
-func (h *Handler) watchlistMap(ctx context.Context, userID string) map[int]string {
-	if userID == "" {
-		return nil
-	}
-	entries, err := h.db.GetUserWatchList(ctx, userID)
-	if err != nil {
-		return nil
-	}
-	m := make(map[int]string, len(entries))
-	for _, e := range entries {
-		m[int(e.AnimeID)] = e.Status
-	}
-	return m
 }
 
 func (h *Handler) HandleSearch(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Vary", "HX-Request")
-
-	query := r.URL.Query().Get("q")
-	if query == "" {
-		if err := templates.Search("").Render(r.Context(), w); err != nil {
-			log.Printf("render error: %v", err)
-			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-			return
-		}
-		return
-	}
-
-	if r.Header.Get("HX-Request") == "true" {
-		res, err := h.jikanClient.Search(r.Context(), query, 1)
-		if err != nil {
-			log.Printf("search error: %v", err)
-			if jikan.IsRetryableError(err) || errors.Is(err, context.Canceled) {
-				writeInlineLoadError(w, "Search is temporarily unavailable. Please retry in a few seconds.")
-				return
-			}
-			http.Error(w, "Failed to search anime", http.StatusInternalServerError)
-			return
-		}
-		statuses := h.watchlistMap(r.Context(), userIDFromRequest(r))
-		if err := templates.SearchResultsWrapper(query, res.Animes, statuses, 2, res.HasNextPage).Render(r.Context(), w); err != nil {
-			log.Printf("render error: %v", err)
-			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-			return
-		}
-		return
-	}
-
-	if err := templates.Search(query).Render(r.Context(), w); err != nil {
-		log.Printf("render error: %v", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-	}
+	renderNotFoundPage(r, w)
 }
 
 func (h *Handler) HandleAPISearch(w http.ResponseWriter, r *http.Request) {
-	query := r.URL.Query().Get("q")
-	page := parsePageParam(r)
-
-	res, err := h.jikanClient.Search(r.Context(), query, page)
-	if err != nil {
-		log.Printf("search pagination error: %v", err)
-		if jikan.IsRetryableError(err) || errors.Is(err, context.Canceled) {
-			writeInlineLoadError(w, "Unable to load more results right now. Please retry shortly.")
-			return
-		}
-		http.Error(w, "Failed to fetch search page", http.StatusInternalServerError)
-		return
-	}
-
-	res.Animes = deduplicateAnimes(res.Animes)
-
-	statuses := h.watchlistMap(r.Context(), userIDFromRequest(r))
-	if err := templates.SearchItems(query, res.Animes, statuses, page+1, res.HasNextPage).Render(r.Context(), w); err != nil {
-		log.Printf("render error: %v", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-	}
+	http.Error(w, "Not implemented yet", http.StatusNotImplemented)
 }
 
 func (h *Handler) HandleAPICatalog(w http.ResponseWriter, r *http.Request) {
-	page := parsePageParam(r)
-
-	result, err := h.jikanClient.GetTopAnime(r.Context(), page)
-	if err == nil {
-		result.Animes = deduplicateAnimes(result.Animes)
-		statuses := h.watchlistMap(r.Context(), userIDFromRequest(r))
-		if err := templates.CatalogItems(result.Animes, statuses, page+1, result.HasNextPage).Render(r.Context(), w); err != nil {
-			log.Printf("render error: %v", err)
-			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-			return
-		}
-		return
-	}
-
-	if jikan.IsRetryableError(err) {
-		if err := templates.CatalogError("Unable to load anime catalog").Render(r.Context(), w); err != nil {
-			log.Printf("render error: %v", err)
-			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		}
-		return
-	}
-
-	log.Printf("top anime error: %v", err)
-	http.Error(w, "Failed to fetch top anime", http.StatusInternalServerError)
+	http.Error(w, "Not implemented yet", http.StatusNotImplemented)
 }
 
 func (h *Handler) HandleAnimeDetails(w http.ResponseWriter, r *http.Request) {
-	idStr := r.URL.Path[len("/anime/"):]
-	id, err := strconv.Atoi(idStr)
-	if err != nil || id <= 0 {
-		renderNotFoundPage(r, w)
-		return
-	}
-
-	userID := userIDFromRequest(r)
-
-	anime, err := h.jikanClient.GetAnimeByID(r.Context(), id)
-	if err != nil {
-		if jikan.IsNotFoundError(err) {
-			renderNotFoundPage(r, w)
-			return
-		}
-
-		h.jikanClient.EnqueueAnimeFetchRetry(r.Context(), id, err)
-		if jikan.IsRetryableError(err) {
-			if err := animecomponents.Pending(id).Render(r.Context(), w); err != nil {
-				log.Printf("render error: %v", err)
-				http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-				return
-			}
-			return
-		}
-
-		log.Printf("anime fetch error for %d: %v", id, err)
-		http.Error(w, "Failed to fetch anime details", http.StatusInternalServerError)
-		return
-	}
-
-	currentStatus := ""
-	nextEpisode := 1
-	if userID != "" {
-		entry, err := h.db.GetWatchListEntry(r.Context(), database.GetWatchListEntryParams{
-			UserID:  userID,
-			AnimeID: int64(id),
-		})
-		if err == nil {
-			currentStatus = entry.Status
-			if entry.CurrentEpisode.Valid {
-				value := int(entry.CurrentEpisode.Int64)
-				if value > 0 {
-					nextEpisode = value
-				}
-			}
-		}
-	}
-
-	if err := templates.AnimeDetails(anime, currentStatus, nextEpisode).Render(r.Context(), w); err != nil {
-		log.Printf("render error: %v", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-	}
+	renderNotFoundPage(r, w)
 }
 
 func (h *Handler) HandleAPIAnime(w http.ResponseWriter, r *http.Request) {
-	path := r.URL.Path[len("/api/anime/"):]
-
-	idPart, section, ok := strings.Cut(path, "/")
-	if !ok || section == "" {
-		http.Error(w, "invalid path", http.StatusBadRequest)
-		return
-	}
-
-	id, err := strconv.Atoi(idPart)
-	if err != nil || id <= 0 {
-		http.Error(w, "invalid id", http.StatusBadRequest)
-		return
-	}
-
-	statuses := h.watchlistMap(r.Context(), userIDFromRequest(r))
-
-	w.Header().Set("Cache-Control", "public, max-age=3600")
-
-	switch section {
-	case "relations":
-		relations, err := h.jikanClient.GetFullRelations(r.Context(), id)
-		if err != nil {
-			if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
-				return
-			}
-			log.Printf("relations error for %d: %v", id, err)
-			writeInlineLoadError(w, "Failed to load relations.")
-			return
-		}
-		if err := animecomponents.RelationsList(relations, statuses).Render(r.Context(), w); err != nil {
-			log.Printf("render error: %v", err)
-			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-			return
-		}
-	case "recommendations":
-		recs, err := h.jikanClient.GetRecommendations(r.Context(), id, 12)
-		if err != nil {
-			log.Printf("recommendations error for %d: %v", id, err)
-			writeInlineLoadError(w, "Failed to load recommendations.")
-			return
-		}
-		if err := animecomponents.Recommendations(recs, statuses).Render(r.Context(), w); err != nil {
-			log.Printf("render error: %v", err)
-			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-			return
-		}
-	case "episodes":
-		currentEpisode := r.URL.Query().Get("current")
-		episodes, err := h.getEpisodes(r.Context(), id)
-		if err != nil {
-			log.Printf("episodes error for %d: %v", id, err)
-			writeInlineLoadError(w, "Failed to load episodes.")
-			return
-		}
-		if err := watchcomponents.EpisodeList(episodes, currentEpisode, id).Render(r.Context(), w); err != nil {
-			log.Printf("render error: %v", err)
-			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-			return
-		}
-	default:
-		renderNotFoundPage(r, w)
-	}
+	renderNotFoundPage(r, w)
 }
 
 func (h *Handler) HandleAPIEpisodes(w http.ResponseWriter, r *http.Request) {
-	path := r.URL.Path[len("/api/episodes/"):]
-	id, err := strconv.Atoi(path)
-	if err != nil || id <= 0 {
-		http.Error(w, "invalid id", http.StatusBadRequest)
-		return
-	}
-
-	w.Header().Set("Cache-Control", "public, max-age=3600")
-
-	currentEpisode := r.URL.Query().Get("current")
-	episodes, err := h.getEpisodes(r.Context(), id)
-	if err != nil {
-		log.Printf("episodes error: %v", err)
-		writeInlineLoadError(w, "Failed to load episodes.")
-		return
-	}
-
-	if err := watchcomponents.EpisodeList(episodes, currentEpisode, id).Render(r.Context(), w); err != nil {
-		log.Printf("render error: %v", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-	}
-}
-
-func (h *Handler) getEpisodes(ctx context.Context, animeID int) ([]jikan.Episode, error) {
-	var allEpisodes []jikan.Episode
-	page := 1
-
-	for page <= 20 {
-		result, err := h.jikanClient.GetEpisodes(ctx, animeID, page)
-		if err != nil {
-			if jikan.IsRetryableError(err) && len(allEpisodes) > 0 {
-				return allEpisodes, nil
-			}
-			return nil, err
-		}
-
-		allEpisodes = append(allEpisodes, result.Data...)
-
-		if !result.Pagination.HasNextPage {
-			break
-		}
-		page++
-	}
-
-	return allEpisodes, nil
+	http.Error(w, "Not implemented yet", http.StatusNotImplemented)
 }
 
 func (h *Handler) HandleQuickSearch(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-
 	query := r.URL.Query().Get("q")
 	if query == "" {
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode([]quickSearchResult{})
 		return
 	}
-
 	res, err := h.jikanClient.SearchWithLimit(r.Context(), query, 1, 5)
 	if err != nil {
 		log.Printf("quick search error: %v", err)
-		if jikan.IsRetryableError(err) || errors.Is(err, context.Canceled) {
-			w.WriteHeader(http.StatusOK)
-			json.NewEncoder(w).Encode([]quickSearchResult{})
-			return
-		}
-		w.WriteHeader(http.StatusInternalServerError)
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode([]quickSearchResult{})
 		return
 	}
-
-	results := res.Animes
-
-	output := make([]quickSearchResult, len(results))
-	for i, anime := range results {
+	output := make([]quickSearchResult, len(res.Animes))
+	for i, anime := range res.Animes {
 		output[i] = quickSearchResult{
 			ID:    anime.MalID,
 			Title: anime.DisplayTitle(),
@@ -395,132 +122,26 @@ func (h *Handler) HandleQuickSearch(w http.ResponseWriter, r *http.Request) {
 			Image: anime.ImageURL(),
 		}
 	}
-
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(output)
 }
 
 func (h *Handler) HandleDiscover(w http.ResponseWriter, r *http.Request) {
-	if err := templates.Discover().Render(r.Context(), w); err != nil {
-		log.Printf("render error: %v", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-	}
+	renderNotFoundPage(r, w)
 }
 
 func (h *Handler) HandleAPIDiscoverAiring(w http.ResponseWriter, r *http.Request) {
-	page := parsePageParam(r)
-
-	res, err := h.jikanClient.GetSeasonsNow(r.Context(), page)
-	if err != nil {
-		log.Printf("airing anime error: %v", err)
-		http.Error(w, "Failed to fetch airing anime", http.StatusInternalServerError)
-		return
-	}
-
-	res.Animes = deduplicateAnimes(res.Animes)
-
-	statuses := h.watchlistMap(r.Context(), userIDFromRequest(r))
-	if err := templates.DiscoverItems(res.Animes, statuses, "airing", page+1, res.HasNextPage).Render(r.Context(), w); err != nil {
-		log.Printf("render error: %v", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-	}
+	http.Error(w, "Not implemented yet", http.StatusNotImplemented)
 }
 
 func (h *Handler) HandleAPIDiscoverUpcoming(w http.ResponseWriter, r *http.Request) {
-	page := parsePageParam(r)
-
-	res, err := h.jikanClient.GetSeasonsUpcoming(r.Context(), page)
-	if err != nil {
-		log.Printf("upcoming anime error: %v", err)
-		http.Error(w, "Failed to fetch upcoming anime", http.StatusInternalServerError)
-		return
-	}
-
-	res.Animes = deduplicateAnimes(res.Animes)
-
-	statuses := h.watchlistMap(r.Context(), userIDFromRequest(r))
-	if err := templates.DiscoverItems(res.Animes, statuses, "upcoming", page+1, res.HasNextPage).Render(r.Context(), w); err != nil {
-		log.Printf("render error: %v", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-	}
+	http.Error(w, "Not implemented yet", http.StatusNotImplemented)
 }
 
 func (h *Handler) HandleStudioDetails(w http.ResponseWriter, r *http.Request) {
-	idStr := r.URL.Path[len("/studios/"):]
-	id, err := strconv.Atoi(idStr)
-	if err != nil || id <= 0 {
-		renderNotFoundPage(r, w)
-		return
-	}
-
-	producer, err := h.jikanClient.GetProducerByID(r.Context(), id)
-	if err != nil {
-		if jikan.IsNotFoundError(err) {
-			renderNotFoundPage(r, w)
-			return
-		}
-
-		log.Printf("studio fetch error for %d: %v", id, err)
-		http.Error(w, "Failed to fetch studio details", http.StatusInternalServerError)
-		return
-	}
-
-	result, err := h.jikanClient.GetAnimeByProducer(r.Context(), id, 1)
-	if err != nil {
-		log.Printf("studio anime fetch error for %d: %v", id, err)
-		if jikan.IsRetryableError(err) || errors.Is(err, context.Canceled) {
-			// Render page with empty anime list if API is rate limiting
-			if err := templates.StudioDetails(producer, []jikan.Anime{}, nil, false, 2).Render(r.Context(), w); err != nil {
-				log.Printf("render error: %v", err)
-				http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-				return
-			}
-			return
-		}
-		http.Error(w, "Failed to fetch studio anime", http.StatusInternalServerError)
-		return
-	}
-
-	statuses := h.watchlistMap(r.Context(), userIDFromRequest(r))
-	if err := templates.StudioDetails(producer, result.Animes, statuses, result.HasNextPage, 2).Render(r.Context(), w); err != nil {
-		log.Printf("render error: %v", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-	}
+	renderNotFoundPage(r, w)
 }
 
 func (h *Handler) HandleAPIStudioAnime(w http.ResponseWriter, r *http.Request) {
-	path := r.URL.Path[len("/api/studios/"):]
-
-	idPart, after, ok := strings.Cut(path, "/")
-	if !ok || after != "anime" {
-		http.Error(w, "invalid path", http.StatusBadRequest)
-		return
-	}
-
-	id, err := strconv.Atoi(idPart)
-	if err != nil || id <= 0 {
-		http.Error(w, "invalid id", http.StatusBadRequest)
-		return
-	}
-
-	page := parsePageParam(r)
-
-	result, err := h.jikanClient.GetAnimeByProducer(r.Context(), id, page)
-	if err != nil {
-		log.Printf("studio anime pagination error for %d page %d: %v", id, page, err)
-		if jikan.IsRetryableError(err) || errors.Is(err, context.Canceled) {
-			writeInlineLoadError(w, "Unable to load more results right now. Please retry shortly.")
-			return
-		}
-		http.Error(w, "Failed to fetch studio anime", http.StatusInternalServerError)
-		return
-	}
-
-	result.Animes = deduplicateAnimes(result.Animes)
-
-	statuses := h.watchlistMap(r.Context(), userIDFromRequest(r))
-	if err := templates.StudioAnimeItems(result.Animes, statuses, result.HasNextPage, id, page+1).Render(r.Context(), w); err != nil {
-		log.Printf("render error: %v", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-	}
+	http.Error(w, "Not implemented yet", http.StatusNotImplemented)
 }

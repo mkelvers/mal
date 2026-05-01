@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"strings"
 
+	"mal/internal/context"
 	"mal/internal/db"
-	webcontext "mal/web/context"
 )
 
 type AccessPolicy struct {
@@ -47,7 +47,7 @@ func RequireGlobalAuthWithPolicy(policy AccessPolicy) func(http.Handler) http.Ha
 				return
 			}
 
-			user, ok := r.Context().Value(webcontext.UserKey).(*database.User)
+			user, ok := r.Context().Value(context.UserKey).(*database.User)
 			if !ok || user == nil {
 				if strings.HasPrefix(r.URL.Path, "/api/") || r.Header.Get("HX-Request") == "true" {
 					w.Header().Set("HX-Redirect", "/login")
