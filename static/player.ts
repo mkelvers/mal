@@ -131,7 +131,6 @@ const initPlayer = (): void => {
   let completionSent = false
   let completionAttempts = 0
   let playerControlsTimeout: number | undefined
-  let playerInitialized = false
   let lastKnownVolume = 1
   let pendingSeekTime: number | null = null
   let preloadedNextEpisodeData: EpisodeData | null = null
