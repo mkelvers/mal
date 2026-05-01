@@ -75,6 +75,7 @@ const initPlayer = (): void => {
   const durationDisplay = container.querySelector('[data-duration]') as HTMLElement
   const progressWrap = container.querySelector('[data-progress-wrap]') as HTMLElement
   const progress = container.querySelector('[data-progress]') as HTMLElement
+  const buffered = container.querySelector('[data-buffered]') as HTMLElement
   const scrubber = container.querySelector('[data-scrubber]') as HTMLElement
   const segmentsTrack = container.querySelector('[data-segments]') as HTMLElement
   const subtitleSelect = container.querySelector('[data-subtitle-select]') as HTMLSelectElement
@@ -316,7 +317,7 @@ const initPlayer = (): void => {
       const left = (segment.start / bounds.duration) * 100
       const width = ((segment.end - segment.start) / bounds.duration) * 100
       const bar = document.createElement('div')
-      bar.className = 'absolute top-0 h-full bg-yellow-400'
+      bar.className = 'absolute top-0 h-full bg-white/70'
       bar.style.left = `${left}%`
       bar.style.width = `${width}%`
       segmentsTrack.appendChild(bar)
@@ -347,6 +348,7 @@ const initPlayer = (): void => {
     const bounds = timelineBounds()
     if (bounds.duration <= 0) {
       progress.style.width = '0%'
+      if (buffered) buffered.style.width = '0%'
       if (scrubber) scrubber.style.left = '0%'
       timeDisplay.textContent = '00:00'
       if (durationDisplay) durationDisplay.textContent = '00:00'
@@ -359,6 +361,18 @@ const initPlayer = (): void => {
     if (scrubber) scrubber.style.left = `${pct}%`
     timeDisplay.textContent = formatTime(currentDisplayTime)
     if (durationDisplay) durationDisplay.textContent = formatTime(bounds.duration)
+
+    if (buffered && video) {
+      let maxBuffered = 0
+      for (let i = 0; i < video.buffered.length; i++) {
+        if (video.buffered.start(i) <= currentTime + 1) { // Adding small tolerance
+          maxBuffered = Math.max(maxBuffered, video.buffered.end(i))
+        }
+      }
+      const bufferedDisplayTime = displayTimeFromAbsolute(maxBuffered)
+      const bufferedPct = Math.max(0, Math.min(100, (bufferedDisplayTime / bounds.duration) * 100))
+      buffered.style.width = `${bufferedPct}%`
+    }
   }
 
   const seekBy = (delta: number): void => {
@@ -770,6 +784,10 @@ const initPlayer = (): void => {
 
     video.addEventListener('playing', () => {
       if (loading) loading.style.display = 'none'
+    })
+
+    video.addEventListener('progress', () => {
+      updateTimeline(video.currentTime)
     })
 
     video.addEventListener('timeupdate', () => {
