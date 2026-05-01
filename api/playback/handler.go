@@ -5,6 +5,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -61,6 +62,10 @@ func (h *Handler) HandleWatchPage(w http.ResponseWriter, r *http.Request) {
 			log.Printf("watch error: %v", err)
 		}
 	}
+
+	sort.Slice(episodes.Data, func(i, j int) bool {
+		return episodes.Data[i].MalID < episodes.Data[j].MalID
+	})
 
 	user, _ := r.Context().Value(ctxpkg.UserKey).(*database.User)
 
