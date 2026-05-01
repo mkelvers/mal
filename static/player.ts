@@ -131,6 +131,7 @@ const initPlayer = (): void => {
   let completionSent = false
   let completionAttempts = 0
   let playerControlsTimeout: number | undefined
+  let isScrubbing = false
   let lastKnownVolume = 1
   let pendingSeekTime: number | null = null
   let preloadedNextEpisodeData: EpisodeData | null = null
@@ -697,8 +698,8 @@ const initPlayer = (): void => {
 
   const showControls = (): void => {
     container.classList.add('show-controls')
-    window.clearTimeout(controlsTimeout)
-    controlsTimeout = window.setTimeout(() => {
+    window.clearTimeout(playerControlsTimeout)
+    playerControlsTimeout = window.setTimeout(() => {
       if (!isScrubbing && !video.paused) {
         container.classList.remove('show-controls')
       }
