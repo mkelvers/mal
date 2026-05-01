@@ -31,17 +31,19 @@ SELECT * FROM anime WHERE id = ? LIMIT 1;
 
 -- name: UpsertWatchListEntry :one
 INSERT INTO watch_list_entry (id, user_id, anime_id, status, current_episode, current_time_seconds, updated_at)
-VALUES (?, ?, ?, ?, ?, ?, NULL)
+VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
 ON CONFLICT (user_id, anime_id) DO UPDATE SET
     status = excluded.status,
     current_episode = excluded.current_episode,
-    current_time_seconds = excluded.current_time_seconds
+    current_time_seconds = excluded.current_time_seconds,
+    updated_at = CURRENT_TIMESTAMP
 RETURNING *;
 
 -- name: SaveWatchProgress :exec
 UPDATE watch_list_entry
 SET current_episode = ?,
-    current_time_seconds = ?
+    current_time_seconds = ?,
+    updated_at = CURRENT_TIMESTAMP
 WHERE user_id = ? AND anime_id = ?;
 
 -- name: UpsertContinueWatchingEntry :one
