@@ -27,7 +27,15 @@ type Client struct {
 
 func NewClient(db database.Querier) *Client {
 	return &Client{
-		httpClient:  &http.Client{Timeout: 10 * time.Second},
+		httpClient: &http.Client{
+			Timeout: 10 * time.Second,
+			Transport: &http.Transport{
+				MaxIdleConns:        10,
+				IdleConnTimeout:     30 * time.Second,
+				DisableKeepAlives:   false,
+				TLSHandshakeTimeout: 5 * time.Second,
+			},
+		},
 		baseURL:     "https://api.jikan.moe/v4",
 		db:          db,
 		retrySignal: make(chan struct{}, 1),
@@ -284,6 +292,12 @@ func (c *Client) getWithCache(ctx context.Context, cacheKey string, ttl time.Dur
 func (c *Client) fetchWithRetry(ctx context.Context, urlStr string, out any) error {
 	maxRetries := 5
 	for attempt := range maxRetries {
+		select {
+		case <-ctx.Done():
+			return fmt.Errorf("request canceled while retrying jikan request: %w", ctx.Err())
+		default:
+		}
+
 		if err := c.waitRateLimit(ctx); err != nil {
 			return err
 		}
@@ -295,6 +309,9 @@ func (c *Client) fetchWithRetry(ctx context.Context, urlStr string, out any) err
 
 		resp, err := c.httpClient.Do(req)
 		if err != nil {
+			if errors.Is(err, context.Canceled) {
+				return fmt.Errorf("request canceled while retrying jikan request: %w", err)
+			}
 			if attempt < maxRetries-1 && IsRetryableError(err) {
 				if retryErr := waitForRetry(ctx, retryDelay(attempt)); retryErr != nil {
 					return retryErr

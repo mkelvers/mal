@@ -29,7 +29,7 @@ type quickSearchResult struct {
 
 func renderNotFoundPage(r *http.Request, w http.ResponseWriter) {
 	w.WriteHeader(http.StatusNotFound)
-	if err := templates.GetRenderer().ExecuteTemplate(w, "not_found.gohtml", map[string]any{
+	if err := templates.GetRenderer().ExecuteTemplate(r.Context(), w, "not_found.gohtml", map[string]any{
 		"CurrentPath": r.URL.Path,
 	}); err != nil {
 		log.Printf("render error: %v", err)
@@ -98,7 +98,7 @@ func (h *Handler) HandleCatalog(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	if err := templates.GetRenderer().ExecuteTemplate(w, "index.gohtml", map[string]any{
+	if err := templates.GetRenderer().ExecuteTemplate(r.Context(), w, "index.gohtml", map[string]any{
 		"MostPopular":      animes.Animes,
 		"CurrentlyAiring":  currentlyAiring.Animes,
 		"ContinueWatching": cw,
@@ -150,7 +150,7 @@ func (h *Handler) HandleBrowse(w http.ResponseWriter, r *http.Request) {
 		}
 
 		w.Header().Set("Content-Type", "text/html")
-		err := templates.GetRenderer().ExecuteFragment(w, "browse.gohtml", "anime_card_scroll", map[string]any{
+		err := templates.GetRenderer().ExecuteFragment(r.Context(), w, "browse.gohtml", "anime_card_scroll", map[string]any{
 			"Animes":       res.Animes,
 			"NextPage":     page + 1,
 			"HasNextPage":  res.HasNextPage,
@@ -184,7 +184,7 @@ func (h *Handler) HandleBrowse(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	if err := templates.GetRenderer().ExecuteTemplate(w, "browse.gohtml", map[string]any{
+	if err := templates.GetRenderer().ExecuteTemplate(r.Context(), w, "browse.gohtml", map[string]any{
 		"User":         user,
 		"CurrentPath":  r.URL.Path,
 		"Query":        q,
@@ -251,7 +251,7 @@ func (h *Handler) HandleAnimeDetails(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	if err := templates.GetRenderer().ExecuteTemplate(w, "anime.gohtml", map[string]any{
+	if err := templates.GetRenderer().ExecuteTemplate(r.Context(), w, "anime.gohtml", map[string]any{
 		"Anime":        anime,
 		"User":         user,
 		"Status":       status,
@@ -287,7 +287,7 @@ func (h *Handler) HandleHTMLWatchOrder(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	if err := templates.GetRenderer().ExecuteFragment(w, "anime.gohtml", "watch_order", map[string]any{
+	if err := templates.GetRenderer().ExecuteFragment(r.Context(), w, "anime.gohtml", "watch_order", map[string]any{
 		"Relations":    relations,
 		"AnimeID":      id,
 		"WatchlistMap": watchlistMap,
@@ -390,7 +390,7 @@ func (h *Handler) HandleDiscover(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	if err := templates.GetRenderer().ExecuteTemplate(w, "discover.gohtml", map[string]any{
+	if err := templates.GetRenderer().ExecuteTemplate(r.Context(), w, "discover.gohtml", map[string]any{
 		"User":         user,
 		"CurrentPath":  r.URL.Path,
 		"Trending":     uniqueTrending,

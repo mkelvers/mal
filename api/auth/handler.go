@@ -25,7 +25,7 @@ func rateLimitErrorFromQuery(r *http.Request) string {
 }
 
 func (h *Handler) HandleLoginPage(w http.ResponseWriter, r *http.Request) {
-	if err := templates.GetRenderer().ExecuteTemplate(w, "login.gohtml", map[string]any{
+	if err := templates.GetRenderer().ExecuteTemplate(r.Context(), w, "login.gohtml", map[string]any{
 		"CurrentPath": r.URL.Path,
 	}); err != nil {
 		log.Printf("render error: %v", err)
@@ -34,7 +34,7 @@ func (h *Handler) HandleLoginPage(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 	if err := r.ParseForm(); err != nil {
-		templates.GetRenderer().ExecuteTemplate(w, "login.gohtml", map[string]any{
+		templates.GetRenderer().ExecuteTemplate(r.Context(), w, "login.gohtml", map[string]any{
 			"Error":       "Something went wrong. Please try again.",
 			"Username":    "",
 			"CurrentPath": r.URL.Path,
@@ -46,7 +46,7 @@ func (h *Handler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 	password := r.FormValue("password")
 
 	if username == "" || password == "" {
-		templates.GetRenderer().ExecuteTemplate(w, "login.gohtml", map[string]any{
+		templates.GetRenderer().ExecuteTemplate(r.Context(), w, "login.gohtml", map[string]any{
 			"Error":       "The email or password is wrong.",
 			"Username":    username,
 			"CurrentPath": r.URL.Path,
@@ -56,7 +56,7 @@ func (h *Handler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 
 	session, err := h.authService.Login(r.Context(), username, password)
 	if err != nil {
-		templates.GetRenderer().ExecuteTemplate(w, "login.gohtml", map[string]any{
+		templates.GetRenderer().ExecuteTemplate(r.Context(), w, "login.gohtml", map[string]any{
 			"Error":       "The email or password is wrong.",
 			"Username":    username,
 			"CurrentPath": r.URL.Path,

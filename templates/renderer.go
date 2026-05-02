@@ -1,6 +1,7 @@
 package templates
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"html/template"
@@ -114,7 +115,13 @@ func GetRenderer() *Renderer {
 	return renderer
 }
 
-func (r *Renderer) ExecuteTemplate(wr io.Writer, name string, data any) error {
+func (r *Renderer) ExecuteTemplate(ctx context.Context, wr io.Writer, name string, data any) error {
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	default:
+	}
+
 	tmpl, ok := r.templates[name]
 	if !ok {
 		return fmt.Errorf("template %s not found", name)
@@ -122,7 +129,13 @@ func (r *Renderer) ExecuteTemplate(wr io.Writer, name string, data any) error {
 	return tmpl.ExecuteTemplate(wr, "base.gohtml", data)
 }
 
-func (r *Renderer) ExecuteFragment(wr io.Writer, name string, block string, data any) error {
+func (r *Renderer) ExecuteFragment(ctx context.Context, wr io.Writer, name string, block string, data any) error {
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	default:
+	}
+
 	tmpl, ok := r.templates[name]
 	if !ok {
 		return fmt.Errorf("template %s not found", name)

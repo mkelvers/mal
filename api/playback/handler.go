@@ -30,7 +30,7 @@ func NewHandler(svc *Service, jikanClient *jikan.Client) *Handler {
 
 func renderNotFoundPage(r *http.Request, w http.ResponseWriter) {
 	w.WriteHeader(http.StatusNotFound)
-	if err := templates.GetRenderer().ExecuteTemplate(w, "not_found.gohtml", map[string]any{
+	if err := templates.GetRenderer().ExecuteTemplate(r.Context(), w, "not_found.gohtml", map[string]any{
 		"CurrentPath": r.URL.Path,
 	}); err != nil {
 		log.Printf("render error: %v", err)
@@ -174,7 +174,7 @@ func (h *Handler) HandleWatchPage(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	if err := templates.GetRenderer().ExecuteTemplate(w, "watch.gohtml", map[string]any{
+	if err := templates.GetRenderer().ExecuteTemplate(r.Context(), w, "watch.gohtml", map[string]any{
 		"Anime":       anime,
 		"Episodes":    episodes.Data,
 		"WatchData":   watchData,

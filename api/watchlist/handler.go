@@ -115,7 +115,7 @@ func (h *Handler) HandleGetWatchlist(w http.ResponseWriter, r *http.Request) {
 	entries, err := h.service.GetUserWatchlist(r.Context(), user.ID)
 	if err != nil {
 		log.Printf("failed to fetch watchlist: %v", err)
-		if err := templates.GetRenderer().ExecuteTemplate(w, "not_found.gohtml", map[string]any{
+		if err := templates.GetRenderer().ExecuteTemplate(r.Context(), w, "not_found.gohtml", map[string]any{
 			"CurrentPath": r.URL.Path,
 		}); err != nil {
 			log.Printf("render error: %v", err)
@@ -158,7 +158,7 @@ func (h *Handler) HandleGetWatchlist(w http.ResponseWriter, r *http.Request) {
 		templateName = "watchlist_partial.gohtml"
 	}
 
-	if err := templates.GetRenderer().ExecuteTemplate(w, templateName, data); err != nil {
+	if err := templates.GetRenderer().ExecuteTemplate(r.Context(), w, templateName, data); err != nil {
 		log.Printf("render error: %v", err)
 	}
 }
