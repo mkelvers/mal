@@ -19,6 +19,7 @@ type Anime struct {
 	Airing            sql.NullBool   `json:"airing"`
 	Status            sql.NullString `json:"status"`
 	RelationsSyncedAt sql.NullTime   `json:"relations_synced_at"`
+	DurationSeconds   sql.NullFloat64 `json:"duration_seconds"`
 }
 
 type AnimeFetchRetry struct {
@@ -37,13 +38,14 @@ type AnimeRelation struct {
 }
 
 type ContinueWatchingEntry struct {
-	ID                 string        `json:"id"`
-	UserID             string        `json:"user_id"`
-	AnimeID            int64         `json:"anime_id"`
-	CurrentEpisode     sql.NullInt64 `json:"current_episode"`
-	CurrentTimeSeconds float64       `json:"current_time_seconds"`
-	CreatedAt          time.Time     `json:"created_at"`
-	UpdatedAt          time.Time     `json:"updated_at"`
+	ID                 string         `json:"id"`
+	UserID             string         `json:"user_id"`
+	AnimeID            int64          `json:"anime_id"`
+	CurrentEpisode     sql.NullInt64  `json:"current_episode"`
+	CurrentTimeSeconds float64        `json:"current_time_seconds"`
+	DurationSeconds    sql.NullFloat64 `json:"duration_seconds"`
+	CreatedAt          time.Time      `json:"created_at"`
+	UpdatedAt          time.Time      `json:"updated_at"`
 }
 
 type JikanCache struct {

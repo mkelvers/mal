@@ -207,12 +207,14 @@ SELECT
     c.anime_id,
     c.current_episode,
     c.current_time_seconds,
+    c.duration_seconds,
     c.created_at,
     c.updated_at,
     a.title_original,
     a.title_english,
     a.title_japanese,
-    a.image_url
+    a.image_url,
+    a.duration_seconds as anime_duration_seconds
 FROM continue_watching_entry c
 JOIN anime a ON c.anime_id = a.id
 WHERE c.user_id = ?
@@ -220,17 +222,19 @@ ORDER BY c.updated_at DESC
 `
 
 type GetContinueWatchingEntriesRow struct {
-	ID                 string         `json:"id"`
-	UserID             string         `json:"user_id"`
-	AnimeID            int64          `json:"anime_id"`
-	CurrentEpisode     sql.NullInt64  `json:"current_episode"`
-	CurrentTimeSeconds float64        `json:"current_time_seconds"`
-	CreatedAt          time.Time      `json:"created_at"`
-	UpdatedAt          time.Time      `json:"updated_at"`
-	TitleOriginal      string         `json:"title_original"`
-	TitleEnglish       sql.NullString `json:"title_english"`
-	TitleJapanese      sql.NullString `json:"title_japanese"`
-	ImageUrl           string         `json:"image_url"`
+	ID                  string         `json:"id"`
+	UserID              string         `json:"user_id"`
+	AnimeID             int64          `json:"anime_id"`
+	CurrentEpisode      sql.NullInt64  `json:"current_episode"`
+	CurrentTimeSeconds  float64        `json:"current_time_seconds"`
+	DurationSeconds     sql.NullFloat64 `json:"duration_seconds"`
+	CreatedAt           time.Time      `json:"created_at"`
+	UpdatedAt           time.Time      `json:"updated_at"`
+	TitleOriginal       string         `json:"title_original"`
+	TitleEnglish        sql.NullString `json:"title_english"`
+	TitleJapanese       sql.NullString `json:"title_japanese"`
+	ImageUrl            string         `json:"image_url"`
+	AnimeDurationSeconds sql.NullFloat64 `json:"anime_duration_seconds"`
 }
 
 func (q *Queries) GetContinueWatchingEntries(ctx context.Context, userID string) ([]GetContinueWatchingEntriesRow, error) {
@@ -248,12 +252,14 @@ func (q *Queries) GetContinueWatchingEntries(ctx context.Context, userID string)
 			&i.AnimeID,
 			&i.CurrentEpisode,
 			&i.CurrentTimeSeconds,
+			&i.DurationSeconds,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.TitleOriginal,
 			&i.TitleEnglish,
 			&i.TitleJapanese,
 			&i.ImageUrl,
+			&i.AnimeDurationSeconds,
 		); err != nil {
 			return nil, err
 		}
@@ -744,24 +750,26 @@ func (q *Queries) UpdateAnimeStatus(ctx context.Context, arg UpdateAnimeStatusPa
 }
 
 const upsertAnime = `-- name: UpsertAnime :one
-INSERT INTO anime (id, title_original, title_english, title_japanese, image_url, airing)
-VALUES (?, ?, ?, ?, ?, ?)
+INSERT INTO anime (id, title_original, title_english, title_japanese, image_url, airing, duration_seconds)
+VALUES (?, ?, ?, ?, ?, ?, ?)
 ON CONFLICT (id) DO UPDATE SET
     title_original = excluded.title_original,
     title_english = excluded.title_english,
     title_japanese = excluded.title_japanese,
     image_url = excluded.image_url,
-    airing = excluded.airing
-RETURNING id, title_original, image_url, created_at, title_english, title_japanese, airing, status, relations_synced_at
+    airing = excluded.airing,
+    duration_seconds = excluded.duration_seconds
+RETURNING id, title_original, image_url, created_at, title_english, title_japanese, airing, status, relations_synced_at, duration_seconds
 `
 
 type UpsertAnimeParams struct {
-	ID            int64          `json:"id"`
-	TitleOriginal string         `json:"title_original"`
-	TitleEnglish  sql.NullString `json:"title_english"`
-	TitleJapanese sql.NullString `json:"title_japanese"`
-	ImageUrl      string         `json:"image_url"`
-	Airing        sql.NullBool   `json:"airing"`
+	ID              int64          `json:"id"`
+	TitleOriginal   string         `json:"title_original"`
+	TitleEnglish    sql.NullString `json:"title_english"`
+	TitleJapanese  sql.NullString `json:"title_japanese"`
+	ImageUrl        string         `json:"image_url"`
+	Airing          sql.NullBool   `json:"airing"`
+	DurationSeconds sql.NullFloat64 `json:"duration_seconds"`
 }
 
 func (q *Queries) UpsertAnime(ctx context.Context, arg UpsertAnimeParams) (Anime, error) {
@@ -772,6 +780,7 @@ func (q *Queries) UpsertAnime(ctx context.Context, arg UpsertAnimeParams) (Anime
 		arg.TitleJapanese,
 		arg.ImageUrl,
 		arg.Airing,
+		arg.DurationSeconds,
 	)
 	var i Anime
 	err := row.Scan(
@@ -784,6 +793,7 @@ func (q *Queries) UpsertAnime(ctx context.Context, arg UpsertAnimeParams) (Anime
 		&i.Airing,
 		&i.Status,
 		&i.RelationsSyncedAt,
+		&i.DurationSeconds,
 	)
 	return i, err
 }
@@ -807,21 +817,23 @@ func (q *Queries) UpsertAnimeRelation(ctx context.Context, arg UpsertAnimeRelati
 }
 
 const upsertContinueWatchingEntry = `-- name: UpsertContinueWatchingEntry :one
-INSERT INTO continue_watching_entry (id, user_id, anime_id, current_episode, current_time_seconds, updated_at)
-VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+INSERT INTO continue_watching_entry (id, user_id, anime_id, current_episode, current_time_seconds, duration_seconds, updated_at)
+VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
 ON CONFLICT (user_id, anime_id) DO UPDATE SET
     current_episode = excluded.current_episode,
     current_time_seconds = excluded.current_time_seconds,
+    duration_seconds = excluded.duration_seconds,
     updated_at = CURRENT_TIMESTAMP
-RETURNING id, user_id, anime_id, current_episode, current_time_seconds, created_at, updated_at
+RETURNING id, user_id, anime_id, current_episode, current_time_seconds, duration_seconds, created_at, updated_at
 `
 
 type UpsertContinueWatchingEntryParams struct {
-	ID                 string        `json:"id"`
-	UserID             string        `json:"user_id"`
-	AnimeID            int64         `json:"anime_id"`
-	CurrentEpisode     sql.NullInt64 `json:"current_episode"`
-	CurrentTimeSeconds float64       `json:"current_time_seconds"`
+	ID                 string         `json:"id"`
+	UserID             string         `json:"user_id"`
+	AnimeID            int64          `json:"anime_id"`
+	CurrentEpisode     sql.NullInt64  `json:"current_episode"`
+	CurrentTimeSeconds float64        `json:"current_time_seconds"`
+	DurationSeconds    sql.NullFloat64 `json:"duration_seconds"`
 }
 
 func (q *Queries) UpsertContinueWatchingEntry(ctx context.Context, arg UpsertContinueWatchingEntryParams) (ContinueWatchingEntry, error) {
@@ -831,6 +843,7 @@ func (q *Queries) UpsertContinueWatchingEntry(ctx context.Context, arg UpsertCon
 		arg.AnimeID,
 		arg.CurrentEpisode,
 		arg.CurrentTimeSeconds,
+		arg.DurationSeconds,
 	)
 	var i ContinueWatchingEntry
 	err := row.Scan(
@@ -839,6 +852,7 @@ func (q *Queries) UpsertContinueWatchingEntry(ctx context.Context, arg UpsertCon
 		&i.AnimeID,
 		&i.CurrentEpisode,
 		&i.CurrentTimeSeconds,
+		&i.DurationSeconds,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)

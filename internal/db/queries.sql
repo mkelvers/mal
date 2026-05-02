@@ -16,14 +16,15 @@ SELECT * FROM session WHERE id = ? LIMIT 1;
 DELETE FROM session WHERE id = ?;
 
 -- name: UpsertAnime :one
-INSERT INTO anime (id, title_original, title_english, title_japanese, image_url, airing)
-VALUES (?, ?, ?, ?, ?, ?)
+INSERT INTO anime (id, title_original, title_english, title_japanese, image_url, airing, duration_seconds)
+VALUES (?, ?, ?, ?, ?, ?, ?)
 ON CONFLICT (id) DO UPDATE SET
     title_original = excluded.title_original,
     title_english = excluded.title_english,
     title_japanese = excluded.title_japanese,
     image_url = excluded.image_url,
-    airing = excluded.airing
+    airing = excluded.airing,
+    duration_seconds = excluded.duration_seconds
 RETURNING *;
 
 -- name: GetAnime :one
@@ -47,11 +48,12 @@ SET current_episode = ?,
 WHERE user_id = ? AND anime_id = ?;
 
 -- name: UpsertContinueWatchingEntry :one
-INSERT INTO continue_watching_entry (id, user_id, anime_id, current_episode, current_time_seconds, updated_at)
-VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+INSERT INTO continue_watching_entry (id, user_id, anime_id, current_episode, current_time_seconds, duration_seconds, updated_at)
+VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
 ON CONFLICT (user_id, anime_id) DO UPDATE SET
     current_episode = excluded.current_episode,
     current_time_seconds = excluded.current_time_seconds,
+    duration_seconds = excluded.duration_seconds,
     updated_at = CURRENT_TIMESTAMP
 RETURNING *;
 
@@ -66,12 +68,14 @@ SELECT
     c.anime_id,
     c.current_episode,
     c.current_time_seconds,
+    c.duration_seconds,
     c.created_at,
     c.updated_at,
     a.title_original,
     a.title_english,
     a.title_japanese,
-    a.image_url
+    a.image_url,
+    a.duration_seconds as anime_duration_seconds
 FROM continue_watching_entry c
 JOIN anime a ON c.anime_id = a.id
 WHERE c.user_id = ?

@@ -21,10 +21,9 @@
             </div>
           </div>
 
-          {{if .CurrentTimeSeconds}}
-            <!-- Progress calculation would go here if total duration was available -->
+          {{if and .CurrentTimeSeconds .AnimeDurationSeconds.Valid}}
             <div class="bg-foreground-muted/60 absolute bottom-0 left-0 h-1.5 w-full z-20">
-              <div class="shadow-background/20 bg-accent h-full shadow-[0_-2px_5px_0]" style="width: 50%"></div>
+              <div class="shadow-background/20 bg-accent h-full shadow-[0_-2px_5px_0]" style="width: {{percent .CurrentTimeSeconds .AnimeDurationSeconds.Float64}}%"></div>
             </div>
           {{end}}
         </div>

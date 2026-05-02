@@ -114,6 +114,46 @@ func (a Anime) ShortDuration() string {
 	return a.Duration
 }
 
+func (a Anime) DurationSeconds() float64 {
+	if a.Duration == "" {
+		return 0
+	}
+	var hours, minutes int
+	var isHours bool
+	var currentNum string
+
+	for _, c := range a.Duration {
+		if c >= '0' && c <= '9' {
+			currentNum += string(c)
+		} else if c == ' ' && currentNum != "" {
+			val := 0
+			fmt.Sscanf(currentNum, "%d", &val)
+			if isHours {
+				hours = val
+			} else {
+				minutes = val
+			}
+			currentNum = ""
+		} else if len(currentNum) > 0 && (c == 'h' || c == 'H') {
+			isHours = true
+			val := 0
+			fmt.Sscanf(currentNum, "%d", &val)
+			hours = val
+			currentNum = ""
+		}
+	}
+	if currentNum != "" {
+		val := 0
+		fmt.Sscanf(currentNum, "%d", &val)
+		if isHours {
+			hours = val
+		} else {
+			minutes = val
+		}
+	}
+	return float64(hours*60 + minutes) * 60
+}
+
 func (a Anime) Premiered() string {
 	if a.Season != "" && a.Year > 0 {
 		return fmt.Sprintf("%s %d", seasonLabel(a.Season), a.Year)

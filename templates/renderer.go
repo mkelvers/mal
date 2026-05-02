@@ -62,6 +62,21 @@ func GetRenderer() *Renderer {
 			"sub": func(a, b int) int {
 				return a - b
 			},
+			"mul": func(a, b float64) float64 {
+				return a * b
+			},
+			"div": func(a, b float64) float64 {
+				if b == 0 {
+					return 0
+				}
+				return a / b
+			},
+			"percent": func(current, total float64) float64 {
+				if total == 0 {
+					return 0
+				}
+				return (current / total) * 100
+			},
 		}
 
 		pages, err := filepath.Glob(filepath.Join(".", "templates", "*.gohtml"))

@@ -254,12 +254,13 @@ func (h *Handler) HandleSaveProgress(w http.ResponseWriter, r *http.Request) {
 	var seed *database.UpsertAnimeParams
 	if err == nil {
 		seed = &database.UpsertAnimeParams{
-			ID:            int64(anime.MalID),
-			TitleOriginal: anime.Title,
-			TitleEnglish:  sql.NullString{String: anime.TitleEnglish, Valid: anime.TitleEnglish != ""},
-			TitleJapanese: sql.NullString{String: anime.TitleJapanese, Valid: anime.TitleJapanese != ""},
-			ImageUrl:      anime.ImageURL(),
-			Airing:        sql.NullBool{Bool: anime.Airing, Valid: true},
+			ID:              int64(anime.MalID),
+			TitleOriginal:  anime.Title,
+			TitleEnglish:    sql.NullString{String: anime.TitleEnglish, Valid: anime.TitleEnglish != ""},
+			TitleJapanese:  sql.NullString{String: anime.TitleJapanese, Valid: anime.TitleJapanese != ""},
+			ImageUrl:       anime.ImageURL(),
+			Airing:          sql.NullBool{Bool: anime.Airing, Valid: true},
+			DurationSeconds: sql.NullFloat64{Float64: anime.DurationSeconds(), Valid: anime.DurationSeconds() > 0},
 		}
 	}
 
@@ -299,12 +300,13 @@ func (h *Handler) HandleCompleteAnime(w http.ResponseWriter, r *http.Request) {
 	var seed *database.UpsertAnimeParams
 	if err == nil {
 		seed = &database.UpsertAnimeParams{
-			ID:            int64(anime.MalID),
-			TitleOriginal: anime.Title,
-			TitleEnglish:  sql.NullString{String: anime.TitleEnglish, Valid: anime.TitleEnglish != ""},
-			TitleJapanese: sql.NullString{String: anime.TitleJapanese, Valid: anime.TitleJapanese != ""},
-			ImageUrl:      anime.ImageURL(),
-			Airing:        sql.NullBool{Bool: anime.Airing, Valid: true},
+			ID:              int64(anime.MalID),
+			TitleOriginal:  anime.Title,
+			TitleEnglish:    sql.NullString{String: anime.TitleEnglish, Valid: anime.TitleEnglish != ""},
+			TitleJapanese:  sql.NullString{String: anime.TitleJapanese, Valid: anime.TitleJapanese != ""},
+			ImageUrl:       anime.ImageURL(),
+			Airing:          sql.NullBool{Bool: anime.Airing, Valid: true},
+			DurationSeconds: sql.NullFloat64{Float64: anime.DurationSeconds(), Valid: anime.DurationSeconds() > 0},
 		}
 	}
 

@@ -50,12 +50,18 @@ func (s *Service) SaveProgress(ctx context.Context, userID string, animeID int64
 		}
 	}
 
+	var durationSeconds sql.NullFloat64
+	if animeSeed != nil {
+		durationSeconds = animeSeed.DurationSeconds
+	}
+
 	if _, err := txQueries.UpsertContinueWatchingEntry(ctx, database.UpsertContinueWatchingEntryParams{
 		ID:                 uuid.New().String(),
 		UserID:             userID,
 		AnimeID:            animeID,
 		CurrentEpisode:     sql.NullInt64{Int64: int64(episode), Valid: true},
 		CurrentTimeSeconds: timeSeconds,
+		DurationSeconds:    durationSeconds,
 	}); err != nil {
 		return fmt.Errorf("failed to upsert continue entry: %w", err)
 	}
