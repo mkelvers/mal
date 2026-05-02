@@ -20,7 +20,7 @@
         {{$isCurrent := eq (printf "%v" .MalID) $currentEpID}}
         <a href="/anime/{{$anime.MalID}}/watch?ep={{.MalID}}" class="group flex flex-col overflow-hidden bg-white/5 transition-colors hover:bg-white/10 {{if $isCurrent}}ring-accent ring-2{{end}}">
           <div class="relative aspect-video w-full overflow-hidden bg-black/50">
-            {{if and .Images .Images.Jpg.ImageURL}}
+            {{if .Images.Jpg.ImageURL}}
               <img src="{{.Images.Jpg.ImageURL}}" alt="{{.Title}}" class="h-full w-full object-cover transition-transform group-hover:scale-105" loading="lazy" />
             {{else}}
               <div class="flex h-full w-full items-center justify-center text-neutral-600">
