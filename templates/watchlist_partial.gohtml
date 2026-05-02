@@ -1,45 +1,155 @@
 {{define "title"}}Watchlist{{end}}
 {{define "content"}}
-<div id="watchlist-content" class="flex flex-col gap-10">
-  {{range $status := $.StatusOrder}}
-    {{$entries := index $.WatchlistByStatus $status}}
-    {{if $entries}}
-      <section class="w-full">
-        <div class="mb-4 flex items-end justify-between">
-          <h2 class="text-lg font-normal text-neutral-300">{{index $.StatusLabels $status}}</h2>
+<div id="watchlist-content" class="flex w-full flex-col gap-6">
+  <h1 class="text-lg font-normal text-neutral-300">Watchlist</h1>
+
+  <div class="flex flex-wrap items-center justify-between gap-4">
+    <div class="flex flex-wrap items-center gap-6">
+      <button class="text-sm transition-colors text-white" onclick="filterWatchlist('all', this)">All</button>
+      <button class="text-sm transition-colors text-neutral-400 hover:text-white" onclick="filterWatchlist('watching', this)">Watching</button>
+      <button class="text-sm transition-colors text-neutral-400 hover:text-white" onclick="filterWatchlist('plan_to_watch', this)">Plan to Watch</button>
+      <button class="text-sm transition-colors text-neutral-400 hover:text-white" onclick="filterWatchlist('completed', this)">Completed</button>
+      <button class="text-sm transition-colors text-neutral-400 hover:text-white" onclick="filterWatchlist('dropped', this)">Dropped</button>
+    </div>
+
+    <div class="flex items-center gap-4">
+      <ui-dropdown class="relative block" data-align="right" data-width="min-w-[150px]">
+        <div data-trigger>
+          <button type="button" class="flex items-center gap-2 text-sm text-neutral-400 transition-colors hover:text-white">
+            <span>Sort by: <span id="sort-by-display">Date Added</span></span>
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 5h20"></path><path d="M6 12h12"></path><path d="M9 19h6"></path></svg>
+          </button>
         </div>
+        <div data-content class="hidden absolute z-50 min-w-[150px] bg-background-button rounded-none shadow-2xl right-0 top-full mt-2">
+          <div class="flex flex-col py-1">
+            <button class="flex w-full items-center px-4 py-2 text-sm text-white transition-colors hover:bg-white/10" onclick="setSortBy('date', this)">Date Added</button>
+            <button class="flex w-full items-center px-4 py-2 text-sm text-neutral-400 transition-colors hover:bg-white/10 hover:text-white" onclick="setSortBy('title', this)">Title</button>
+          </div>
+        </div>
+      </ui-dropdown>
 
-        <div class="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-6">
-          {{range $entries}}
-            <div class="watchlist-item flex w-full flex-col gap-2">
-              <div class="group relative flex aspect-[2/3] w-full flex-col overflow-hidden bg-white/5 after:absolute after:inset-0 after:bg-black/80 after:opacity-0 hover:after:opacity-100 after:transition-opacity">
-                <a href="/anime/{{.AnimeID}}" class="absolute inset-0"></a>
-                <img src="{{.ImageUrl}}" alt="{{.DisplayTitle}}" class="h-full w-full object-cover" loading="lazy" />
+      <button type="button" id="sort-order-btn" class="text-neutral-400 transition-colors hover:text-white" onclick="toggleSortOrder(this)">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="transition-transform duration-200 rotate-0"><path d="m21 16-4 4-4-4"></path><path d="M17 20V4"></path><path d="m3 8 4-4 4 4"></path><path d="M7 4v16"></path></svg>
+      </button>
+    </div>
+  </div>
 
-                <div class="absolute inset-0 z-10 flex flex-col p-3 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
-                  <div class="flex justify-end">
-                    <button type="button" hx-delete="/api/watchlist/{{.AnimeID}}" hx-target="#watchlist-content" hx-swap="outerHTML" hx-on::after-request="if(event.detail.successful) { watchlistIds.delete({{.AnimeID}}) }" class="text-white/70 transition-colors hover:text-white focus:outline-none" aria-label="Remove from Watchlist">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="size-5 shadow-black drop-shadow-md"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-                    </button>
+  <div id="watchlist-items">
+    {{range $status := $.StatusOrder}}
+      {{$entries := index $.WatchlistByStatus $status}}
+      {{if $entries}}
+        <div class="watchlist-section" data-status="{{$status}}">
+          <div class="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-6">
+            {{range $entries}}
+              <div class="watchlist-item flex w-full flex-col gap-2" data-created-at="{{.CreatedAt}}">
+                <div class="group relative flex aspect-[2/3] w-full flex-col overflow-hidden bg-white/5 after:absolute after:inset-0 after:bg-black/80 after:opacity-0 hover:after:opacity-100 after:transition-opacity">
+                  <a href="/anime/{{.AnimeID}}" class="absolute inset-0"></a>
+                  <img src="{{.ImageUrl}}" alt="{{.DisplayTitle}}" class="h-full w-full object-cover" loading="lazy" />
+
+                  <div class="absolute inset-0 z-10 flex flex-col p-3 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+                    <div class="flex justify-end">
+                      <button type="button" hx-delete="/api/watchlist/{{.AnimeID}}" hx-target="#watchlist-content" hx-swap="outerHTML" hx-on::after-request="if(event.detail.successful) { watchlistIds.delete({{.AnimeID}}) }" class="text-white/70 transition-colors hover:text-white focus:outline-none" aria-label="Remove from Watchlist">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="size-5 shadow-black drop-shadow-md"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                      </button>
+                    </div>
                   </div>
                 </div>
+                <h3 class="line-clamp-2 text-sm font-medium text-white">
+                  {{.DisplayTitle}}
+                </h3>
               </div>
-              <h3 class="line-clamp-2 text-sm font-medium text-white">
-                {{.DisplayTitle}}
-              </h3>
-            </div>
-          {{end}}
+            {{end}}
+          </div>
         </div>
-      </section>
+      {{end}}
     {{end}}
-  {{end}}
 
-  {{if eq (len $.AllEntries) 0}}
-    <div class="flex flex-col items-center justify-center gap-2 py-24 text-neutral-400">
-      <svg class="h-12 w-12 opacity-30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
-      <p class="text-lg">Your watchlist is empty.</p>
-      <a href="/" class="text-accent hover:text-accent/80 transition-colors">Browse anime</a>
-    </div>
-  {{end}}
+    {{if eq (len $.AllEntries) 0}}
+      <div class="flex flex-col items-center justify-center gap-2 py-24 text-neutral-400">
+        <svg class="h-12 w-12 opacity-30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
+        <p class="text-lg">Your watchlist is empty.</p>
+        <a href="/" class="text-accent hover:text-accent/80 transition-colors">Browse anime</a>
+      </div>
+    {{end}}
+  </div>
 </div>
+
+<script>
+  let currentSortBy = 'date'
+  let sortOrderDesc = true
+
+  function filterWatchlist(status, btn) {
+    // Update active tab styling
+    const parent = btn.parentElement
+    parent.querySelectorAll('button').forEach(function(b) {
+      b.classList.remove('text-white')
+      b.classList.add('text-neutral-400')
+    })
+    btn.classList.remove('text-neutral-400')
+    btn.classList.add('text-white')
+    
+    // Show/hide sections
+    document.querySelectorAll('.watchlist-section').forEach(function(section) {
+      if (status === 'all') {
+        section.style.display = 'block'
+      } else if (section.dataset.status === status) {
+        section.style.display = 'block'
+      } else {
+        section.style.display = 'none'
+      }
+    })
+    sortItems()
+  }
+
+  function setSortBy(sort, btn) {
+    currentSortBy = sort
+    document.getElementById('sort-by-display').textContent = sort === 'date' ? 'Date Added' : 'Title'
+    
+    // Update button colors in dropdown
+    const dropdown = btn.closest('[data-content]')
+    dropdown.querySelectorAll('button').forEach(function(b) {
+      b.classList.remove('text-white')
+      b.classList.add('text-neutral-400')
+    })
+    btn.classList.remove('text-neutral-400')
+    btn.classList.add('text-white')
+    
+    sortItems()
+    
+    // Close dropdown
+    const parentDropdown = btn.closest('ui-dropdown')
+    if (parentDropdown) parentDropdown.close()
+  }
+
+  function toggleSortOrder(btn) {
+    sortOrderDesc = !sortOrderDesc
+    btn.querySelector('svg').classList.toggle('rotate-180', !sortOrderDesc)
+    sortItems()
+  }
+
+  function sortItems() {
+    document.querySelectorAll('.watchlist-section').forEach(function(section) {
+      const grid = section.querySelector('.grid')
+      const items = Array.from(grid.children)
+      
+      items.sort(function(a, b) {
+        let comparison = 0
+        if (currentSortBy === 'title') {
+          const titleA = a.querySelector('h3').textContent.toLowerCase()
+          const titleB = b.querySelector('h3').textContent.toLowerCase()
+          comparison = titleA.localeCompare(titleB)
+        } else {
+          const dateA = new Date(a.dataset.createdAt || 0).getTime()
+          const dateB = new Date(b.dataset.createdAt || 0).getTime()
+          comparison = dateA - dateB
+        }
+        return sortOrderDesc ? -comparison : comparison
+      })
+      
+      items.forEach(function(item) {
+        grid.appendChild(item)
+      })
+    })
+  }
+</script>
 {{end}}
