@@ -12,6 +12,7 @@ import (
 	"sync"
 
 	"mal/integrations/jikan"
+	database "mal/internal/db"
 	"mal/internal/middleware"
 	"mal/templates"
 )
@@ -85,6 +86,18 @@ func (h *Handler) HandleWatchPage(w http.ResponseWriter, r *http.Request) {
 
 	currentEpID := r.URL.Query().Get("ep")
 	if currentEpID == "" {
+		if user != nil {
+			entry, err := h.svc.db.GetWatchListEntry(r.Context(), database.GetWatchListEntryParams{
+				UserID:  user.ID,
+				AnimeID: int64(id),
+			})
+			if err == nil && entry.CurrentEpisode.Valid {
+				currentEpID = strconv.FormatInt(entry.CurrentEpisode.Int64, 10)
+				// Redirect to the correct episode URL to keep state consistent
+				http.Redirect(w, r, fmt.Sprintf("/anime/%d/watch?ep=%s", id, currentEpID), http.StatusFound)
+				return
+			}
+		}
 		currentEpID = "1"
 	}
 
