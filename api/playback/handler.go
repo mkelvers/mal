@@ -64,7 +64,9 @@ func (h *Handler) HandleWatchPage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	for i := range episodes.Data {
+		log.Printf("Ep %s image: %s", episodes.Data[i].Episode, episodes.Data[i].Images.Jpg.ImageURL)
 		episodes.Data[i].Images.Jpg.ImageURL = episodes.Data[i].GetFallbackImage(id)
+		log.Printf("Ep %s fallback image: %s", episodes.Data[i].Episode, episodes.Data[i].Images.Jpg.ImageURL)
 	}
 
 	sort.Slice(episodes.Data, func(i, j int) bool {
