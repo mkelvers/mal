@@ -39,20 +39,22 @@
     {{range $.AllEntries}}
       <div class="watchlist-item flex w-full flex-col gap-2" data-status="{{.Status}}" data-created-at="{{.CreatedAt}}">
         <div class="group relative flex aspect-[2/3] w-full flex-col overflow-hidden bg-white/5 after:absolute after:inset-0 after:bg-black/80 after:opacity-0 hover:after:opacity-100 after:transition-opacity">
-          <a href="/anime/{{.AnimeID}}" class="absolute inset-0"></a>
+          <a href="/anime/{{.AnimeID}}" class="absolute inset-0 z-10"></a>
           <img src="{{.ImageUrl}}" alt="{{.DisplayTitle}}" class="h-full w-full object-cover" loading="lazy" />
 
-          <div class="absolute inset-0 z-10 flex flex-col p-3 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+          <div class="absolute inset-0 z-20 flex flex-col p-3 opacity-0 transition-opacity duration-300 group-hover:opacity-100 pointer-events-none">
             <div class="flex justify-end">
-              <button type="button" hx-delete="/api/watchlist/{{.AnimeID}}" hx-target="#watchlist-content" hx-swap="outerHTML" hx-on::after-request="if(event.detail.successful) { watchlistIds.delete({{.AnimeID}}) }" class="text-white/70 transition-colors hover:text-white focus:outline-none" aria-label="Remove from Watchlist">
+              <button type="button" hx-delete="/api/watchlist/{{.AnimeID}}" hx-target="#watchlist-content" hx-swap="outerHTML" hx-on::after-request="if(event.detail.successful) { watchlistIds.delete({{.AnimeID}}) }" class="text-white/70 transition-colors hover:text-white focus:outline-none pointer-events-auto" aria-label="Remove from Watchlist">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="size-5 shadow-black drop-shadow-md"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
               </button>
             </div>
           </div>
         </div>
-        <h3 class="line-clamp-2 text-sm font-medium text-white">
-          {{.DisplayTitle}}
-        </h3>
+        <a href="/anime/{{.AnimeID}}" class="group/title">
+          <h3 class="line-clamp-2 text-sm font-medium text-white group-hover/title:text-neutral-300 transition-colors">
+            {{.DisplayTitle}}
+          </h3>
+        </a>
       </div>
     {{end}}
 
