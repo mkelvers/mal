@@ -15,12 +15,41 @@
         <p>No anime found matching your filters.</p>
       </div>
     {{else}}
-      <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
-        {{range .Animes}}
-          {{template "anime_card" dict "Anime" . "WithActions" true "IsWatchlist" (index $.WatchlistMap .MalID)}}
+      <div id="anime-grid" class="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
+        {{range $i, $anime := .Animes}}
+          {{$isThreshold := eq (add $i 1) (sub (len $.Animes) 8)}}
+          {{if and $isThreshold $.HasNextPage}}
+            <div hx-get="/browse?q={{$.Query}}&type={{$.Type}}&status={{$.Status}}&order_by={{$.OrderBy}}&sort={{$.Sort}}&{{genresParams $.Genres}}&page={{$.NextPage}}"
+                 hx-trigger="revealed"
+                 hx-swap="afterend"
+                 hx-target="this"
+                 class="contents">
+              {{template "anime_card" dict "Anime" . "WithActions" true "IsWatchlist" (index $.WatchlistMap .MalID)}}
+            </div>
+          {{else}}
+            {{template "anime_card" dict "Anime" . "WithActions" true "IsWatchlist" (index $.WatchlistMap .MalID)}}
+          {{end}}
         {{end}}
       </div>
     {{end}}
   </main>
 </div>
+{{end}}
+
+{{define "anime_card_scroll"}}
+  {{$count := len .Animes}}
+  {{range $i, $anime := .Animes}}
+    {{$isThreshold := eq (add $i 1) (sub $count 8)}}
+    {{if and $isThreshold $.HasNextPage}}
+      <div hx-get="/browse?q={{$.Query}}&type={{$.Type}}&status={{$.Status}}&order_by={{$.OrderBy}}&sort={{$.Sort}}&{{genresParams $.Genres}}&page={{$.NextPage}}"
+           hx-trigger="revealed"
+           hx-swap="afterend"
+           hx-target="this"
+           class="contents">
+        {{template "anime_card" dict "Anime" $anime "WithActions" true "IsWatchlist" (index $.WatchlistMap $anime.MalID)}}
+      </div>
+    {{else}}
+      {{template "anime_card" dict "Anime" $anime "WithActions" true "IsWatchlist" (index $.WatchlistMap $anime.MalID)}}
+    {{end}}
+  {{end}}
 {{end}}
