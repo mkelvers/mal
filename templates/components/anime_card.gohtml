@@ -37,7 +37,7 @@
         {{end}}
 
         <div class="mt-auto flex items-center justify-start pb-2 pl-2">
-          <button type="button" onclick="event.preventDefault(); event.stopPropagation(); toggleWatchlist({{$anime.MalID}}, this)" class="text-accent hover:text-accent/80 transition-colors focus:outline-none {{if $isWatchlist}}in-watchlist{{end}}" aria-label="{{if $isWatchlist}}Remove from Watchlist{{else}}Add to Watchlist{{end}}">
+          <button type="button" data-mal-id="{{$anime.MalID}}" onclick="event.preventDefault(); event.stopPropagation(); toggleWatchlist({{$anime.MalID}}, this)" class="text-accent hover:text-accent/80 transition-colors focus:outline-none {{if $isWatchlist}}in-watchlist{{end}}" aria-label="{{if $isWatchlist}}Remove from Watchlist{{else}}Add to Watchlist{{end}}">
             <svg class="size-6 shadow-black drop-shadow-md watchlist-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z" /></svg>
           </button>
         </div>

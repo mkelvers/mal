@@ -48,13 +48,45 @@
             watchlistIds.delete(id)
             btn.classList.remove('in-watchlist')
             btn.setAttribute('aria-label', 'Add to Watchlist')
+            
+            // Update dropdown status if on anime page
+            syncWatchlistDropdown(id, false)
           } else {
             watchlistIds.add(id)
             btn.classList.add('in-watchlist')
             btn.setAttribute('aria-label', 'Remove from Watchlist')
+            
+            // Update dropdown status if on anime page
+            syncWatchlistDropdown(id, true)
           }
+          
+          // Update all other watchlist icons on the page for this anime
+          document.querySelectorAll('.watchlist-icon').forEach(function(icon) {
+            const button = icon.closest('button')
+            if (button && button !== btn) {
+              const malId = button.dataset.malId
+              if (malId && parseInt(malId) === id) {
+                if (watchlistIds.has(id)) {
+                  button.classList.add('in-watchlist')
+                } else {
+                  button.classList.remove('in-watchlist')
+                }
+              }
+            }
+          })
         }
       })
+    }
+
+    function syncWatchlistDropdown(id, inWatchlist) {
+      const statusDisplay = document.getElementById('watchlist-status-display-' + id)
+      if (statusDisplay) {
+        statusDisplay.textContent = inWatchlist ? 'Plan to Watch' : 'Add to Watchlist'
+        const removeContainer = document.getElementById('remove-watchlist-container-' + id)
+        if (removeContainer) {
+          removeContainer.classList.toggle('hidden', !inWatchlist)
+        }
+      }
     }
 
     function removeFromWatchlist(id, btn) {
