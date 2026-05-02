@@ -313,7 +313,7 @@ func (h *Handler) HandleDiscover(w http.ResponseWriter, r *http.Request) {
 			seen[a.MalID] = true
 			uniqueTrending = append(uniqueTrending, a)
 		}
-		if len(uniqueTrending) >= 10 {
+		if len(uniqueTrending) >= 8 {
 			break
 		}
 	}
@@ -324,7 +324,7 @@ func (h *Handler) HandleDiscover(w http.ResponseWriter, r *http.Request) {
 			seen[a.MalID] = true
 			uniqueUpcoming = append(uniqueUpcoming, a)
 		}
-		if len(uniqueUpcoming) >= 10 {
+		if len(uniqueUpcoming) >= 8 {
 			break
 		}
 	}
@@ -335,7 +335,7 @@ func (h *Handler) HandleDiscover(w http.ResponseWriter, r *http.Request) {
 			seen[a.MalID] = true
 			uniqueTop = append(uniqueTop, a)
 		}
-		if len(uniqueTop) >= 10 {
+		if len(uniqueTop) >= 8 {
 			break
 		}
 	}
