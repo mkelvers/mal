@@ -1,0 +1,45 @@
+{{define "title"}}Watchlist{{end}}
+{{define "content"}}
+<div id="watchlist-content" class="flex flex-col gap-10">
+  {{range $status := $.StatusOrder}}
+    {{$entries := index $.WatchlistByStatus $status}}
+    {{if $entries}}
+      <section class="w-full">
+        <div class="mb-4 flex items-end justify-between">
+          <h2 class="text-lg font-normal text-neutral-300">{{index $.StatusLabels $status}}</h2>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-6">
+          {{range $entries}}
+            <div class="watchlist-item flex w-full flex-col gap-2">
+              <div class="group relative flex aspect-[2/3] w-full flex-col overflow-hidden bg-white/5 after:absolute after:inset-0 after:bg-black/80 after:opacity-0 hover:after:opacity-100 after:transition-opacity">
+                <a href="/anime/{{.AnimeID}}" class="absolute inset-0"></a>
+                <img src="{{.ImageUrl}}" alt="{{.DisplayTitle}}" class="h-full w-full object-cover" loading="lazy" />
+
+                <div class="absolute inset-0 z-10 flex flex-col p-3 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+                  <div class="flex justify-end">
+                    <button type="button" hx-delete="/api/watchlist/{{.AnimeID}}" hx-target="#watchlist-content" hx-swap="outerHTML" hx-on::after-request="if(event.detail.successful) { watchlistIds.delete({{.AnimeID}}) }" class="text-white/70 transition-colors hover:text-white focus:outline-none" aria-label="Remove from Watchlist">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="size-5 shadow-black drop-shadow-md"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <h3 class="line-clamp-2 text-sm font-medium text-white">
+                {{.DisplayTitle}}
+              </h3>
+            </div>
+          {{end}}
+        </div>
+      </section>
+    {{end}}
+  {{end}}
+
+  {{if eq (len $.AllEntries) 0}}
+    <div class="flex flex-col items-center justify-center gap-2 py-24 text-neutral-400">
+      <svg class="h-12 w-12 opacity-30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
+      <p class="text-lg">Your watchlist is empty.</p>
+      <a href="/" class="text-accent hover:text-accent/80 transition-colors">Browse anime</a>
+    </div>
+  {{end}}
+</div>
+{{end}}

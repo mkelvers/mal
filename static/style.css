@@ -95,7 +95,11 @@ html, body {
   .scrollbar-hide::-webkit-scrollbar-thumb:hover {
     background: rgba(255, 255, 255, 0.3);
   }
-  .scrollbar-hide {
+button.in-watchlist .watchlist-icon {
+  fill: currentColor !important;
+}
+
+.scrollbar-hide {
     -ms-overflow-style: auto;
     scrollbar-width: thin;
     scrollbar-color: rgba(255, 255, 255, 0.2) rgba(255, 255, 255, 0.05);

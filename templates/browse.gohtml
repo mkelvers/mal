@@ -1,5 +1,6 @@
 {{define "title"}}Browse{{end}}
 {{define "content"}}
+{{if .WatchlistIDs}}<script>initWatchlist({{.WatchlistIDs}})</script>{{end}}
 <div class="flex flex-col gap-6">
   <div class="flex items-end justify-between">
     <h1 class="text-lg font-normal text-neutral-300">Browse</h1>
@@ -16,7 +17,7 @@
     {{else}}
       <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
         {{range .Animes}}
-          {{template "anime_card" dict "Anime" . "WithActions" true}}
+          {{template "anime_card" dict "Anime" . "WithActions" true "IsWatchlist" (index $.WatchlistMap .MalID)}}
         {{end}}
       </div>
     {{end}}

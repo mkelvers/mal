@@ -9,12 +9,14 @@ import (
 
 	"github.com/google/uuid"
 
+	"mal/integrations/jikan"
 	"mal/internal/db"
 )
 
 type Service struct {
-	db    database.Querier
-	sqlDB *sql.DB
+	db          database.Querier
+	sqlDB       *sql.DB
+	jikanClient *jikan.Client
 }
 
 var (
@@ -23,13 +25,41 @@ var (
 )
 
 var validStatuses = map[string]struct{}{
+	"watching":      {},
 	"completed":     {},
 	"dropped":       {},
 	"plan_to_watch": {},
+	"on_hold":       {},
 }
 
-func NewService(db database.Querier, sqlDB *sql.DB) *Service {
-	return &Service{db: db, sqlDB: sqlDB}
+func NewService(db database.Querier, sqlDB *sql.DB, jikanClient *jikan.Client) *Service {
+	return &Service{db: db, sqlDB: sqlDB, jikanClient: jikanClient}
+}
+
+func (s *Service) ensureAnimeExists(ctx context.Context, animeID int64) error {
+	_, err := s.db.GetAnime(ctx, animeID)
+	if err == nil {
+		return nil
+	}
+
+	anime, err := s.jikanClient.GetAnimeByID(ctx, int(animeID))
+	if err != nil {
+		return fmt.Errorf("failed to fetch anime from jikan: %w", err)
+	}
+
+	_, err = s.db.UpsertAnime(ctx, database.UpsertAnimeParams{
+		ID:            int64(anime.MalID),
+		TitleOriginal: anime.Title,
+		TitleEnglish:  sql.NullString{String: anime.TitleEnglish, Valid: anime.TitleEnglish != ""},
+		TitleJapanese: sql.NullString{String: anime.TitleJapanese, Valid: anime.TitleJapanese != ""},
+		ImageUrl:      anime.Images.Jpg.LargeImageURL,
+		Airing:        sql.NullBool{Bool: anime.Airing, Valid: true},
+	})
+	if err != nil {
+		return fmt.Errorf("failed to save anime: %w", err)
+	}
+
+	return nil
 }
 
 type AddRequest struct {
@@ -42,34 +72,26 @@ type AddRequest struct {
 	Airing        bool
 }
 
-func (s *Service) AddEntry(ctx context.Context, userID string, req AddRequest) error {
-	if req.AnimeID <= 0 {
+func (s *Service) AddToWatchlist(ctx context.Context, userID string, animeID int64, status string) error {
+	if animeID <= 0 {
 		return ErrInvalidAnimeID
 	}
 
-	if _, ok := validStatuses[req.Status]; !ok {
+	if _, ok := validStatuses[status]; !ok {
 		return ErrInvalidStatus
 	}
 
-	_, err := s.db.UpsertAnime(ctx, database.UpsertAnimeParams{
-		ID:            req.AnimeID,
-		TitleOriginal: req.TitleOriginal,
-		TitleEnglish:  sql.NullString{String: req.TitleEnglish, Valid: req.TitleEnglish != ""},
-		TitleJapanese: sql.NullString{String: req.TitleJapanese, Valid: req.TitleJapanese != ""},
-		ImageUrl:      req.ImageURL,
-		Airing:        sql.NullBool{Bool: req.Airing, Valid: true},
-	})
-	if err != nil {
-		return fmt.Errorf("failed to save anime reference: %w", err)
+	if err := s.ensureAnimeExists(ctx, animeID); err != nil {
+		return err
 	}
 
 	entryID := uuid.New().String()
-	_, err = s.db.UpsertWatchListEntry(ctx, database.UpsertWatchListEntryParams{
+	_, err := s.db.UpsertWatchListEntry(ctx, database.UpsertWatchListEntryParams{
 		ID:                 entryID,
 		UserID:             userID,
-		AnimeID:            req.AnimeID,
-		Status:             req.Status,
-		CurrentEpisode:     sql.NullInt64{Int64: 0, Valid: false},
+		AnimeID:            animeID,
+		Status:             status,
+		CurrentEpisode:     sql.NullInt64{Valid: false},
 		CurrentTimeSeconds: 0,
 	})
 	if err != nil {
