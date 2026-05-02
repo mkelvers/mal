@@ -31,7 +31,7 @@ func (e *providerExtractor) ExtractVideoLinks(ctx context.Context, providerPath 
 	var resp *http.Response
 	var err error
 
-	for attempt := 0; attempt < 3; attempt++ {
+	for attempt := range 3 {
 		if attempt > 0 {
 			select {
 			case <-ctx.Done():

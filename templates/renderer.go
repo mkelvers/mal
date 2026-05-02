@@ -7,6 +7,8 @@ import (
 	"io"
 	"log"
 	"path/filepath"
+	"slices"
+	"strings"
 	"sync"
 )
 
@@ -45,19 +47,14 @@ func GetRenderer() *Renderer {
 				if len(genres) == 0 {
 					return ""
 				}
-				s := ""
+				var s strings.Builder
 				for _, g := range genres {
-					s += "genres=" + fmt.Sprintf("%d", g) + "&"
+					s.WriteString("genres=" + fmt.Sprintf("%d", g) + "&")
 				}
-				return s[:len(s)-1]
+				return s.String()[:len(s.String())-1]
 			},
 			"hasGenre": func(id int, genres []int) bool {
-				for _, g := range genres {
-					if g == id {
-						return true
-					}
-				}
-				return false
+				return slices.Contains(genres, id)
 			},
 			"add": func(a, b int) int {
 				return a + b

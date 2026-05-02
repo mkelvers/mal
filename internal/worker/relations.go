@@ -65,10 +65,7 @@ func retryBackoff(attempts int64) string {
 
 	delay := time.Minute
 	if attempts > 1 {
-		shift := attempts - 1
-		if shift > 6 {
-			shift = 6
-		}
+		shift := min(attempts-1, 6)
 		delay = time.Minute * time.Duration(1<<shift)
 	}
 
@@ -76,10 +73,7 @@ func retryBackoff(attempts int64) string {
 		delay = 30 * time.Minute
 	}
 
-	minutes := int(delay / time.Minute)
-	if minutes < 1 {
-		minutes = 1
-	}
+	minutes := max(int(delay/time.Minute), 1)
 	return fmt.Sprintf("+%d minutes", minutes)
 }
 

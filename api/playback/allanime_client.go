@@ -304,13 +304,6 @@ func getMapKeys(m map[string]any) []string {
 	return keys
 }
 
-func min(a, b int) int {
-	if a < b {
-		return a
-	}
-	return b
-}
-
 func (c *allAnimeClient) extractSourceURLsFromData(ctx context.Context, data map[string]any) []StreamSource {
 	episodeData, ok := data["episode"].(map[string]any)
 	if !ok {

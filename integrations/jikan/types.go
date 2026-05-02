@@ -100,16 +100,16 @@ func (a Anime) ShortDuration() string {
 		return ""
 	}
 	// Duration format: "23 min per ep" or "1 hr 30 min"
-	var num string
+	var num strings.Builder
 	for _, c := range a.Duration {
 		if c >= '0' && c <= '9' {
-			num += string(c)
-		} else if c == ' ' && num != "" {
+			num.WriteString(string(c))
+		} else if c == ' ' && num.String() != "" {
 			break
 		}
 	}
-	if num != "" {
-		return num + "m"
+	if num.String() != "" {
+		return num.String() + "m"
 	}
 	return a.Duration
 }

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"maps"
 	"net/http"
 	"sort"
 	"strconv"
@@ -214,9 +215,7 @@ func (h *Handler) HandleProxy(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	for k, v := range headers {
-		w.Header()[k] = v
-	}
+	maps.Copy(w.Header(), headers)
 	w.WriteHeader(statusCode)
 
 	if bodyReader != nil {

@@ -48,12 +48,10 @@ func (s *Service) searchShowResultsByMode(ctx context.Context, query string, mod
 	var wg sync.WaitGroup
 	for _, mode := range modeCandidates {
 		modeValue := mode
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
+		wg.Go(func() {
 			results, err := s.allAnimeClient.Search(ctx, query, modeValue)
 			searchCh <- searchModeResult{Mode: modeValue, Results: results, Err: err}
-		}()
+		})
 	}
 
 	wg.Wait()

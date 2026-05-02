@@ -316,10 +316,7 @@ func (c *Client) fetchWithRetry(ctx context.Context, urlStr string, out any) err
 
 			if retryable && attempt < maxRetries-1 {
 				resp.Body.Close()
-				delay := retryDelay(attempt)
-				if retryAfter > delay {
-					delay = retryAfter
-				}
+				delay := max(retryAfter, retryDelay(attempt))
 
 				if retryErr := waitForRetry(ctx, delay); retryErr != nil {
 					return retryErr
