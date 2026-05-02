@@ -41,6 +41,24 @@ func GetRenderer() *Renderer {
 				b, _ := json.Marshal(v)
 				return template.HTMLAttr(b)
 			},
+			"genresParams": func(genres []int) string {
+				if len(genres) == 0 {
+					return ""
+				}
+				s := ""
+				for _, g := range genres {
+					s += "genres=" + fmt.Sprintf("%d", g) + "&"
+				}
+				return s[:len(s)-1]
+			},
+			"hasGenre": func(id int, genres []int) bool {
+				for _, g := range genres {
+					if g == id {
+						return true
+					}
+				}
+				return false
+			},
 		}
 
 		pages, err := filepath.Glob(filepath.Join(".", "templates", "*.gohtml"))
