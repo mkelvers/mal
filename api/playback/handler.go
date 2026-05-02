@@ -8,10 +8,11 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 
 	"mal/integrations/jikan"
 	ctxpkg "mal/internal/context"
-	"mal/internal/db"
+	database "mal/internal/db"
 	"mal/templates"
 )
 
@@ -63,9 +64,18 @@ func (h *Handler) HandleWatchPage(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	var wg sync.WaitGroup
 	for i := range episodes.Data {
-		episodes.Data[i].Images.Jpg.ImageURL = episodes.Data[i].GetFallbackImage(id)
+		if episodes.Data[i].Images == nil {
+			episodes.Data[i].Images = &jikan.EpisodeImages{}
+		}
+		wg.Add(1)
+		go func(idx int) {
+			defer wg.Done()
+			episodes.Data[idx].Images.Jpg.ImageURL = episodes.Data[idx].GetFallbackImage(id)
+		}(i)
 	}
+	wg.Wait()
 
 	sort.Slice(episodes.Data, func(i, j int) bool {
 		return episodes.Data[i].MalID < episodes.Data[j].MalID
