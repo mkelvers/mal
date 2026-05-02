@@ -166,17 +166,19 @@ type TopAnimeResponse struct {
 	Pagination Pagination `json:"pagination"`
 }
 
+type EpisodeImages struct {
+	Jpg struct {
+		ImageURL string `json:"image_url"`
+	} `json:"jpg"`
+}
+
 type Episode struct {
-	MalID   int    `json:"mal_id"`
-	Title   string `json:"title"`
-	Episode string `json:"episode"`
-	Filler  bool   `json:"filler"`
-	Recap   bool   `json:"recap"`
-	Images  *struct {
-		Jpg struct {
-			ImageURL string `json:"image_url"`
-		} `json:"jpg"`
-	} `json:"images,omitempty"`
+	MalID   int            `json:"mal_id"`
+	Title   string         `json:"title"`
+	Episode string         `json:"episode"`
+	Filler  bool           `json:"filler"`
+	Recap   bool           `json:"recap"`
+	Images  *EpisodeImages `json:"images,omitempty"`
 }
 
 type EpisodesResponse struct {

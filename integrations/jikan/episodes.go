@@ -38,15 +38,15 @@ func (e *Episode) GetFallbackImage(animeID int) string {
 	}
 
 	// Always trigger scraping if we encounter the banned icon OR the generic placeholder
-	if imageUrl != bannedImageURL && imageUrl != placeholderImageURL && imageUrl != "" {
-		return imageUrl
-	}
-
-	episodeURL := fmt.Sprintf("https://myanimelist.net/anime/%d/episode/%d", animeID, episodeNum)
-	fallbackURL := scrapeAnimeImageFromEpisodePage(episodeURL, episodeNum)
-	
-	if fallbackURL != "" {
-		return fallbackURL
+	// OR if there is no image URL at all
+	if imageUrl == bannedImageURL || imageUrl == placeholderImageURL || imageUrl == "" {
+		// MAL URLs usually follow this format, and it redirects to the slug version
+		episodeURL := fmt.Sprintf("https://myanimelist.net/anime/%d/_/episode/%d", animeID, episodeNum)
+		fallbackURL := scrapeAnimeImageFromEpisodePage(episodeURL, episodeNum)
+		
+		if fallbackURL != "" {
+			return fallbackURL
+		}
 	}
 
 	return imageUrl
@@ -66,7 +66,9 @@ func scrapeAnimeImageFromEpisodePage(episodeURL string, episodeNum int) string {
 	}
 	defer resp.Body.Close()
 
+	// Log the status code for debugging
 	if resp.StatusCode != 200 {
+		// fmt.Printf("[DEBUG] Failed to fetch %s: Status %d\n", episodeURL, resp.StatusCode)
 		return ""
 	}
 
@@ -77,11 +79,18 @@ func scrapeAnimeImageFromEpisodePage(episodeURL string, episodeNum int) string {
 
 	html := string(body)
 
-	// Look for the JSON data in MAL.episodeVideo.aroundVideos
+	// MAL sometimes redirects to a URL with a slug. 
+	// The JSON object is very likely to be present in the full page.
 	// We extract the object {} containing "episode_number":X
 	episodeStr := strconv.Itoa(episodeNum)
 	objPattern := regexp.MustCompile(`\{[^{}]*"episode_number":\s*` + episodeStr + `[^{}]*\}`)
 	match := objPattern.FindString(html)
+	if match == "" {
+		// Try a broader search if the strict one fails
+		objPattern = regexp.MustCompile(`\{[^}]*"episode_number":\s*` + episodeStr + `[^}]*\}`)
+		match = objPattern.FindString(html)
+	}
+	
 	if match != "" {
 		thumbRe := regexp.MustCompile(`"thumbnail":\s*"([^"]+)"`)
 		thumbMatch := thumbRe.FindStringSubmatch(match)
