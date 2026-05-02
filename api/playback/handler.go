@@ -63,6 +63,10 @@ func (h *Handler) HandleWatchPage(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	for i := range episodes.Data {
+		episodes.Data[i].Images.Jpg.ImageURL = episodes.Data[i].GetFallbackImage(id)
+	}
+
 	sort.Slice(episodes.Data, func(i, j int) bool {
 		return episodes.Data[i].MalID < episodes.Data[j].MalID
 	})
