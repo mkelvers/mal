@@ -15,7 +15,7 @@
 
           <div class="absolute inset-0 z-10 flex flex-col p-3 opacity-0 transition-opacity duration-300 group-hover:opacity-100 bg-black/40 pointer-events-none">
             <div class="flex justify-end pointer-events-auto">
-              <button hx-delete="/api/continue-watching/{{.AnimeID}}" hx-target="#continue-watching-{{.AnimeID}}" hx-swap="outerHTML" hx-confirm="Remove from continue watching?" class="bg-black/60 hover:bg-black/80 rounded-full p-1.5 text-white transition-colors focus:outline-none disabled:opacity-50 backdrop-blur-sm" aria-label="Remove from Continue Watching">
+              <button hx-delete="/api/continue-watching/{{.AnimeID}}" hx-target="#continue-watching-{{.AnimeID}}" hx-swap="outerHTML" class="bg-black/60 hover:bg-black/80 rounded-full p-1.5 text-white transition-colors focus:outline-none disabled:opacity-50 backdrop-blur-sm" aria-label="Remove from Continue Watching">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="size-5"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
               </button>
             </div>

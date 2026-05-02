@@ -101,6 +101,7 @@ func (h *Handler) HandleDeleteContinueWatching(w http.ResponseWriter, r *http.Re
 		return
 	}
 
+	w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
 	w.WriteHeader(http.StatusOK)
 }
 
