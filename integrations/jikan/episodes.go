@@ -185,22 +185,20 @@ func (c *Client) GetAllEpisodes(ctx context.Context, animeID int) ([]Episode, er
 		}
 	}
 
-	// Background fetching for intermediate pages
+	// Background fetching for intermediate pages (Working BACKWARDS)
 	if lastPage > 2 {
 		go func() {
-			// Create a fresh context for background work
-			bgCtx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
+			bgCtx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 			defer cancel()
 
-			for p := 2; p < lastPage; p++ {
-				// We don't need to store the result here if the client has an internal cache,
-				// but calling it ensures the data is ready for the next request.
+			// Count backwards from the second-to-last page to page 2
+			for p := lastPage - 1; p >= 2; p-- {
 				_, _ = c.GetEpisodes(bgCtx, animeID, p)
 
 				select {
 				case <-bgCtx.Done():
 					return
-				case <-time.After(500 * time.Millisecond): // Rate limit buffer
+				case <-time.After(600 * time.Millisecond): // Slightly slower to be safe
 				}
 			}
 		}()
