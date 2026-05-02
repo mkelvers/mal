@@ -1,6 +1,7 @@
 package playback
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -227,11 +228,94 @@ func (h *Handler) HandleProxy(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) HandleSaveProgress(w http.ResponseWriter, r *http.Request) {
-	http.Error(w, "Not implemented", http.StatusNotImplemented)
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	user := middleware.GetUser(r.Context())
+	if user == nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	var req struct {
+		MalID       int64   `json:"mal_id"`
+		Episode     int     `json:"episode"`
+		TimeSeconds float64 `json:"time_seconds"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid request", http.StatusBadRequest)
+		return
+	}
+
+	// We fetch the anime info to seed the DB if it's the first time saving progress for this show
+	anime, err := h.jikanClient.GetAnimeByID(r.Context(), int(req.MalID))
+	var seed *database.UpsertAnimeParams
+	if err == nil {
+		seed = &database.UpsertAnimeParams{
+			ID:            int64(anime.MalID),
+			TitleOriginal: anime.Title,
+			TitleEnglish:  sql.NullString{String: anime.TitleEnglish, Valid: anime.TitleEnglish != ""},
+			TitleJapanese: sql.NullString{String: anime.TitleJapanese, Valid: anime.TitleJapanese != ""},
+			ImageUrl:      anime.ImageURL(),
+			Airing:        sql.NullBool{Bool: anime.Airing, Valid: true},
+		}
+	}
+
+	if err := h.svc.SaveProgress(r.Context(), user.ID, req.MalID, req.Episode, req.TimeSeconds, seed); err != nil {
+		log.Printf("failed to save progress: %v", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
 }
 
 func (h *Handler) HandleCompleteAnime(w http.ResponseWriter, r *http.Request) {
-	http.Error(w, "Not implemented", http.StatusNotImplemented)
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	user := middleware.GetUser(r.Context())
+	if user == nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	var req struct {
+		MalID   int64 `json:"mal_id"`
+		Episode int   `json:"episode"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid request", http.StatusBadRequest)
+		return
+	}
+
+	// Seed anime info if needed
+	anime, err := h.jikanClient.GetAnimeByID(r.Context(), int(req.MalID))
+	var seed *database.UpsertAnimeParams
+	if err == nil {
+		seed = &database.UpsertAnimeParams{
+			ID:            int64(anime.MalID),
+			TitleOriginal: anime.Title,
+			TitleEnglish:  sql.NullString{String: anime.TitleEnglish, Valid: anime.TitleEnglish != ""},
+			TitleJapanese: sql.NullString{String: anime.TitleJapanese, Valid: anime.TitleJapanese != ""},
+			ImageUrl:      anime.ImageURL(),
+			Airing:        sql.NullBool{Bool: anime.Airing, Valid: true},
+		}
+	}
+
+	if err := h.svc.CompleteAnime(r.Context(), user.ID, req.MalID, req.Episode, seed); err != nil {
+		log.Printf("failed to complete anime: %v", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
 }
 
 func (h *Handler) HandleEpisodeData(w http.ResponseWriter, r *http.Request) {
