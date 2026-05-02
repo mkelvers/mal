@@ -143,9 +143,9 @@ func (s *Service) BuildWatchPageData(ctx context.Context, malID int, titleCandid
 
 		fallbackEpisodes := make(map[string]int)
 		if counts, err := s.allAnimeClient.GetAvailableEpisodes(ctx, showID); err == nil {
-			fallbackEpisodes["sub"] = counts.Sub
-			fallbackEpisodes["dub"] = counts.Dub
-			fallbackEpisodes["raw"] = counts.Raw
+			fallbackEpisodes["sub"] = len(counts.Sub)
+			fallbackEpisodes["dub"] = len(counts.Dub)
+			fallbackEpisodes["raw"] = len(counts.Raw)
 		}
 
 		watchTitle := strings.TrimSpace(resolvedTitle)
@@ -358,6 +358,14 @@ func clonePlaybackBaseData(data playbackBaseData) playbackBaseData {
 		Segments:         cloneSlice(data.Segments),
 		FallbackEpisodes: data.FallbackEpisodes,
 	}
+}
+
+func (s *Service) GetEpisodeMetadata(ctx context.Context, malID int, episode string) (map[string]any, error) {
+	showID, _, err := s.resolveShowCached(ctx, malID, nil)
+	if err != nil {
+		return nil, err
+	}
+	return s.allAnimeClient.GetEpisodeMetadata(ctx, showID, episode)
 }
 
 func cloneSlice[T any](items []T) []T {

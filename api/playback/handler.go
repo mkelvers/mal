@@ -118,17 +118,44 @@ func (h *Handler) HandleWatchPage(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if maxCount > len(episodes.Data) {
-			// Add dummy episodes for the ones Jikan is missing
+			// Fetch metadata for the missing episodes
 			start := len(episodes.Data) + 1
 			for i := start; i <= maxCount; i++ {
-				dummy := jikan.Episode{
+				epStr := strconv.Itoa(i)
+				meta, err := h.svc.GetEpisodeMetadata(r.Context(), id, epStr)
+				
+				title := fmt.Sprintf("Episode %d", i)
+				imgURL := ""
+				
+				if err == nil && meta != nil {
+					if info, ok := meta["episodeInfo"].(map[string]any); ok {
+						if thumbs, ok := info["thumbnails"].([]any); ok && len(thumbs) > 0 {
+							if firstThumb, ok := thumbs[0].(string); ok {
+								imgURL = firstThumb
+							}
+						}
+					}
+					if notes, ok := meta["notes"].(string); ok && notes != "" {
+						title = notes
+					}
+				}
+
+				if imgURL == "" {
+					// Last resort fallback
+					tmpEp := jikan.Episode{MalID: i}
+					imgURL = tmpEp.GetFallbackImage(id)
+				}
+
+				episodes.Data = append(episodes.Data, jikan.Episode{
 					MalID:   i,
 					Episode: fmt.Sprintf("Episode %d", i),
-					Title:   fmt.Sprintf("Episode %d", i),
-					Images:  &jikan.EpisodeImages{},
-				}
-				dummy.Images.Jpg.ImageURL = dummy.GetFallbackImage(id)
-				episodes.Data = append(episodes.Data, dummy)
+					Title:   title,
+					Images: &jikan.EpisodeImages{
+						Jpg: struct {
+							ImageURL string `json:"image_url"`
+						}{ImageURL: imgURL},
+					},
+				})
 			}
 		}
 	}

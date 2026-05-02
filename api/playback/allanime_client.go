@@ -108,9 +108,9 @@ type searchResult struct {
 }
 
 type AvailableEpisodes struct {
-	Sub int
-	Dub int
-	Raw int
+	Sub []string
+	Dub []string
+	Raw []string
 }
 
 type allAnimeClient struct {
@@ -497,6 +497,7 @@ func (c *allAnimeClient) GetAvailableEpisodes(ctx context.Context, showID string
 	graphqlQuery := `query($showId: String!) {
 		show(_id: $showId) {
 			availableEpisodesDetail
+			lastEpisodeInfo
 		}
 	}`
 
@@ -522,16 +523,67 @@ func (c *allAnimeClient) GetAvailableEpisodes(ctx context.Context, showID string
 
 	var count AvailableEpisodes
 	if sub, ok := detail["sub"].([]any); ok {
-		count.Sub = len(sub)
+		for _, s := range sub {
+			if str, ok := s.(string); ok {
+				count.Sub = append(count.Sub, str)
+			}
+		}
 	}
 	if dub, ok := detail["dub"].([]any); ok {
-		count.Dub = len(dub)
+		for _, s := range dub {
+			if str, ok := s.(string); ok {
+				count.Dub = append(count.Dub, str)
+			}
+		}
 	}
 	if raw, ok := detail["raw"].([]any); ok {
-		count.Raw = len(raw)
+		for _, s := range raw {
+			if str, ok := s.(string); ok {
+				count.Raw = append(count.Raw, str)
+			}
+		}
 	}
 
 	return count, nil
+}
+
+func (c *allAnimeClient) GetEpisodeMetadata(ctx context.Context, showID string, episode string) (map[string]any, error) {
+	// First try to get it from the standard episode query which often contains metadata
+	// but we'll use a specific query that includes images and titles if available
+	graphqlQuery := `query($showId: String!, $episodeString: String!, $translationType: VaildTranslationTypeEnumType!) {
+		episode(showId: $showId, episodeString: $episodeString, translationType: $translationType) {
+			notes
+			episodeInfo {
+				notes
+				thumbnails
+				vidinfors {
+					vidPath
+				}
+			}
+		}
+	}`
+
+	// We'll try SUB by default for metadata
+	result, err := c.graphqlRequest(ctx, graphqlQuery, map[string]any{
+		"showId":          showID,
+		"episodeString":   episode,
+		"translationType": "sub",
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	data, ok := result["data"].(map[string]any)
+	if !ok {
+		return nil, fmt.Errorf("invalid response")
+	}
+
+	ep, ok := data["episode"].(map[string]any)
+	if !ok {
+		return nil, fmt.Errorf("episode not found")
+	}
+
+	return ep, nil
 }
 
 func buildStreamSource(url, sourceType, provider string) StreamSource {
