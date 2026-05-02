@@ -1,0 +1,106 @@
+{{define "title"}}Discover{{end}}
+{{define "content"}}
+{{if .WatchlistIDs}}<script>initWatchlist({{.WatchlistIDs}})</script>{{end}}
+<script>
+  let isFetchingRandom = false;
+
+  async function handleSurpriseMe() {
+    if (isFetchingRandom) return;
+    isFetchingRandom = true;
+    const btn = document.getElementById('surprise-btn');
+    const spinner = document.getElementById('surprise-spinner');
+    const text = document.getElementById('surprise-text');
+    try {
+      const res = await fetch(`/api/jikan/random/anime?t=${Date.now()}`, {
+        cache: 'no-store'
+      });
+      if (!res.ok) throw new Error('Failed to fetch random anime');
+      const json = await res.json();
+      if (json.data && json.data.mal_id) {
+        window.location.href = `/anime/${json.data.mal_id}`;
+      }
+    } catch (error) {
+      console.error(error);
+    } finally {
+      isFetchingRandom = false;
+    }
+  }
+</script>
+
+<div class="flex flex-col gap-12 pb-12">
+  <section class="relative flex flex-col items-center justify-center overflow-hidden rounded-2xl bg-neutral-900 px-6 py-24 text-center">
+    <div class="from-accent/10 absolute inset-0 bg-linear-to-b to-transparent opacity-50"></div>
+    <div class="relative z-10 flex max-w-2xl flex-col items-center gap-6">
+      <h1 class="text-4xl font-bold tracking-tight text-white sm:text-5xl">
+        Don't know what to watch?
+      </h1>
+      <p class="text-lg text-neutral-400">
+        Let us pick something for you from our vast collection of anime.
+      </p>
+      <button
+        id="surprise-btn"
+        class="group bg-accent relative inline-flex items-center justify-center gap-2 overflow-hidden rounded-full px-8 py-4 font-medium text-black transition-transform hover:scale-105 active:scale-95 disabled:opacity-70 disabled:hover:scale-100"
+        onclick="handleSurpriseMe()"
+      >
+        <span id="surprise-spinner" class="hidden h-5 w-5 animate-spin rounded-full border-2 border-black border-t-transparent"></span>
+        <svg id="surprise-icon" class="h-5 w-5 transition-transform group-hover:rotate-12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+        </svg>
+        <span id="surprise-text">Surprise Me</span>
+      </button>
+    </div>
+  </section>
+
+  <section class="flex flex-col gap-4">
+    <div class="flex items-center justify-between">
+      <h2 class="text-xl font-semibold text-white">Trending This Season</h2>
+      <a href="/browse?order_by=popularity&sort=desc" class="text-accent text-sm hover:underline">View all</a>
+    </div>
+    <div class="scrollbar-hide flex snap-x snap-mandatory gap-4 overflow-x-auto pb-4">
+      {{range $i, $anime := .Trending}}
+        <div class="w-40 shrink-0 snap-start sm:w-48 md:w-56">
+          {{template "anime_card" dict "Anime" $anime "WithActions" true "IsWatchlist" (index $.WatchlistMap $anime.MalID)}}
+        </div>
+      {{end}}
+    </div>
+  </section>
+
+  <section class="flex flex-col gap-4">
+    <div class="flex items-center justify-between">
+      <h2 class="text-xl font-semibold text-white">Highly Anticipated</h2>
+      <a href="/browse?status=upcoming&order_by=members&sort=desc" class="text-accent text-sm hover:underline">View all</a>
+    </div>
+    <div class="scrollbar-hide flex snap-x snap-mandatory gap-4 overflow-x-auto pb-4">
+      {{range $i, $anime := .Upcoming}}
+        <div class="w-40 shrink-0 snap-start sm:w-48 md:w-56">
+          {{template "anime_card" dict "Anime" $anime "WithActions" true "IsWatchlist" (index $.WatchlistMap $anime.MalID)}}
+        </div>
+      {{end}}
+    </div>
+  </section>
+
+  <section class="flex flex-col gap-4">
+    <div class="flex items-center justify-between">
+      <h2 class="text-xl font-semibold text-white">All-Time Greats</h2>
+      <a href="/browse?order_by=score&sort=desc" class="text-accent text-sm hover:underline">View all</a>
+    </div>
+    <div class="scrollbar-hide flex snap-x snap-mandatory gap-4 overflow-x-auto pb-4">
+      {{range $i, $anime := .Top}}
+        <div class="w-40 shrink-0 snap-start sm:w-48 md:w-56">
+          {{template "anime_card" dict "Anime" $anime "WithActions" true "IsWatchlist" (index $.WatchlistMap $anime.MalID)}}
+        </div>
+      {{end}}
+    </div>
+  </section>
+</div>
+
+<style>
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+</style>
+{{end}}

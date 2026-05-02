@@ -1,13 +1,12 @@
 const dedupe = (): void => {
-  const script = document.currentScript as HTMLScriptElement | null
-  if (!script) return
-  const containerId = script.getAttribute('data-container')
-  const container = containerId ? document.getElementById(containerId) : document
-  if (!container) return
+  console.log('Dedupe running...')
   const seen = new Set<string>()
-  container.querySelectorAll('[data-id]').forEach((item) => {
+  const elements = document.querySelectorAll('[data-id]')
+  console.log('Found elements:', elements.length)
+  elements.forEach((item) => {
     const id = item.getAttribute('data-id')
     if (id && seen.has(id)) {
+      console.log('Removing duplicate:', id)
       item.remove()
     } else if (id) {
       seen.add(id)
@@ -15,4 +14,10 @@ const dedupe = (): void => {
   })
 }
 
-dedupe()
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', dedupe)
+} else {
+  dedupe()
+}
+// Also run on window load to be sure
+window.addEventListener('load', dedupe)
