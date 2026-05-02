@@ -105,20 +105,23 @@ func (h *Handler) HandleGetWatchlist(w http.ResponseWriter, r *http.Request) {
 
 	watchlistByStatus := make(map[string][]database.GetUserWatchListRow)
 	allEntries := make([]database.GetUserWatchListRow, 0)
+	watchlistIDs := make([]int64, len(entries))
 
-	for _, entry := range entries {
+	for i, entry := range entries {
 		status := entry.Status
 		if status == "" {
 			status = "plan_to_watch"
 		}
 		watchlistByStatus[status] = append(watchlistByStatus[status], entry)
 		allEntries = append(allEntries, entry)
+		watchlistIDs[i] = entry.AnimeID
 	}
 
 	data := map[string]any{
 		"CurrentPath":       r.URL.Path,
 		"WatchlistByStatus": watchlistByStatus,
 		"AllEntries":        allEntries,
+		"WatchlistIDs":      watchlistIDs,
 		"StatusOrder":       []string{"watching", "plan_to_watch", "on_hold", "completed", "dropped"},
 		"StatusLabels": map[string]string{
 			"watching":      "Currently Watching",
