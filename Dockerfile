@@ -5,9 +5,6 @@ WORKDIR /app
 # Enable CGO for sqlite3
 ENV CGO_ENABLED=1
 
-# Install templ
-RUN go install github.com/a-h/templ/cmd/templ@latest
-
 # Install sqlc for code generation
 RUN go install github.com/sqlc-dev/sqlc/cmd/sqlc@v1.30.0
 
@@ -25,13 +22,10 @@ RUN bun install --frozen-lockfile
 
 # Copy key source files first to auto-bust cache when they change
 # This ensures the COPY . . layer is never stale
-COPY web/shared/layout/layout.templ ./
-RUN cat web/shared/layout/layout.templ | md5sum > /tmp/source_hash.txt
+COPY templates/base.gohtml ./
+RUN cat base.gohtml | md5sum > /tmp/source_hash.txt
 
 COPY . .
-
-# Generate templ files
-RUN templ generate
 
 # Build frontend assets (tailwind + ts)
 # Touch input file to force Tailwind to rescan
