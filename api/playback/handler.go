@@ -488,23 +488,23 @@ func (h *Handler) HandleEpisodeThumbnails(w http.ResponseWriter, r *http.Request
 	}
 
 	results := make([]ThumbResult, len(unique))
-	
+
 	// Use a semaphore to limit concurrent scraping requests to avoid MAL bans
 	sem := make(chan struct{}, 2)
 	var wg sync.WaitGroup
-	
+
 	for i := range unique {
 		wg.Add(1)
 		go func(idx int) {
 			defer wg.Done()
-			
+
 			sem <- struct{}{} // Acquire
-			
+
 			// Add a small jittered delay between requests to avoid 405/429
 			time.Sleep(time.Duration(200+idx%300) * time.Millisecond)
-			
+
 			defer func() { <-sem }() // Release
-			
+
 			ep := unique[idx]
 			imgURL := ep.GetFallbackImage(id)
 			results[idx] = ThumbResult{

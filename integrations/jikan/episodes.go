@@ -83,7 +83,7 @@ func scrapeAnimeImageFromEpisodePage(episodeURL string, episodeNum int) string {
 
 	// MAL sometimes redirects to a URL with a slug.
 	// We look for the "thumbnail" field in the page source.
-	
+
 	// Pattern 1: Look for the specific episode object in the JSON data
 	episodeStr := strconv.Itoa(episodeNum)
 	objPattern := regexp.MustCompile(`\{[^{}]*"episode_number":\s*` + episodeStr + `[^{}]*\}`)
@@ -101,7 +101,7 @@ func scrapeAnimeImageFromEpisodePage(episodeURL string, episodeNum int) string {
 			return strings.ReplaceAll(thumbMatch[1], `\/`, `/`)
 		}
 	}
-	
+
 	// Pattern 2: Fallback to og:image if it's the specific episode page
 	ogRe := regexp.MustCompile(`<meta\s+property="og:image"\s+content="([^"]+)"`)
 	ogMatch := ogRe.FindStringSubmatch(html)
@@ -174,7 +174,7 @@ func (c *Client) GetAllEpisodes(ctx context.Context, animeID int) ([]Episode, er
 	pageSize := 100
 	lastPage := (totalEpisodes + (pageSize - 1)) / pageSize
 	var allEpisodes []Episode
-	
+
 	// Fetch last page first (to get most recent episodes immediately)
 	lastResp, err := c.GetEpisodes(ctx, animeID, lastPage)
 	if err == nil {
@@ -190,7 +190,7 @@ func (c *Client) GetAllEpisodes(ctx context.Context, animeID int) ([]Episode, er
 			// Start from lastPage - 1 and go down to 1
 			for p := lastPage - 1; p >= 1; p-- {
 				_, _ = c.GetEpisodes(bgCtx, animeID, p)
-				
+
 				// Also pre-fetch the video episodes metadata (39 per page)
 				// to warm the cache for thumbnails
 				videoPageSize := 39
