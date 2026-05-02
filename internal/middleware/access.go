@@ -3,9 +3,6 @@ package middleware
 import (
 	"net/http"
 	"strings"
-
-	"mal/internal/context"
-	"mal/internal/db"
 )
 
 type AccessPolicy struct {
@@ -47,7 +44,8 @@ func RequireGlobalAuthWithPolicy(policy AccessPolicy) func(http.Handler) http.Ha
 				return
 			}
 
-			user, ok := r.Context().Value(context.UserKey).(*database.User)
+			user := GetUser(r.Context())
+			ok := user != nil
 			if !ok || user == nil {
 				if strings.HasPrefix(r.URL.Path, "/api/") || r.Header.Get("HX-Request") == "true" {
 					w.Header().Set("HX-Redirect", "/login")

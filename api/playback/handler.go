@@ -12,8 +12,7 @@ import (
 	"sync"
 
 	"mal/integrations/jikan"
-	ctxpkg "mal/internal/context"
-	database "mal/internal/db"
+	"mal/internal/middleware"
 	"mal/templates"
 )
 
@@ -82,7 +81,7 @@ func (h *Handler) HandleWatchPage(w http.ResponseWriter, r *http.Request) {
 		return episodes.Data[i].MalID < episodes.Data[j].MalID
 	})
 
-	user, _ := r.Context().Value(ctxpkg.UserKey).(*database.User)
+	user := middleware.GetUser(r.Context())
 
 	currentEpID := r.URL.Query().Get("ep")
 	if currentEpID == "" {
@@ -238,7 +237,7 @@ func (h *Handler) HandleEpisodeData(w http.ResponseWriter, r *http.Request) {
 
 	episodeID := parts[5]
 
-	user, _ := r.Context().Value(ctxpkg.UserKey).(*database.User)
+	user := middleware.GetUser(r.Context())
 	userID := ""
 	if user != nil {
 		userID = user.ID
