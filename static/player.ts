@@ -114,7 +114,7 @@ const initPlayer = (): void => {
   const minSegmentDurationSeconds = 20
   const maxSegmentDurationSeconds = 240
 
-  let parsedSegments = segments
+  let parsedSegments = (segments || [])
     .map((segment: SkipSegment) => {
       const start = Number(segment.start || 0)
       const end = Number(segment.end || 0)
