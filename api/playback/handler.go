@@ -123,10 +123,10 @@ func (h *Handler) HandleWatchPage(w http.ResponseWriter, r *http.Request) {
 			for i := start; i <= maxCount; i++ {
 				epStr := strconv.Itoa(i)
 				meta, err := h.svc.GetEpisodeMetadata(r.Context(), id, epStr)
-				
+
 				title := fmt.Sprintf("Episode %d", i)
 				imgURL := ""
-				
+
 				if err == nil && meta != nil {
 					if info, ok := meta["episodeInfo"].(map[string]any); ok {
 						if thumbs, ok := info["thumbnails"].([]any); ok && len(thumbs) > 0 {

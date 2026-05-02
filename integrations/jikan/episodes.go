@@ -43,7 +43,7 @@ func (e *Episode) GetFallbackImage(animeID int) string {
 		// MAL URLs usually follow this format, and it redirects to the slug version
 		episodeURL := fmt.Sprintf("https://myanimelist.net/anime/%d/_/episode/%d", animeID, episodeNum)
 		fallbackURL := scrapeAnimeImageFromEpisodePage(episodeURL, episodeNum)
-		
+
 		if fallbackURL != "" {
 			return fallbackURL
 		}
@@ -79,7 +79,7 @@ func scrapeAnimeImageFromEpisodePage(episodeURL string, episodeNum int) string {
 
 	html := string(body)
 
-	// MAL sometimes redirects to a URL with a slug. 
+	// MAL sometimes redirects to a URL with a slug.
 	// The JSON object is very likely to be present in the full page.
 	// We extract the object {} containing "episode_number":X
 	episodeStr := strconv.Itoa(episodeNum)
@@ -90,7 +90,7 @@ func scrapeAnimeImageFromEpisodePage(episodeURL string, episodeNum int) string {
 		objPattern = regexp.MustCompile(`\{[^}]*"episode_number":\s*` + episodeStr + `[^}]*\}`)
 		match = objPattern.FindString(html)
 	}
-	
+
 	if match != "" {
 		thumbRe := regexp.MustCompile(`"thumbnail":\s*"([^"]+)"`)
 		thumbMatch := thumbRe.FindStringSubmatch(match)
