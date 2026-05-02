@@ -57,7 +57,7 @@ func RequireAuth(next http.Handler) http.Handler {
 				r = r.WithContext(ctx)
 			}
 		}
-		
+
 		user, ok := r.Context().Value(ctxpkg.UserKey).(*database.User)
 		if !ok || user == nil {
 			if strings.HasPrefix(r.URL.Path, "/api/") {

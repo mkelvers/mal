@@ -199,15 +199,15 @@ func (h *Handler) HandleEpisodeData(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]any{
-		"mal_id":           watchData.MalID,
-		"title":            watchData.Title,
-		"current_episode":  watchData.CurrentEpisode,
-		"total_episodes":   anime.Episodes,
-		"initial_mode":     watchData.InitialMode,
-		"token":            "", // The token might be per-source, wait, in Go it was per-mode?
-		"available_modes":  watchData.AvailableModes,
-		"mode_sources":     watchData.ModeSources,
-		"segments":         watchData.Segments,
-		"episode_title":    "", // Find episode title if possible
+		"mal_id":          watchData.MalID,
+		"title":           watchData.Title,
+		"current_episode": watchData.CurrentEpisode,
+		"total_episodes":  anime.Episodes,
+		"initial_mode":    watchData.InitialMode,
+		"token":           "", // The token might be per-source, wait, in Go it was per-mode?
+		"available_modes": watchData.AvailableModes,
+		"mode_sources":    watchData.ModeSources,
+		"segments":        watchData.Segments,
+		"episode_title":   "", // Find episode title if possible
 	})
 }

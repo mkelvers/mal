@@ -24,7 +24,7 @@ func GetRenderer() *Renderer {
 		renderer = &Renderer{
 			templates: make(map[string]*template.Template),
 		}
-		
+
 		funcs := template.FuncMap{
 			"dict": func(values ...any) map[string]any {
 				m := make(map[string]any)
@@ -62,12 +62,12 @@ func GetRenderer() *Renderer {
 			tmpl := template.New(name).Funcs(funcs)
 			// Parse base first so it establishes the core definitions
 			tmpl = template.Must(tmpl.ParseFiles(filepath.Join(".", "templates", "base.gohtml")))
-			
+
 			// Parse all components next so they are available to the page
 			if len(components) > 0 {
 				tmpl = template.Must(tmpl.ParseFiles(components...))
 			}
-			
+
 			// Parse the page itself last
 			tmpl = template.Must(tmpl.ParseFiles(page))
 
