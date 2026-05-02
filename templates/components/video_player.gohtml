@@ -1,6 +1,6 @@
 {{define "video_player"}}
 <div data-video-player
-  data-anime-id="{{.WatchData.MalID}}" 
+  data-mal-id="{{.WatchData.MalID}}" 
   data-current-episode="{{.WatchData.CurrentEpisode}}" 
   data-total-episodes="{{.TotalEpisodes}}"
   data-initial-mode="{{.WatchData.InitialMode}}"
@@ -9,7 +9,10 @@
   data-mode-sources='{{json .WatchData.ModeSources}}'
   data-available-modes='{{json .WatchData.AvailableModes}}'
   data-segments='{{json .WatchData.Segments}}'
+  data-anime-title-english="{{.WatchData.Title}}"
+  data-anime-image="{{.WatchData.MalID}}"
   class="group relative aspect-video w-full overflow-hidden bg-black">
+
   
   <video class="h-full w-full cursor-pointer" preload="metadata" playsinline autoplay></video>
   
