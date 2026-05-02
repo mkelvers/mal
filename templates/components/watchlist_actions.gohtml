@@ -11,7 +11,7 @@
           {{if $status}}
             {{if eq $status "watching"}}Watching{{end}}
             {{if eq $status "completed"}}Completed{{end}}
-            {{if eq $status "plan to watch"}}Plan to Watch{{end}}
+            {{if eq $status "plan_to_watch"}}Plan to Watch{{end}}
             {{if eq $status "dropped"}}Dropped{{end}}
           {{else}}
             Add to Watchlist
@@ -63,6 +63,17 @@
         document.getElementById('watchlist-status-display-' + id).textContent = display;
         document.getElementById('remove-watchlist-container-' + id).classList.remove('hidden');
         
+        // Update all watchlist icons on the page
+        document.querySelectorAll('.watchlist-icon').forEach(function(icon) {
+          const button = icon.closest('button')
+          if (button) {
+            const malId = button.dataset.malId
+            if (malId && parseInt(malId) === id) {
+              button.classList.add('in-watchlist')
+            }
+          }
+        });
+        
         // Close dropdown after a small delay to let click event finish
         requestAnimationFrame(() => {
           const dropdown = btn.closest('ui-dropdown');
@@ -78,6 +89,17 @@
         watchlistIds.delete(id);
         document.getElementById('watchlist-status-display-' + id).textContent = 'Add to Watchlist';
         document.getElementById('remove-watchlist-container-' + id).classList.add('hidden');
+        
+        // Update all watchlist icons on the page
+        document.querySelectorAll('.watchlist-icon').forEach(function(icon) {
+          const button = icon.closest('button')
+          if (button) {
+            const malId = button.dataset.malId
+            if (malId && parseInt(malId) === id) {
+              button.classList.remove('in-watchlist')
+            }
+          }
+        });
         
         // Close dropdown
         const btn = document.getElementById('watchlist-status-display-' + id);

@@ -182,6 +182,7 @@ func (h *Handler) HandleAnimeDetails(w http.ResponseWriter, r *http.Request) {
 	user, _ := r.Context().Value(ctxpkg.UserKey).(*database.User)
 
 	var status string
+	var watchlistIDs []int64
 	if user != nil {
 		entry, err := h.db.GetWatchListEntry(r.Context(), database.GetWatchListEntryParams{
 			UserID:  user.ID,
@@ -190,13 +191,19 @@ func (h *Handler) HandleAnimeDetails(w http.ResponseWriter, r *http.Request) {
 		if err == nil {
 			status = entry.Status
 		}
+		watchlist, _ := h.db.GetUserWatchList(r.Context(), user.ID)
+		watchlistIDs = make([]int64, len(watchlist))
+		for i, e := range watchlist {
+			watchlistIDs[i] = e.AnimeID
+		}
 	}
 
 	if err := templates.GetRenderer().ExecuteTemplate(w, "anime.gohtml", map[string]any{
-		"Anime":       anime,
-		"User":        user,
-		"Status":      status,
-		"CurrentPath": r.URL.Path,
+		"Anime":        anime,
+		"User":         user,
+		"Status":       status,
+		"CurrentPath":  r.URL.Path,
+		"WatchlistIDs": watchlistIDs,
 	}); err != nil {
 		log.Printf("render error: %v", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
@@ -218,9 +225,19 @@ func (h *Handler) HandleHTMLWatchOrder(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	user, _ := r.Context().Value(ctxpkg.UserKey).(*database.User)
+	watchlistMap := make(map[int64]bool)
+	if user != nil {
+		watchlist, _ := h.db.GetUserWatchList(r.Context(), user.ID)
+		for _, entry := range watchlist {
+			watchlistMap[entry.AnimeID] = true
+		}
+	}
+
 	if err := templates.GetRenderer().ExecuteFragment(w, "anime.gohtml", "watch_order", map[string]any{
-		"Relations": relations,
-		"AnimeID":   id,
+		"Relations":     relations,
+		"AnimeID":       id,
+		"WatchlistMap":  watchlistMap,
 	}); err != nil {
 		log.Printf("render error: %v", err)
 	}
