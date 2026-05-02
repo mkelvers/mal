@@ -22,32 +22,34 @@ func (e *Episode) GetFallbackImage(animeID int) string {
 		imageUrl = e.Images.Jpg.ImageURL
 	}
 
+	// Always trigger scraping if we encounter the banned icon OR the generic placeholder
 	if imageUrl != bannedImageURL && imageUrl != placeholderImageURL && imageUrl != "" {
 		return imageUrl
 	}
 
-	episodeNum := 1
+	// Determine the episode number reliably
+	episodeNum := 0
 	if e.Episode != "" {
-		// e.Episode can be "Episode 1" or just "1"
 		re := regexp.MustCompile(`\d+`)
 		match := re.FindString(e.Episode)
 		if match != "" {
 			episodeNum, _ = strconv.Atoi(match)
-		} else {
-			episodeNum, _ = strconv.Atoi(e.Episode)
 		}
 	}
+
+	// Fallback to MalID if the episode string didn't have a number
 	if episodeNum == 0 {
 		episodeNum = e.MalID
 	}
 
 	episodeURL := fmt.Sprintf("https://myanimelist.net/anime/%d/episode/%d", animeID, episodeNum)
 	fallbackURL := scrapeAnimeImageFromEpisodePage(episodeURL, episodeNum)
+	
 	if fallbackURL != "" {
 		return fallbackURL
 	}
 
-	return e.Images.Jpg.ImageURL
+	return imageUrl
 }
 
 func scrapeAnimeImageFromEpisodePage(episodeURL string, episodeNum int) string {
