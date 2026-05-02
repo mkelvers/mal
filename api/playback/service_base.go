@@ -169,6 +169,11 @@ func (s *Service) BuildWatchPageData(ctx context.Context, malID int, titleCandid
 		return WatchPageData{}, errors.New("stream mode unavailable")
 	}
 
+	segments := baseData.Segments
+	if segments == nil {
+		segments = []SkipSegment{}
+	}
+
 	userState := userPlaybackState{}
 	if userStateCh != nil {
 		userState = <-userStateCh
@@ -183,7 +188,7 @@ func (s *Service) BuildWatchPageData(ctx context.Context, malID int, titleCandid
 		InitialMode:      initialMode,
 		AvailableModes:   cloneSlice(baseData.AvailableModes),
 		ModeSources:      clientModeSources,
-		Segments:         cloneSlice(baseData.Segments),
+		Segments:         cloneSlice(segments),
 	}, nil
 }
 
@@ -345,8 +350,11 @@ func clonePlaybackBaseData(data playbackBaseData) playbackBaseData {
 }
 
 func cloneSlice[T any](items []T) []T {
+	if items == nil {
+		return []T{}
+	}
 	if len(items) == 0 {
-		return nil
+		return []T{}
 	}
 	cloned := make([]T, len(items))
 	copy(cloned, items)
