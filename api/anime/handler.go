@@ -150,7 +150,7 @@ func (h *Handler) HandleBrowse(w http.ResponseWriter, r *http.Request) {
 
 	if err := templates.GetRenderer().ExecuteTemplate(w, "browse.gohtml", map[string]any{
 		"User":         user,
-		"CurrentPath": r.URL.Path,
+		"CurrentPath":  r.URL.Path,
 		"Query":        q,
 		"Type":         animeType,
 		"Status":       status,
@@ -250,9 +250,9 @@ func (h *Handler) HandleHTMLWatchOrder(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := templates.GetRenderer().ExecuteFragment(w, "anime.gohtml", "watch_order", map[string]any{
-		"Relations":     relations,
-		"AnimeID":       id,
-		"WatchlistMap":  watchlistMap,
+		"Relations":    relations,
+		"AnimeID":      id,
+		"WatchlistMap": watchlistMap,
 	}); err != nil {
 		log.Printf("render error: %v", err)
 	}
