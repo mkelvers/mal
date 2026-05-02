@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"regexp"
 	"strconv"
@@ -40,8 +41,9 @@ func (e *Episode) GetFallbackImage(animeID int) string {
 	// Always trigger scraping if we encounter the banned icon OR the generic placeholder
 	// OR if there is no image URL at all
 	if imageUrl == bannedImageURL || imageUrl == placeholderImageURL || imageUrl == "" {
-		// MAL URLs usually follow this format, and it redirects to the slug version
-		episodeURL := fmt.Sprintf("https://myanimelist.net/anime/%d/_/episode/%d", animeID, episodeNum)
+		// MAL URLs follow this format: https://myanimelist.net/anime/20/Naruto/episode/1
+		// The previous format used /_/ which is sometimes rejected with 405
+		episodeURL := fmt.Sprintf("https://myanimelist.net/anime/%d/slug/episode/%d", animeID, episodeNum)
 		fallbackURL := scrapeAnimeImageFromEpisodePage(episodeURL, episodeNum)
 
 		if fallbackURL != "" {
@@ -68,7 +70,7 @@ func scrapeAnimeImageFromEpisodePage(episodeURL string, episodeNum int) string {
 
 	// Log the status code for debugging
 	if resp.StatusCode != 200 {
-		// fmt.Printf("[DEBUG] Failed to fetch %s: Status %d\n", episodeURL, resp.StatusCode)
+		log.Printf("[DEBUG] Scraper failed to fetch %s: Status %d", episodeURL, resp.StatusCode)
 		return ""
 	}
 
@@ -80,8 +82,9 @@ func scrapeAnimeImageFromEpisodePage(episodeURL string, episodeNum int) string {
 	html := string(body)
 
 	// MAL sometimes redirects to a URL with a slug.
-	// The JSON object is very likely to be present in the full page.
-	// We extract the object {} containing "episode_number":X
+	// We look for the "thumbnail" field in the page source.
+	
+	// Pattern 1: Look for the specific episode object in the JSON data
 	episodeStr := strconv.Itoa(episodeNum)
 	objPattern := regexp.MustCompile(`\{[^{}]*"episode_number":\s*` + episodeStr + `[^{}]*\}`)
 	match := objPattern.FindString(html)
@@ -95,8 +98,17 @@ func scrapeAnimeImageFromEpisodePage(episodeURL string, episodeNum int) string {
 		thumbRe := regexp.MustCompile(`"thumbnail":\s*"([^"]+)"`)
 		thumbMatch := thumbRe.FindStringSubmatch(match)
 		if len(thumbMatch) > 1 {
-			// Unescape backslashes in URL
 			return strings.ReplaceAll(thumbMatch[1], `\/`, `/`)
+		}
+	}
+	
+	// Pattern 2: Fallback to og:image if it's the specific episode page
+	ogRe := regexp.MustCompile(`<meta\s+property="og:image"\s+content="([^"]+)"`)
+	ogMatch := ogRe.FindStringSubmatch(html)
+	if len(ogMatch) > 1 {
+		// Only use if it looks like an episode thumbnail (contains /episodes/)
+		if strings.Contains(ogMatch[1], "/episodes/") {
+			return ogMatch[1]
 		}
 	}
 
@@ -136,4 +148,63 @@ func (c *Client) GetEpisode(ctx context.Context, animeID int, episode int) (Epis
 
 	err := c.getWithCache(ctx, cacheKey, 24*time.Hour, reqURL, &result)
 	return result, err
+}
+
+func (c *Client) GetAllEpisodes(ctx context.Context, animeID int) ([]Episode, error) {
+	// First fetch the anime to get total episodes count
+	anime, err := c.GetAnimeByID(ctx, animeID)
+	if err != nil {
+		return nil, err
+	}
+
+	totalEpisodes := anime.Episodes
+	if totalEpisodes <= 0 {
+		// Fallback to simple page 1 fetch if count is unknown
+		resp, err := c.GetEpisodes(ctx, animeID, 1)
+		if err != nil {
+			return nil, err
+		}
+		return resp.Data, nil
+	}
+
+	// Jikan /episodes returns 100 per page
+	lastPage := (totalEpisodes + 99) / 100
+	var allEpisodes []Episode
+	
+	// Fetch last page first (to get most recent episodes immediately)
+	lastResp, err := c.GetEpisodes(ctx, animeID, lastPage)
+	if err == nil {
+		allEpisodes = append(allEpisodes, lastResp.Data...)
+	}
+
+	// Fetch first page
+	if lastPage > 1 {
+		firstResp, err := c.GetEpisodes(ctx, animeID, 1)
+		if err == nil {
+			allEpisodes = append(allEpisodes, firstResp.Data...)
+		}
+	}
+
+	// Background fetching for intermediate pages
+	if lastPage > 2 {
+		go func() {
+			// Create a fresh context for background work
+			bgCtx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
+			defer cancel()
+
+			for p := 2; p < lastPage; p++ {
+				// We don't need to store the result here if the client has an internal cache,
+				// but calling it ensures the data is ready for the next request.
+				_, _ = c.GetEpisodes(bgCtx, animeID, p)
+
+				select {
+				case <-bgCtx.Done():
+					return
+				case <-time.After(500 * time.Millisecond): // Rate limit buffer
+				}
+			}
+		}()
+	}
+
+	return allEpisodes, nil
 }

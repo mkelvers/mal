@@ -1113,6 +1113,42 @@ const initPlayer = (): void => {
   showControls()
 
   playerInitialized = true
+
+  // Fetch thumbnails and metadata in the background
+  fetch(`/api/watch/thumbnails/${malID}`)
+    .then((res) => res.json())
+    .then((data: Array<{ mal_id: number, url: string, title?: string }>) => {
+      const episodeList = document.querySelector('[data-episode-list]')
+      if (!episodeList) return
+
+      data.forEach((item) => {
+        const epCard = episodeList.querySelector(`[data-episode-id="${item.mal_id}"]`)
+        if (!epCard) return
+
+        if (item.url) {
+          const imgContainer = epCard.querySelector('.relative.aspect-video')
+          if (imgContainer) {
+            let img = imgContainer.querySelector('img')
+            if (!img) {
+              img = document.createElement('img')
+              img.className = 'h-full w-full object-cover transition-transform group-hover:scale-105'
+              img.loading = 'lazy'
+              const placeholder = imgContainer.querySelector('.flex.h-full.w-full.items-center.justify-center')
+              if (placeholder) placeholder.remove()
+              imgContainer.prepend(img)
+            }
+            img.src = item.url
+            img.alt = item.title || `Episode ${item.mal_id}`
+          }
+        }
+
+        if (item.title) {
+          const titleSpan = epCard.querySelector('[data-episode-title]')
+          if (titleSpan) titleSpan.textContent = item.title
+        }
+      })
+    })
+    .catch((err) => console.error('Failed to fetch thumbnails:', err))
 }
 
 document.addEventListener('DOMContentLoaded', initPlayer)

@@ -21,13 +21,19 @@
       {{$totalEps = $fallbackSub}}
     {{end}}
 
-    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5" data-episode-list>
       {{range $episodes}}
         {{$isCurrent := eq (printf "%v" .MalID) $currentEpID}}
-        <a href="/anime/{{$anime.MalID}}/watch?ep={{.MalID}}" class="group flex flex-col overflow-hidden bg-white/5 transition-colors hover:bg-white/10 {{if $isCurrent}}ring-accent ring-2{{end}}">
+        <a href="/anime/{{$anime.MalID}}/watch?ep={{.MalID}}" class="group flex flex-col overflow-hidden bg-white/5 transition-colors hover:bg-white/10 {{if $isCurrent}}ring-accent ring-2{{end}}" data-episode-id="{{.MalID}}">
           <div class="relative aspect-video w-full overflow-hidden bg-black/50">
-            {{if .Images.Jpg.ImageURL}}
-              <img src="{{.Images.Jpg.ImageURL}}" alt="{{.Title}}" class="h-full w-full object-cover transition-transform group-hover:scale-105" loading="lazy" />
+            {{if .Images}}
+              {{if .Images.Jpg.ImageURL}}
+                <img src="{{.Images.Jpg.ImageURL}}" alt="{{.Title}}" class="h-full w-full object-cover transition-transform group-hover:scale-105" loading="lazy" />
+              {{else}}
+                <div class="flex h-full w-full items-center justify-center text-neutral-600">
+                  <svg class="h-8 w-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                </div>
+              {{end}}
             {{else}}
               <div class="flex h-full w-full items-center justify-center text-neutral-600">
                 <svg class="h-8 w-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
@@ -41,7 +47,7 @@
           </div>
           <div class="flex flex-col gap-1 p-3">
             <span class="text-accent text-xs font-semibold">Episode {{.MalID}}</span>
-            <span class="line-clamp-2 text-sm font-medium text-neutral-200">{{.Title}}</span>
+            <span class="line-clamp-2 text-sm font-medium text-neutral-200" data-episode-title>{{.Title}}</span>
           </div>
         </a>
       {{end}}

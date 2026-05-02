@@ -76,6 +76,10 @@ type Anime struct {
 		URL  string `json:"url"`
 	} `json:"streaming"`
 	Relations []JikanRelationGroup `json:"relations"`
+	External  []struct {
+		Name string `json:"name"`
+		URL  string `json:"url"`
+	} `json:"external"`
 }
 
 func (a Anime) ImageURL() string {

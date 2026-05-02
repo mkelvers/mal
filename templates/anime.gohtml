@@ -28,7 +28,15 @@
 
       {{template "watchlist_actions" dict "Anime" $anime "User" .User "Status" .Status}}
 
-      <div class="space-y-4">
+      <div class="mt-6 flex flex-wrap gap-3">
+        {{range $anime.External}}
+          <a href="{{.URL}}" target="_blank" rel="noopener" class="bg-white/5 hover:bg-white/10 border-white/10 rounded-md border px-3 py-1.5 text-xs font-medium text-neutral-300 transition-colors">
+            {{.Name}}
+          </a>
+        {{end}}
+      </div>
+
+      <div class="mt-8 space-y-4">
         <div>
           <h2 class="mb-2 text-lg font-medium text-neutral-300">Synopsis</h2>
           <p id="synopsis-container" class="text-foreground-muted max-w-4xl text-base leading-relaxed whitespace-pre-line line-clamp-5 md:line-clamp-none">
