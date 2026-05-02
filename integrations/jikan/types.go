@@ -151,7 +151,7 @@ func (a Anime) DurationSeconds() float64 {
 			minutes = val
 		}
 	}
-	return float64(hours*60 + minutes) * 60
+	return float64(hours*60+minutes) * 60
 }
 
 func (a Anime) Premiered() string {

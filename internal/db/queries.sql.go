@@ -222,18 +222,18 @@ ORDER BY c.updated_at DESC
 `
 
 type GetContinueWatchingEntriesRow struct {
-	ID                  string         `json:"id"`
-	UserID              string         `json:"user_id"`
-	AnimeID             int64          `json:"anime_id"`
-	CurrentEpisode      sql.NullInt64  `json:"current_episode"`
-	CurrentTimeSeconds  float64        `json:"current_time_seconds"`
-	DurationSeconds     sql.NullFloat64 `json:"duration_seconds"`
-	CreatedAt           time.Time      `json:"created_at"`
-	UpdatedAt           time.Time      `json:"updated_at"`
-	TitleOriginal       string         `json:"title_original"`
-	TitleEnglish        sql.NullString `json:"title_english"`
-	TitleJapanese       sql.NullString `json:"title_japanese"`
-	ImageUrl            string         `json:"image_url"`
+	ID                   string          `json:"id"`
+	UserID               string          `json:"user_id"`
+	AnimeID              int64           `json:"anime_id"`
+	CurrentEpisode       sql.NullInt64   `json:"current_episode"`
+	CurrentTimeSeconds   float64         `json:"current_time_seconds"`
+	DurationSeconds      sql.NullFloat64 `json:"duration_seconds"`
+	CreatedAt            time.Time       `json:"created_at"`
+	UpdatedAt            time.Time       `json:"updated_at"`
+	TitleOriginal        string          `json:"title_original"`
+	TitleEnglish         sql.NullString  `json:"title_english"`
+	TitleJapanese        sql.NullString  `json:"title_japanese"`
+	ImageUrl             string          `json:"image_url"`
 	AnimeDurationSeconds sql.NullFloat64 `json:"anime_duration_seconds"`
 }
 
@@ -763,12 +763,12 @@ RETURNING id, title_original, image_url, created_at, title_english, title_japane
 `
 
 type UpsertAnimeParams struct {
-	ID              int64          `json:"id"`
-	TitleOriginal   string         `json:"title_original"`
-	TitleEnglish    sql.NullString `json:"title_english"`
-	TitleJapanese  sql.NullString `json:"title_japanese"`
-	ImageUrl        string         `json:"image_url"`
-	Airing          sql.NullBool   `json:"airing"`
+	ID              int64           `json:"id"`
+	TitleOriginal   string          `json:"title_original"`
+	TitleEnglish    sql.NullString  `json:"title_english"`
+	TitleJapanese   sql.NullString  `json:"title_japanese"`
+	ImageUrl        string          `json:"image_url"`
+	Airing          sql.NullBool    `json:"airing"`
 	DurationSeconds sql.NullFloat64 `json:"duration_seconds"`
 }
 
@@ -828,11 +828,11 @@ RETURNING id, user_id, anime_id, current_episode, current_time_seconds, duration
 `
 
 type UpsertContinueWatchingEntryParams struct {
-	ID                 string         `json:"id"`
-	UserID             string         `json:"user_id"`
-	AnimeID            int64          `json:"anime_id"`
-	CurrentEpisode     sql.NullInt64  `json:"current_episode"`
-	CurrentTimeSeconds float64        `json:"current_time_seconds"`
+	ID                 string          `json:"id"`
+	UserID             string          `json:"user_id"`
+	AnimeID            int64           `json:"anime_id"`
+	CurrentEpisode     sql.NullInt64   `json:"current_episode"`
+	CurrentTimeSeconds float64         `json:"current_time_seconds"`
 	DurationSeconds    sql.NullFloat64 `json:"duration_seconds"`
 }
 

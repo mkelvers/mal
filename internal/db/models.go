@@ -10,15 +10,15 @@ import (
 )
 
 type Anime struct {
-	ID                int64          `json:"id"`
-	TitleOriginal     string         `json:"title_original"`
-	ImageUrl          string         `json:"image_url"`
-	CreatedAt         time.Time      `json:"created_at"`
-	TitleEnglish      sql.NullString `json:"title_english"`
-	TitleJapanese     sql.NullString `json:"title_japanese"`
-	Airing            sql.NullBool   `json:"airing"`
-	Status            sql.NullString `json:"status"`
-	RelationsSyncedAt sql.NullTime   `json:"relations_synced_at"`
+	ID                int64           `json:"id"`
+	TitleOriginal     string          `json:"title_original"`
+	ImageUrl          string          `json:"image_url"`
+	CreatedAt         time.Time       `json:"created_at"`
+	TitleEnglish      sql.NullString  `json:"title_english"`
+	TitleJapanese     sql.NullString  `json:"title_japanese"`
+	Airing            sql.NullBool    `json:"airing"`
+	Status            sql.NullString  `json:"status"`
+	RelationsSyncedAt sql.NullTime    `json:"relations_synced_at"`
 	DurationSeconds   sql.NullFloat64 `json:"duration_seconds"`
 }
 
@@ -38,14 +38,14 @@ type AnimeRelation struct {
 }
 
 type ContinueWatchingEntry struct {
-	ID                 string         `json:"id"`
-	UserID             string         `json:"user_id"`
-	AnimeID            int64          `json:"anime_id"`
-	CurrentEpisode     sql.NullInt64  `json:"current_episode"`
-	CurrentTimeSeconds float64        `json:"current_time_seconds"`
+	ID                 string          `json:"id"`
+	UserID             string          `json:"user_id"`
+	AnimeID            int64           `json:"anime_id"`
+	CurrentEpisode     sql.NullInt64   `json:"current_episode"`
+	CurrentTimeSeconds float64         `json:"current_time_seconds"`
 	DurationSeconds    sql.NullFloat64 `json:"duration_seconds"`
-	CreatedAt          time.Time      `json:"created_at"`
-	UpdatedAt          time.Time      `json:"updated_at"`
+	CreatedAt          time.Time       `json:"created_at"`
+	UpdatedAt          time.Time       `json:"updated_at"`
 }
 
 type JikanCache struct {
