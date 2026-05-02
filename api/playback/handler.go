@@ -2,6 +2,7 @@ package playback
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -105,6 +106,31 @@ func (h *Handler) HandleWatchPage(w http.ResponseWriter, r *http.Request) {
 	watchData, err := h.svc.BuildWatchPageData(r.Context(), id, titleCandidates, currentEpID, mode, userID)
 	if err != nil {
 		log.Printf("watch data error: %v", err)
+	}
+
+	// Update episodes list if fallback has more
+	if watchData.FallbackEpisodes != nil {
+		maxCount := 0
+		for _, count := range watchData.FallbackEpisodes {
+			if count > maxCount {
+				maxCount = count
+			}
+		}
+
+		if maxCount > len(episodes.Data) {
+			// Add dummy episodes for the ones Jikan is missing
+			start := len(episodes.Data) + 1
+			for i := start; i <= maxCount; i++ {
+				dummy := jikan.Episode{
+					MalID:   i,
+					Episode: fmt.Sprintf("Episode %d", i),
+					Title:   fmt.Sprintf("Episode %d", i),
+					Images:  &jikan.EpisodeImages{},
+				}
+				dummy.Images.Jpg.ImageURL = dummy.GetFallbackImage(id)
+				episodes.Data = append(episodes.Data, dummy)
+			}
+		}
 	}
 
 	if err := templates.GetRenderer().ExecuteTemplate(w, "watch.gohtml", map[string]any{

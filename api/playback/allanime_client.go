@@ -107,6 +107,12 @@ type searchResult struct {
 	Name  string
 }
 
+type AvailableEpisodes struct {
+	Sub int
+	Dub int
+	Raw int
+}
+
 type allAnimeClient struct {
 	httpClient *http.Client
 	extractor  *providerExtractor
@@ -485,6 +491,47 @@ func (c *allAnimeClient) GetEpisodes(ctx context.Context, showID string, mode st
 	}
 
 	return episodes, nil
+}
+
+func (c *allAnimeClient) GetAvailableEpisodes(ctx context.Context, showID string) (AvailableEpisodes, error) {
+	graphqlQuery := `query($showId: String!) {
+		show(_id: $showId) {
+			availableEpisodesDetail
+		}
+	}`
+
+	result, err := c.graphqlRequest(ctx, graphqlQuery, map[string]any{"showId": showID})
+	if err != nil {
+		return AvailableEpisodes{}, err
+	}
+
+	data, ok := result["data"].(map[string]any)
+	if !ok {
+		return AvailableEpisodes{}, fmt.Errorf("invalid response")
+	}
+
+	show, ok := data["show"].(map[string]any)
+	if !ok || show == nil {
+		return AvailableEpisodes{}, fmt.Errorf("show not found")
+	}
+
+	detail, ok := show["availableEpisodesDetail"].(map[string]any)
+	if !ok {
+		return AvailableEpisodes{}, fmt.Errorf("invalid detail")
+	}
+
+	var count AvailableEpisodes
+	if sub, ok := detail["sub"].([]any); ok {
+		count.Sub = len(sub)
+	}
+	if dub, ok := detail["dub"].([]any); ok {
+		count.Dub = len(dub)
+	}
+	if raw, ok := detail["raw"].([]any); ok {
+		count.Raw = len(raw)
+	}
+
+	return count, nil
 }
 
 func buildStreamSource(url, sourceType, provider string) StreamSource {
