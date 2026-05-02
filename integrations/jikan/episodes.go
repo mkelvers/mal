@@ -38,8 +38,7 @@ func (e *Episode) GetFallbackImage(animeID int) string {
 	}
 
 	// Always trigger scraping if we encounter the banned icon OR the generic placeholder
-	// OR if it's the specific Code Geass episode we are testing
-	if imageUrl != bannedImageURL && imageUrl != placeholderImageURL && imageUrl != "" && !(animeID == 2904 && episodeNum == 6) {
+	if imageUrl != bannedImageURL && imageUrl != placeholderImageURL && imageUrl != "" {
 		return imageUrl
 	}
 
