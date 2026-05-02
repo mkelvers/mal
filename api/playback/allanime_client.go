@@ -98,7 +98,7 @@ func (rt *utlsRoundTripper) RoundTrip(req *http.Request) (*http.Response, error)
 
 var allAnimeUTLSClient = &http.Client{
 	Transport: &utlsRoundTripper{},
-	Timeout:   15 * time.Second,
+	Timeout:   30 * time.Second,
 }
 
 type searchResult struct {
@@ -115,7 +115,7 @@ type allAnimeClient struct {
 func newAllAnimeClient() *allAnimeClient {
 	return &allAnimeClient{
 		httpClient: &http.Client{
-			Timeout: 12 * time.Second,
+			Timeout: 30 * time.Second,
 		},
 		extractor: newProviderExtractor(),
 	}
@@ -305,7 +305,7 @@ func min(a, b int) int {
 	return b
 }
 
-func (c *allAnimeClient) extractSourceURLsFromData(data map[string]any) []StreamSource {
+func (c *allAnimeClient) extractSourceURLsFromData(ctx context.Context, data map[string]any) []StreamSource {
 	episodeData, ok := data["episode"].(map[string]any)
 	if !ok {
 		return nil
@@ -356,9 +356,6 @@ func (c *allAnimeClient) extractSourceURLsFromData(data map[string]any) []Stream
 		if !strings.HasPrefix(decoded, "/") {
 			decoded = "/" + decoded
 		}
-
-		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-		defer cancel()
 
 		extracted, err := c.extractor.ExtractVideoLinks(ctx, decoded)
 		if err != nil {
@@ -510,7 +507,7 @@ func (c *allAnimeClient) GetEpisodeSources(ctx context.Context, showID string, e
 	result, err := c.graphqlRequestWithHash(ctx, showID, episode, mode)
 	if err == nil {
 		// Result is already in shape {"episode": {"sourceUrls": [...]}}
-		sources := c.extractSourceURLsFromData(result)
+		sources := c.extractSourceURLsFromData(ctx, result)
 		if len(sources) > 0 {
 			return sources, nil
 		}

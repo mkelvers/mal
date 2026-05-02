@@ -19,18 +19,37 @@ type providerExtractor struct {
 
 func newProviderExtractor() *providerExtractor {
 	return &providerExtractor{
-		httpClient: &http.Client{Timeout: 12 * time.Second},
-		baseURL:    "https://allanime.day",
+		httpClient: &http.Client{Timeout: 30 * time.Second},
+		baseURL:    allAnimeBaseURL,
 		referer:    allAnimeReferer,
 	}
 }
 
 func (e *providerExtractor) ExtractVideoLinks(ctx context.Context, providerPath string) ([]StreamSource, error) {
 	endpoint := e.baseURL + providerPath
-	resp, err := doProxiedRequest(ctx, e.httpClient, endpoint, e.referer)
-	if err != nil {
-		return nil, fmt.Errorf("fetch provider response: %w", err)
+
+	var resp *http.Response
+	var err error
+
+	for attempt := 0; attempt < 3; attempt++ {
+		if attempt > 0 {
+			select {
+			case <-ctx.Done():
+				return nil, ctx.Err()
+			case <-time.After(time.Duration(attempt) * 2 * time.Second):
+			}
+		}
+
+		resp, err = doProxiedRequest(ctx, e.httpClient, endpoint, e.referer)
+		if err == nil {
+			break
+		}
+
+		if attempt == 2 {
+			return nil, fmt.Errorf("fetch provider response: %w", err)
+		}
 	}
+
 	defer resp.Body.Close()
 
 	body, err := io.ReadAll(io.LimitReader(resp.Body, 2*1024*1024))
