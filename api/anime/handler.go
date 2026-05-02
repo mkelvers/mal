@@ -11,6 +11,7 @@ import (
 	"mal/integrations/jikan"
 	ctxpkg "mal/internal/context"
 	"mal/internal/db"
+	"mal/internal/middleware"
 	"mal/templates"
 )
 
@@ -85,8 +86,9 @@ func (h *Handler) HandleCatalog(w http.ResponseWriter, r *http.Request) {
 	var cw []database.GetContinueWatchingEntriesRow
 	watchlistMap := make(map[int64]bool)
 	var watchlistIDs []int64
-	user, userOk := r.Context().Value(ctxpkg.UserKey).(*database.User)
-	if userOk && user != nil {
+	user := middleware.GetUser(r.Context())
+	userOk := user != nil
+	if userOk {
 		cw, _ = h.db.GetContinueWatchingEntries(r.Context(), user.ID)
 		watchlist, _ := h.db.GetUserWatchList(r.Context(), user.ID)
 		watchlistIDs = make([]int64, len(watchlist))
@@ -111,7 +113,7 @@ func (h *Handler) HandleCatalog(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) HandleBrowse(w http.ResponseWriter, r *http.Request) {
-	user, _ := r.Context().Value(ctxpkg.UserKey).(*database.User)
+	user := middleware.GetUser(r.Context())
 
 	q := r.URL.Query().Get("q")
 	animeType := r.URL.Query().Get("type")
@@ -230,7 +232,7 @@ func (h *Handler) HandleAnimeDetails(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, _ := r.Context().Value(ctxpkg.UserKey).(*database.User)
+	user := middleware.GetUser(r.Context())
 
 	var status string
 	var watchlistIDs []int64
@@ -276,7 +278,7 @@ func (h *Handler) HandleHTMLWatchOrder(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, _ := r.Context().Value(ctxpkg.UserKey).(*database.User)
+	user := middleware.GetUser(r.Context())
 	watchlistMap := make(map[int64]bool)
 	if user != nil {
 		watchlist, _ := h.db.GetUserWatchList(r.Context(), user.ID)

@@ -58,8 +58,8 @@ func RequireAuth(next http.Handler) http.Handler {
 			}
 		}
 
-		user, ok := r.Context().Value(ctxpkg.UserKey).(*database.User)
-		if !ok || user == nil {
+		user := GetUser(r.Context())
+		if user == nil {
 			if strings.HasPrefix(r.URL.Path, "/api/") {
 				w.Header().Set("HX-Redirect", "/login")
 				http.Error(w, "Unauthorized", http.StatusUnauthorized)
@@ -73,8 +73,8 @@ func RequireAuth(next http.Handler) http.Handler {
 	})
 }
 
-func GetUser(ctx interface{}) *database.User {
-	user, ok := ctx.(*database.User)
+func GetUser(ctx context.Context) *database.User {
+	user, ok := ctx.Value(ctxpkg.UserKey).(*database.User)
 	if !ok {
 		return nil
 	}

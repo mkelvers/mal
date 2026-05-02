@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"strconv"
 
-	ctxpkg "mal/internal/context"
 	database "mal/internal/db"
+	"mal/internal/middleware"
 	"mal/templates"
 )
 
@@ -29,7 +29,7 @@ func (h *Handler) HandleUpdateWatchlist(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	user, _ := r.Context().Value(ctxpkg.UserKey).(*database.User)
+	user := middleware.GetUser(r.Context())
 	if user == nil {
 		http.Error(w, "unauthorized", http.StatusUnauthorized)
 		return
@@ -58,7 +58,7 @@ func (h *Handler) HandleUpdateWatchlist(w http.ResponseWriter, r *http.Request) 
 }
 
 func (h *Handler) HandleDeleteWatchlist(w http.ResponseWriter, r *http.Request) {
-	user, _ := r.Context().Value(ctxpkg.UserKey).(*database.User)
+	user := middleware.GetUser(r.Context())
 	if user == nil {
 		http.Error(w, "unauthorized", http.StatusUnauthorized)
 		return
@@ -86,7 +86,7 @@ func (h *Handler) HandleDeleteContinueWatching(w http.ResponseWriter, r *http.Re
 }
 
 func (h *Handler) HandleGetWatchlist(w http.ResponseWriter, r *http.Request) {
-	user, _ := r.Context().Value(ctxpkg.UserKey).(*database.User)
+	user := middleware.GetUser(r.Context())
 	if user == nil {
 		http.Redirect(w, r, "/login", http.StatusSeeOther)
 		return
