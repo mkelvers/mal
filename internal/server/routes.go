@@ -96,6 +96,7 @@ func NewRouter(cfg Config) http.Handler {
 			pkgmiddleware.RateLimitAuth(pkgmiddleware.VerifyOrigin(http.HandlerFunc(authHandler.HandleLogin))).ServeHTTP(w, r)
 		}
 	})
+	mux.HandleFunc("/logout", authHandler.HandleLogout)
 
 	// Watchlist Endpoints
 	mux.HandleFunc("/api/watchlist/card", watchlistHandler.HandleCardWatchlist)

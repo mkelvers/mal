@@ -108,3 +108,18 @@ func SetSessionCookie(w http.ResponseWriter, sessionID string, expiresAt time.Ti
 		Path:     "/",
 	})
 }
+
+func (s *Service) Logout(ctx context.Context, sessionID string) error {
+	return s.db.DeleteSession(ctx, sessionID)
+}
+
+func ClearSessionCookie(w http.ResponseWriter) {
+	http.SetCookie(w, &http.Cookie{
+		Name:     "session_id",
+		Value:    "",
+		Expires:  time.Unix(0, 0),
+		MaxAge:   -1,
+		HttpOnly: true,
+		Path:     "/",
+	})
+}
