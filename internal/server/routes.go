@@ -101,6 +101,7 @@ func NewRouter(cfg Config) http.Handler {
 	mux.HandleFunc("/api/watchlist/card", watchlistHandler.HandleCardWatchlist)
 	mux.HandleFunc("/api/watchlist", watchlistHandler.HandleUpdateWatchlist)
 	mux.HandleFunc("/api/watchlist/", watchlistHandler.HandleDeleteWatchlist)
+	mux.HandleFunc("/api/continue-watching/", watchlistHandler.HandleDeleteContinueWatching)
 	mux.HandleFunc("/watchlist", watchlistHandler.HandleGetWatchlist)
 
 	// Wrap mux with global CSRF origin verification and auth checking

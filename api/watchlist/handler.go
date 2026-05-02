@@ -82,7 +82,26 @@ func (h *Handler) HandleDeleteWatchlist(w http.ResponseWriter, r *http.Request) 
 }
 
 func (h *Handler) HandleDeleteContinueWatching(w http.ResponseWriter, r *http.Request) {
-	http.Error(w, "Not implemented", http.StatusNotImplemented)
+	user := middleware.GetUser(r.Context())
+	if user == nil {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	animeIDStr := r.URL.Path[len("/api/continue-watching/"):]
+	animeID, err := strconv.ParseInt(animeIDStr, 10, 64)
+	if err != nil {
+		http.Error(w, "invalid anime id", http.StatusBadRequest)
+		return
+	}
+
+	if err := h.service.DeleteContinueWatching(r.Context(), user.ID, animeID); err != nil {
+		log.Printf("failed to remove from continue watching: %v", err)
+		http.Error(w, "failed to remove from continue watching", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
 }
 
 func (h *Handler) HandleGetWatchlist(w http.ResponseWriter, r *http.Request) {
