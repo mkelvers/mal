@@ -52,7 +52,7 @@ func NewRouter(cfg Config) http.Handler {
 	middleware.InitAuth(cfg.AuthService)
 
 	animeHandler := anime.NewHandler(cfg.JikanClient, cfg.DB)
-	
+
 	playbackSvc := playback.NewService(cfg.DB, cfg.SQLDB, playback.Config{
 		ProxyTokenSecret: cfg.PlaybackProxySecret,
 	})
