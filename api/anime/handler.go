@@ -83,9 +83,17 @@ func (h *Handler) HandleCatalog(w http.ResponseWriter, r *http.Request) {
 	// We'll skip DB fetch for continue watching for now if it requires complex session parsing
 	// Actually we should try to fetch it if we can.
 	var cw []database.GetContinueWatchingEntriesRow
+	watchlistMap := make(map[int64]bool)
+	var watchlistIDs []int64
 	user, userOk := r.Context().Value(ctxpkg.UserKey).(*database.User)
 	if userOk && user != nil {
 		cw, _ = h.db.GetContinueWatchingEntries(r.Context(), user.ID)
+		watchlist, _ := h.db.GetUserWatchList(r.Context(), user.ID)
+		watchlistIDs = make([]int64, len(watchlist))
+		for i, entry := range watchlist {
+			watchlistMap[entry.AnimeID] = true
+			watchlistIDs[i] = entry.AnimeID
+		}
 	}
 
 	if err := templates.GetRenderer().ExecuteTemplate(w, "index.gohtml", map[string]any{
@@ -94,6 +102,8 @@ func (h *Handler) HandleCatalog(w http.ResponseWriter, r *http.Request) {
 		"ContinueWatching": cw,
 		"User":             user,
 		"CurrentPath":      r.URL.Path,
+		"WatchlistMap":     watchlistMap,
+		"WatchlistIDs":     watchlistIDs,
 	}); err != nil {
 		log.Printf("render error: %v", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
@@ -114,15 +124,28 @@ func (h *Handler) HandleBrowse(w http.ResponseWriter, r *http.Request) {
 		log.Printf("browse error: %v", err)
 	}
 
+	watchlistMap := make(map[int64]bool)
+	var watchlistIDs []int64
+	if user != nil {
+		watchlist, _ := h.db.GetUserWatchList(r.Context(), user.ID)
+		watchlistIDs = make([]int64, len(watchlist))
+		for i, entry := range watchlist {
+			watchlistMap[entry.AnimeID] = true
+			watchlistIDs[i] = entry.AnimeID
+		}
+	}
+
 	if err := templates.GetRenderer().ExecuteTemplate(w, "browse.gohtml", map[string]any{
-		"User":        user,
-		"CurrentPath": r.URL.Path,
-		"Query":       q,
-		"Type":        animeType,
-		"Status":      status,
-		"OrderBy":     orderBy,
-		"Sort":        sort,
-		"Animes":      res.Animes,
+		"User":         user,
+		"CurrentPath":  r.URL.Path,
+		"Query":        q,
+		"Type":         animeType,
+		"Status":       status,
+		"OrderBy":      orderBy,
+		"Sort":         sort,
+		"Animes":       res.Animes,
+		"WatchlistMap": watchlistMap,
+		"WatchlistIDs": watchlistIDs,
 	}); err != nil {
 		log.Printf("render error: %v", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)

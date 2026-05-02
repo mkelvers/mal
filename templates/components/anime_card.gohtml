@@ -24,14 +24,6 @@
 
     {{if $withActions}}
       <div class="absolute inset-0 z-10 flex flex-col p-3 {{if $hasTopBadge}}pt-10{{end}} opacity-0 transition-opacity duration-300 group-hover:opacity-100">
-        {{if $isWatchlist}}
-          <div class="flex justify-end">
-            <button class="text-white/70 transition-colors hover:text-white focus:outline-none disabled:opacity-50" aria-label="Remove from Watchlist">
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="size-5 shadow-black drop-shadow-md"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-            </button>
-          </div>
-        {{end}}
-
         {{if not $isWatchlist}}
           <h3 class="mb-1.5 line-clamp-2 text-sm font-medium text-white shadow-black drop-shadow-md">
             {{$displayTitle}}
@@ -44,13 +36,11 @@
           </p>
         {{end}}
 
-        {{if not $isWatchlist}}
-          <div class="mt-auto flex items-center justify-start pb-2 pl-2">
-            <button class="text-accent hover:text-accent/80 transition-colors focus:outline-none disabled:opacity-50" aria-label="Add to Watchlist">
-              <svg class="size-6 shadow-black drop-shadow-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z" /></svg>
-            </button>
-          </div>
-        {{end}}
+        <div class="mt-auto flex items-center justify-start pb-2 pl-2">
+          <button type="button" onclick="event.preventDefault(); event.stopPropagation(); toggleWatchlist({{$anime.MalID}}, this)" class="text-accent hover:text-accent/80 transition-colors focus:outline-none {{if $isWatchlist}}in-watchlist{{end}}" aria-label="{{if $isWatchlist}}Remove from Watchlist{{else}}Add to Watchlist{{end}}">
+            <svg class="size-6 shadow-black drop-shadow-md watchlist-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z" /></svg>
+          </button>
+        </div>
       </div>
     {{else}}
       <div class="absolute bottom-0 left-0 z-10 w-full p-4">
@@ -62,22 +52,22 @@
             {{if $anime.Score}}
               <span class="flex items-center gap-1">
                 <svg class="text-accent h-3 w-3" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-                {{$anime.Score}}
-              </span>
-            {{end}}
-            {{if $anime.Year}}
-              <span>•</span>
-              <span>{{$anime.Year}}</span>
-            {{end}}
-            {{if $anime.Episodes}}
-              <span>•</span>
-              <span>{{$anime.Episodes}} ep</span>
-            {{end}}
-          </div>
-        {{end}}
-      </div>
-    {{end}}
-  </a>
+                  {{$anime.Score}}
+                </span>
+              {{end}}
+              {{if $anime.Year}}
+                <span>•</span>
+                <span>{{$anime.Year}}</span>
+              {{end}}
+              {{if $anime.Episodes}}
+                <span>•</span>
+                <span>{{$anime.Episodes}} ep</span>
+              {{end}}
+            </div>
+          {{end}}
+        </div>
+      {{end}}
+    </a>
   {{if and $withActions (not $hideTitle)}}
     <h3 class="line-clamp-2 text-sm font-medium text-white">
       {{$displayTitle}}

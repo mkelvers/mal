@@ -46,7 +46,7 @@ func NewRouter(cfg Config) http.Handler {
 
 	authHandler := auth.NewHandler(cfg.AuthService)
 
-	watchlistSvc := watchlist.NewService(cfg.DB, cfg.SQLDB)
+	watchlistSvc := watchlist.NewService(cfg.DB, cfg.SQLDB, cfg.JikanClient)
 	watchlistHandler := watchlist.NewHandler(watchlistSvc)
 
 	middleware.InitAuth(cfg.AuthService)

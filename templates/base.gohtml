@@ -26,6 +26,47 @@
         document.getElementById('mobile-overlay').classList.add('hidden');
       }
     }
+
+    const watchlistIds = new Set()
+
+    function initWatchlist(ids) {
+      ids.forEach(id => watchlistIds.add(id))
+    }
+
+    function toggleWatchlist(id, btn) {
+      const isInWatchlist = watchlistIds.has(id)
+      const url = isInWatchlist ? `/api/watchlist/${id}` : '/api/watchlist'
+      const method = isInWatchlist ? 'DELETE' : 'POST'
+      const body = isInWatchlist ? null : JSON.stringify({ animeId: id, status: 'plan_to_watch' })
+      fetch(url, {
+        method,
+        headers: body ? { 'Content-Type': 'application/json' } : {},
+        body
+      }).then(res => {
+        if (res.ok) {
+          if (isInWatchlist) {
+            watchlistIds.delete(id)
+            btn.classList.remove('in-watchlist')
+            btn.setAttribute('aria-label', 'Add to Watchlist')
+          } else {
+            watchlistIds.add(id)
+            btn.classList.add('in-watchlist')
+            btn.setAttribute('aria-label', 'Remove from Watchlist')
+          }
+        }
+      })
+    }
+
+    function removeFromWatchlist(id, btn) {
+      fetch(`/api/watchlist/${id}`, { method: 'DELETE' }).then(res => {
+        if (res.ok) {
+          watchlistIds.delete(id)
+          const card = btn.closest('.group').parentElement
+          if (card) card.remove()
+          setTimeout(() => location.reload(), 100)
+        }
+      })
+    }
   </script>
 </head>
 <body class="bg-background text-neutral-200">
