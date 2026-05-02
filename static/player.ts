@@ -641,14 +641,14 @@ const initPlayer = (): void => {
     if (modeDub) {
       modeDub.disabled = !availableModes.includes('dub')
       modeDub.classList.toggle('text-white', mode !== 'dub')
-      modeDub.classList.toggle('text-yellow-400', mode === 'dub')
+      modeDub.classList.toggle('text-accent', mode === 'dub')
       modeDub.classList.toggle('opacity-50', !availableModes.includes('dub'))
       modeDub.classList.toggle('cursor-not-allowed', !availableModes.includes('dub'))
     }
     if (modeSub) {
       modeSub.disabled = !availableModes.includes('sub')
       modeSub.classList.toggle('text-white', mode !== 'sub')
-      modeSub.classList.toggle('text-yellow-400', mode === 'sub')
+      modeSub.classList.toggle('text-accent', mode === 'sub')
       modeSub.classList.toggle('opacity-50', !availableModes.includes('sub'))
       modeSub.classList.toggle('cursor-not-allowed', !availableModes.includes('sub'))
     }
