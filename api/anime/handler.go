@@ -291,7 +291,100 @@ func (h *Handler) HandleQuickSearch(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) HandleDiscover(w http.ResponseWriter, r *http.Request) {
-	renderNotFoundPage(r, w)
+	trending, err := h.jikanClient.GetSeasonsNow(r.Context(), 1)
+	if err != nil {
+		log.Printf("seasons now error: %v", err)
+	}
+
+	upcoming, err := h.jikanClient.GetSeasonsUpcoming(r.Context(), 1)
+	if err != nil {
+		log.Printf("seasons upcoming error: %v", err)
+	}
+
+	top, err := h.jikanClient.GetTopAnime(r.Context(), 1)
+	if err != nil {
+		log.Printf("top anime error: %v", err)
+	}
+
+	seen := make(map[int]bool)
+	uniqueTrending := make([]jikan.Anime, 0)
+	for _, a := range trending.Animes {
+		if !seen[a.MalID] {
+			seen[a.MalID] = true
+			uniqueTrending = append(uniqueTrending, a)
+		}
+		if len(uniqueTrending) >= 10 {
+			break
+		}
+	}
+
+	uniqueUpcoming := make([]jikan.Anime, 0)
+	for _, a := range upcoming.Animes {
+		if !seen[a.MalID] {
+			seen[a.MalID] = true
+			uniqueUpcoming = append(uniqueUpcoming, a)
+		}
+		if len(uniqueUpcoming) >= 10 {
+			break
+		}
+	}
+
+	uniqueTop := make([]jikan.Anime, 0)
+	for _, a := range top.Animes {
+		if !seen[a.MalID] {
+			seen[a.MalID] = true
+			uniqueTop = append(uniqueTop, a)
+		}
+		if len(uniqueTop) >= 10 {
+			break
+		}
+	}
+
+	user, _ := r.Context().Value(ctxpkg.UserKey).(*database.User)
+	watchlistMap := make(map[int64]bool)
+	var watchlistIDs []int64
+	if user != nil {
+		watchlist, _ := h.db.GetUserWatchList(r.Context(), user.ID)
+		watchlistIDs = make([]int64, len(watchlist))
+		for i, entry := range watchlist {
+			watchlistMap[entry.AnimeID] = true
+			watchlistIDs[i] = entry.AnimeID
+		}
+	}
+
+	if err := templates.GetRenderer().ExecuteTemplate(w, "discover.gohtml", map[string]any{
+		"User":         user,
+		"CurrentPath":  r.URL.Path,
+		"Trending":     uniqueTrending,
+		"Upcoming":     uniqueUpcoming,
+		"Top":          uniqueTop,
+		"WatchlistMap": watchlistMap,
+		"WatchlistIDs": watchlistIDs,
+	}); err != nil {
+		log.Printf("render error: %v", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+	}
+}
+
+func (h *Handler) HandleRandomAnime(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	anime, err := h.jikanClient.GetRandomAnime(r.Context())
+	if err != nil {
+		log.Printf("random anime error: %v", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Failed to fetch random anime"})
+		return
+	}
+
+	if anime.MalID == 0 {
+		w.WriteHeader(http.StatusNotFound)
+		json.NewEncoder(w).Encode(map[string]string{"error": "No anime found"})
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]any{"data": anime})
 }
 
 func (h *Handler) HandleAPIDiscoverAiring(w http.ResponseWriter, r *http.Request) {

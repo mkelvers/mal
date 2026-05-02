@@ -83,3 +83,17 @@ func (c *Client) GetSeasonsUpcoming(ctx context.Context, page int) (TopAnimeResu
 		HasNextPage: result.Pagination.HasNextPage,
 	}, nil
 }
+
+func (c *Client) GetRandomAnime(ctx context.Context) (Anime, error) {
+	var result struct {
+		Data Anime `json:"data"`
+	}
+
+	reqURL := fmt.Sprintf("%s/random/anime", c.baseURL)
+	err := c.fetchWithRetry(ctx, reqURL, &result)
+	if err != nil {
+		return Anime{}, err
+	}
+
+	return result.Data, nil
+}
