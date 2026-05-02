@@ -32,12 +32,9 @@ func TestAddEntry_RejectsInvalidAnimeID(t *testing.T) {
 	t.Parallel()
 
 	q := &fakeQuerier{}
-	svc := NewService(q, nil)
+	svc := NewService(q, nil, nil)
 
-	err := svc.AddEntry(context.Background(), "user-1", AddRequest{
-		AnimeID: 0,
-		Status:  "watching",
-	})
+	err := svc.AddToWatchlist(context.Background(), "user-1", 0, "watching")
 
 	if err != ErrInvalidAnimeID {
 		t.Fatalf("expected ErrInvalidAnimeID, got %v", err)
@@ -52,12 +49,9 @@ func TestAddEntry_RejectsInvalidStatus(t *testing.T) {
 	t.Parallel()
 
 	q := &fakeQuerier{}
-	svc := NewService(q, nil)
+	svc := NewService(q, nil, nil)
 
-	err := svc.AddEntry(context.Background(), "user-1", AddRequest{
-		AnimeID: 1,
-		Status:  "invalid",
-	})
+	err := svc.AddToWatchlist(context.Background(), "user-1", 1, "invalid")
 
 	if err != ErrInvalidStatus {
 		t.Fatalf("expected ErrInvalidStatus, got %v", err)
