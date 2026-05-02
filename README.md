@@ -25,9 +25,6 @@
 
 ---
 
-> [!WARNING]
-> **This repository is archived.** It's still functional and you can run it if you want, but I won't be maintaining it anymore. The codebase became too complex for what it is, and the maintenance burden just isn't worth it.
-
 ## Why this project exists
 
 I built this for myself.
