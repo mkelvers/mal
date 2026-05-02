@@ -138,6 +138,7 @@ func (h *Handler) HandleGetWatchlist(w http.ResponseWriter, r *http.Request) {
 	}
 
 	data := map[string]any{
+		"User":              user,
 		"CurrentPath":       r.URL.Path,
 		"WatchlistByStatus": watchlistByStatus,
 		"AllEntries":        allEntries,
