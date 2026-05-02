@@ -119,9 +119,22 @@ func (h *Handler) HandleBrowse(w http.ResponseWriter, r *http.Request) {
 	orderBy := r.URL.Query().Get("order_by")
 	sort := r.URL.Query().Get("sort")
 
-	res, err := h.jikanClient.SearchAdvanced(r.Context(), q, animeType, status, orderBy, sort, 1, 24)
+	var genres []int
+	for _, g := range r.URL.Query()["genres"] {
+		id, err := strconv.Atoi(g)
+		if err == nil {
+			genres = append(genres, id)
+		}
+	}
+
+	res, err := h.jikanClient.SearchAdvanced(r.Context(), q, animeType, status, orderBy, sort, genres, 1, 24)
 	if err != nil {
 		log.Printf("browse error: %v", err)
+	}
+
+	genresList, err := h.jikanClient.GetAnimeGenres(r.Context())
+	if err != nil {
+		log.Printf("genres error: %v", err)
 	}
 
 	watchlistMap := make(map[int64]bool)
@@ -137,12 +150,14 @@ func (h *Handler) HandleBrowse(w http.ResponseWriter, r *http.Request) {
 
 	if err := templates.GetRenderer().ExecuteTemplate(w, "browse.gohtml", map[string]any{
 		"User":         user,
-		"CurrentPath":  r.URL.Path,
+		"CurrentPath": r.URL.Path,
 		"Query":        q,
 		"Type":         animeType,
 		"Status":       status,
 		"OrderBy":      orderBy,
 		"Sort":         sort,
+		"Genres":       genres,
+		"GenresList":   genresList,
 		"Animes":       res.Animes,
 		"WatchlistMap": watchlistMap,
 		"WatchlistIDs": watchlistIDs,
@@ -255,7 +270,7 @@ func (h *Handler) HandleQuickSearch(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode([]quickSearchResult{})
 		return
 	}
-	res, err := h.jikanClient.SearchAdvanced(r.Context(), query, "", "", "", "", 1, 5)
+	res, err := h.jikanClient.SearchAdvanced(r.Context(), query, "", "", "", "", nil, 1, 5)
 	if err != nil {
 		log.Printf("quick search error: %v", err)
 		w.WriteHeader(http.StatusOK)
