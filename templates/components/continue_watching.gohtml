@@ -1,13 +1,13 @@
 {{define "continue_watching"}}
-<section class="w-full">
+<section id="continue-watching-section" class="w-full empty:hidden">
   <h2 class="mb-3 text-lg font-normal text-neutral-300">Continue Watching</h2>
 
-  <div class="scrollbar-hide flex snap-x snap-mandatory gap-2 overflow-x-auto pb-4">
+  <div id="continue-watching-items" class="scrollbar-hide flex snap-x snap-mandatory gap-2 overflow-x-auto pb-4" hx-on::after-request="if(this.querySelectorAll('.continue-watching-item').length === 0) document.getElementById('continue-watching-section')?.remove()">
     {{range .}}
       {{$title := .TitleOriginal}}
       {{if .TitleEnglish.Valid}}{{$title = .TitleEnglish.String}}{{end}}
 
-      <div id="continue-watching-{{.AnimeID}}" class="group relative w-70 shrink-0 snap-start space-y-2 2xl:w-lg">
+      <div id="continue-watching-{{.AnimeID}}" class="continue-watching-item group relative w-70 shrink-0 snap-start space-y-2 2xl:w-lg">
         <div class="bg-background/80 relative aspect-video w-full overflow-hidden">
           <a href="/anime/{{.AnimeID}}/watch" class="block h-full w-full">
             <img src="{{if .ImageUrl}}{{.ImageUrl}}{{else}}https://placehold.co/500x500{{end}}" alt="{{$title}}" class="h-full w-full object-cover" />
@@ -15,7 +15,7 @@
 
           <div class="absolute inset-0 z-10 flex flex-col p-3 opacity-0 transition-opacity duration-300 group-hover:opacity-100 bg-black/40 pointer-events-none">
             <div class="flex justify-end pointer-events-auto">
-              <button hx-delete="/api/continue-watching/{{.AnimeID}}" hx-target="#continue-watching-{{.AnimeID}}" hx-swap="outerHTML" class="bg-black/60 hover:bg-black/80 rounded-full p-1.5 text-white transition-colors focus:outline-none disabled:opacity-50 backdrop-blur-sm" aria-label="Remove from Continue Watching">
+              <button hx-delete="/api/continue-watching/{{.AnimeID}}" hx-target="#continue-watching-{{.AnimeID}}" hx-swap="delete" hx-on::after-request="if(document.querySelectorAll('.continue-watching-item').length === 0) document.getElementById('continue-watching-section')?.remove()" class="bg-black/60 hover:bg-black/80 rounded-full p-1.5 text-white transition-colors focus:outline-none disabled:opacity-50 backdrop-blur-sm" aria-label="Remove from Continue Watching">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="size-5"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
               </button>
             </div>
