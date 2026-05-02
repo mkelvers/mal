@@ -12,17 +12,33 @@ import (
 )
 
 const bannedImageURL = "https://myanimelist.net/images/icon-banned-youtube.png"
+const placeholderImageURL = "https://myanimelist.net/images/episodes/videos/icon-thumbs-not-available.png"
 
 var httpClient = &http.Client{Timeout: 10 * time.Second}
 
 func (e *Episode) GetFallbackImage(animeID int) string {
-	if e.Images == nil || e.Images.Jpg.ImageURL != bannedImageURL {
-		return e.Images.Jpg.ImageURL
+	imageUrl := ""
+	if e.Images != nil {
+		imageUrl = e.Images.Jpg.ImageURL
+	}
+
+	if imageUrl != bannedImageURL && imageUrl != placeholderImageURL && imageUrl != "" {
+		return imageUrl
 	}
 
 	episodeNum := 1
 	if e.Episode != "" {
-		episodeNum, _ = strconv.Atoi(e.Episode)
+		// e.Episode can be "Episode 1" or just "1"
+		re := regexp.MustCompile(`\d+`)
+		match := re.FindString(e.Episode)
+		if match != "" {
+			episodeNum, _ = strconv.Atoi(match)
+		} else {
+			episodeNum, _ = strconv.Atoi(e.Episode)
+		}
+	}
+	if episodeNum == 0 {
+		episodeNum = e.MalID
 	}
 
 	episodeURL := fmt.Sprintf("https://myanimelist.net/anime/%d/episode/%d", animeID, episodeNum)
