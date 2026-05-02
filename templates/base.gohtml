@@ -104,26 +104,32 @@
 </head>
 <body class="bg-background text-neutral-200">
   <div class="flex min-h-screen flex-col">
-    <div class="sticky top-0 z-50">
-      {{block "header" .}}
-        {{template "header" .}}
-      {{end}}
-    </div>
-    
-    <div class="flex flex-1">
-      <button id="mobile-overlay" class="hidden fixed inset-0 z-40 w-full cursor-default border-none bg-black/60 backdrop-blur-sm outline-none lg:hidden" onclick="toggleMobileMenu()" aria-label="Close mobile menu"></button>
-
-      <!-- Sidebar -->
-      <div id="mobile-menu" class="fixed inset-y-0 left-0 z-50 shrink-0 overflow-hidden transform transition-all duration-300 lg:sticky lg:top-16 lg:z-auto lg:h-[calc(100vh-4rem)] -translate-x-full lg:shadow-none lg:w-64 lg:translate-x-0 w-64 shadow-2xl">
-        {{block "sidebar" .}}
-          {{template "navigation" dict "CurrentPath" .CurrentPath "IsCollapsed" false}}
+    {{if .User}}
+      <div class="sticky top-0 z-50">
+        {{block "header" .}}
+          {{template "header" .}}
         {{end}}
       </div>
-
-      <main class="w-full flex-1 overflow-x-hidden p-4 md:p-8 lg:p-12">
+      
+      <div class="flex flex-1">
+        <button id="mobile-overlay" class="hidden fixed inset-0 z-40 w-full cursor-default border-none bg-black/60 backdrop-blur-sm outline-none lg:hidden" onclick="toggleMobileMenu()" aria-label="Close mobile menu"></button>
+  
+        <!-- Sidebar -->
+        <div id="mobile-menu" class="fixed inset-y-0 left-0 z-50 shrink-0 overflow-hidden transform transition-all duration-300 lg:sticky lg:top-16 lg:z-auto lg:h-[calc(100vh-4rem)] -translate-x-full lg:shadow-none lg:w-64 lg:translate-x-0 w-64 shadow-2xl">
+          {{block "sidebar" .}}
+            {{template "navigation" dict "CurrentPath" .CurrentPath "IsCollapsed" false}}
+          {{end}}
+        </div>
+  
+        <main class="w-full flex-1 overflow-x-hidden p-4 md:p-8 lg:p-12">
+          {{template "content" .}}
+        </main>
+      </div>
+    {{else}}
+      <main class="w-full flex-1">
         {{template "content" .}}
       </main>
-    </div>
+    {{end}}
   </div>
 </body>
 </html>
