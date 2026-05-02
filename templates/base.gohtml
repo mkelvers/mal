@@ -17,6 +17,46 @@
   <script type="module" src="/dist/static/dedupe.js" defer></script>
   <script src="https://unpkg.com/htmx.org@1.9.12"></script>
   <script>
+    function toggleSidebar() {
+      const sidebar = document.getElementById('mobile-menu');
+      const isCollapsed = sidebar.classList.contains('lg:w-20');
+      
+      if (isCollapsed) {
+        sidebar.classList.remove('lg:w-20');
+        sidebar.classList.add('lg:w-64');
+        localStorage.setItem('sidebar-collapsed', 'false');
+      } else {
+        sidebar.classList.remove('lg:w-64');
+        sidebar.classList.add('lg:w-20');
+        localStorage.setItem('sidebar-collapsed', 'true');
+      }
+
+      // Update navigation items visibility
+      document.querySelectorAll('.nav-label-container').forEach(el => {
+        if (isCollapsed) {
+          el.classList.remove('lg:grid-cols-[0fr]', 'lg:opacity-0', 'lg:ml-0');
+          el.classList.add('lg:grid-cols-[1fr]', 'lg:opacity-100', 'lg:ml-4');
+        } else {
+          el.classList.remove('lg:grid-cols-[1fr]', 'lg:opacity-100', 'lg:ml-4');
+          el.classList.add('lg:grid-cols-[0fr]', 'lg:opacity-0', 'lg:ml-0');
+        }
+      });
+    }
+
+    // Initialize sidebar state on load
+    document.addEventListener('DOMContentLoaded', () => {
+      const isCollapsed = localStorage.getItem('sidebar-collapsed') === 'true';
+      if (isCollapsed && window.innerWidth >= 1024) {
+        const sidebar = document.getElementById('mobile-menu');
+        sidebar.classList.remove('lg:w-64');
+        sidebar.classList.add('lg:w-20');
+        document.querySelectorAll('.nav-label-container').forEach(el => {
+          el.classList.remove('lg:grid-cols-[1fr]', 'lg:opacity-100', 'lg:ml-4');
+          el.classList.add('lg:grid-cols-[0fr]', 'lg:opacity-0', 'lg:ml-0');
+        });
+      }
+    });
+
     function toggleMobileMenu() {
       const menu = document.getElementById('mobile-menu');
       if (menu.classList.contains('-translate-x-full')) {
@@ -117,7 +157,7 @@
         <!-- Sidebar -->
         <div id="mobile-menu" class="fixed inset-y-0 left-0 z-50 shrink-0 overflow-hidden transform transition-all duration-300 lg:sticky lg:top-16 lg:z-auto lg:h-[calc(100vh-4rem)] -translate-x-full lg:shadow-none lg:w-64 lg:translate-x-0 w-64 shadow-2xl">
           {{block "sidebar" .}}
-            {{template "navigation" dict "CurrentPath" .CurrentPath "IsCollapsed" false}}
+            {{template "navigation" dict "CurrentPath" .CurrentPath}}
           {{end}}
         </div>
   
