@@ -68,3 +68,13 @@ func (h *Handler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
+
+func (h *Handler) HandleLogout(w http.ResponseWriter, r *http.Request) {
+	cookie, err := r.Cookie("session_id")
+	if err == nil {
+		_ = h.authService.Logout(r.Context(), cookie.Value)
+	}
+
+	ClearSessionCookie(w)
+	http.Redirect(w, r, "/", http.StatusSeeOther)
+}
