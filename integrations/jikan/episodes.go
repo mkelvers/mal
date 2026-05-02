@@ -159,6 +159,62 @@ func (c *Client) GetAllEpisodes(ctx context.Context, animeID int) ([]Episode, er
 
 	totalEpisodes := anime.Episodes
 	if totalEpisodes <= 0 {
+		resp, err := c.GetEpisodes(ctx, animeID, 1)
+		if err != nil {
+			return nil, err
+		}
+		return resp.Data, nil
+	}
+
+	// Jikan /episodes/video (which has thumbnails) returns ~39-40 per page.
+	// Jikan /episodes (standard) returns 100 per page.
+	// Since the user wants to prioritize the metadata-rich video clips if possible,
+	// we will calculate based on the 100-per-page standard endpoint for the full list,
+	// but the background logic remains the same: last page to first.
+	pageSize := 100
+	lastPage := (totalEpisodes + (pageSize - 1)) / pageSize
+	var allEpisodes []Episode
+	
+	// Fetch last page first (to get most recent episodes immediately)
+	lastResp, err := c.GetEpisodes(ctx, animeID, lastPage)
+	if err == nil {
+		allEpisodes = append(allEpisodes, lastResp.Data...)
+	}
+
+	// For the rest, fetch them in reverse order in the background
+	if lastPage > 1 {
+		go func() {
+			bgCtx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
+			defer cancel()
+
+			// Start from lastPage - 1 and go down to 1
+			for p := lastPage - 1; p >= 1; p-- {
+				_, _ = c.GetEpisodes(bgCtx, animeID, p)
+				
+				// Also pre-fetch the video episodes metadata (39 per page)
+				// to warm the cache for thumbnails
+				videoPageSize := 39
+				vPageStart := ((p-1)*pageSize)/videoPageSize + 1
+				vPageEnd := (p*pageSize)/videoPageSize + 1
+				for v := vPageEnd; v >= vPageStart; v-- {
+					_, _ = c.GetVideoEpisodes(bgCtx, animeID, v)
+				}
+
+				select {
+				case <-bgCtx.Done():
+					return
+				case <-time.After(800 * time.Millisecond):
+				}
+			}
+		}()
+	}
+
+	return allEpisodes, nil
+}
+
+
+	totalEpisodes := anime.Episodes
+	if totalEpisodes <= 0 {
 		// Fallback to simple page 1 fetch if count is unknown
 		resp, err := c.GetEpisodes(ctx, animeID, 1)
 		if err != nil {
