@@ -4,13 +4,15 @@ import (
 	"context"
 	"fmt"
 	"net/url"
+	"strconv"
+	"strings"
 )
 
 func (c *Client) Search(ctx context.Context, query string, page int) (SearchResult, error) {
 	return c.search(ctx, query, page, 0)
 }
 
-func (c *Client) SearchAdvanced(ctx context.Context, query, animeType, status, orderBy, sort string, page, limit int) (SearchResult, error) {
+func (c *Client) SearchAdvanced(ctx context.Context, query, animeType, status, orderBy, sort string, genres []int, page, limit int) (SearchResult, error) {
 	if page < 1 {
 		page = 1
 	}
@@ -18,7 +20,16 @@ func (c *Client) SearchAdvanced(ctx context.Context, query, animeType, status, o
 		limit = 0
 	}
 
-	cacheKey := fmt.Sprintf("search:%s:%s:%s:%s:%s:%d:%d", query, animeType, status, orderBy, sort, page, limit)
+	genresParam := ""
+	if len(genres) > 0 {
+		ids := make([]string, len(genres))
+		for i, g := range genres {
+			ids[i] = strconv.Itoa(g)
+		}
+		genresParam = strings.Join(ids, ",")
+	}
+
+	cacheKey := fmt.Sprintf("search:%s:%s:%s:%s:%s:%s:%d:%d", query, animeType, status, orderBy, sort, genresParam, page, limit)
 
 	var result SearchResponse
 	reqURL := fmt.Sprintf("%s/anime?page=%d", c.baseURL, page)
@@ -36,6 +47,9 @@ func (c *Client) SearchAdvanced(ctx context.Context, query, animeType, status, o
 	}
 	if sort != "" {
 		reqURL += "&sort=" + url.QueryEscape(sort)
+	}
+	if genresParam != "" {
+		reqURL += "&genres=" + genresParam
 	}
 	if limit > 0 {
 		reqURL += fmt.Sprintf("&limit=%d", limit)
@@ -126,4 +140,17 @@ func (c *Client) GetTopAnime(ctx context.Context, page int) (TopAnimeResult, err
 		Animes:      result.Data,
 		HasNextPage: result.Pagination.HasNextPage,
 	}, nil
+}
+
+func (c *Client) GetAnimeGenres(ctx context.Context) ([]Genre, error) {
+	const cacheKey = "anime_genres"
+
+	var result GenresResponse
+	reqURL := fmt.Sprintf("%s/genres/anime", c.baseURL)
+
+	if err := c.getWithCache(ctx, cacheKey, longCacheTTL, reqURL, &result); err != nil {
+		return nil, err
+	}
+
+	return result.Data, nil
 }

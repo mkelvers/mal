@@ -143,6 +143,15 @@ type AnimeResponse struct {
 	Data Anime `json:"data"`
 }
 
+type Genre struct {
+	MalID int    `json:"mal_id"`
+	Name  string `json:"name"`
+}
+
+type GenresResponse struct {
+	Data []Genre `json:"data"`
+}
+
 type SearchResponse struct {
 	Data       []Anime    `json:"data"`
 	Pagination Pagination `json:"pagination"`
