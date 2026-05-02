@@ -59,6 +59,12 @@ func GetRenderer() *Renderer {
 				}
 				return false
 			},
+			"add": func(a, b int) int {
+				return a + b
+			},
+			"sub": func(a, b int) int {
+				return a - b
+			},
 		}
 
 		pages, err := filepath.Glob(filepath.Join(".", "templates", "*.gohtml"))

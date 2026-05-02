@@ -127,9 +127,43 @@ func (h *Handler) HandleBrowse(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	res, err := h.jikanClient.SearchAdvanced(r.Context(), q, animeType, status, orderBy, sort, genres, 1, 24)
+	pageStr := r.URL.Query().Get("page")
+	page, _ := strconv.Atoi(pageStr)
+	if page < 1 {
+		page = 1
+	}
+
+	res, err := h.jikanClient.SearchAdvanced(r.Context(), q, animeType, status, orderBy, sort, genres, page, 24)
 	if err != nil {
 		log.Printf("browse error: %v", err)
+	}
+
+	if r.Header.Get("HX-Request") == "true" {
+		watchlistMap := make(map[int]bool)
+		if user != nil {
+			watchlist, _ := h.db.GetUserWatchList(r.Context(), user.ID)
+			for _, entry := range watchlist {
+				watchlistMap[int(entry.AnimeID)] = true
+			}
+		}
+
+		w.Header().Set("Content-Type", "text/html")
+		err := templates.GetRenderer().ExecuteFragment(w, "browse.gohtml", "anime_card_scroll", map[string]any{
+			"Animes":       res.Animes,
+			"NextPage":     page + 1,
+			"HasNextPage":  res.HasNextPage,
+			"Query":        q,
+			"Type":         animeType,
+			"Status":       status,
+			"OrderBy":      orderBy,
+			"Sort":         sort,
+			"Genres":       genres,
+			"WatchlistMap": watchlistMap,
+		})
+		if err != nil {
+			log.Printf("fragment render error: %v", err)
+		}
+		return
 	}
 
 	genresList, err := h.jikanClient.GetAnimeGenres(r.Context())
@@ -137,13 +171,13 @@ func (h *Handler) HandleBrowse(w http.ResponseWriter, r *http.Request) {
 		log.Printf("genres error: %v", err)
 	}
 
-	watchlistMap := make(map[int64]bool)
+	watchlistMap := make(map[int]bool)
 	var watchlistIDs []int64
 	if user != nil {
 		watchlist, _ := h.db.GetUserWatchList(r.Context(), user.ID)
 		watchlistIDs = make([]int64, len(watchlist))
 		for i, entry := range watchlist {
-			watchlistMap[entry.AnimeID] = true
+			watchlistMap[int(entry.AnimeID)] = true
 			watchlistIDs[i] = entry.AnimeID
 		}
 	}
@@ -159,6 +193,8 @@ func (h *Handler) HandleBrowse(w http.ResponseWriter, r *http.Request) {
 		"Genres":       genres,
 		"GenresList":   genresList,
 		"Animes":       res.Animes,
+		"HasNextPage":  res.HasNextPage,
+		"NextPage":     page + 1,
 		"WatchlistMap": watchlistMap,
 		"WatchlistIDs": watchlistIDs,
 	}); err != nil {
