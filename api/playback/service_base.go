@@ -59,10 +59,11 @@ type playbackDataCacheItem struct {
 }
 
 type playbackBaseData struct {
-	Title          string
-	AvailableModes []string
-	ModeSources    map[string]ModeSource
-	Segments       []SkipSegment
+	Title            string
+	AvailableModes   []string
+	ModeSources      map[string]ModeSource
+	Segments         []SkipSegment
+	FallbackEpisodes map[string]int
 }
 
 type modeSourceResult struct {
@@ -140,6 +141,13 @@ func (s *Service) BuildWatchPageData(ctx context.Context, malID int, titleCandid
 			return WatchPageData{}, errors.New("no direct playable sources available")
 		}
 
+		fallbackEpisodes := make(map[string]int)
+		if counts, err := s.allAnimeClient.GetAvailableEpisodes(ctx, showID); err == nil {
+			fallbackEpisodes["sub"] = counts.Sub
+			fallbackEpisodes["dub"] = counts.Dub
+			fallbackEpisodes["raw"] = counts.Raw
+		}
+
 		watchTitle := strings.TrimSpace(resolvedTitle)
 		if watchTitle == "" {
 			watchTitle = firstNonEmptyTitle(titleCandidates)
@@ -149,10 +157,11 @@ func (s *Service) BuildWatchPageData(ctx context.Context, malID int, titleCandid
 		}
 
 		baseData = playbackBaseData{
-			Title:          watchTitle,
-			AvailableModes: availableModes(modeSources),
-			ModeSources:    modeSources,
-			Segments:       segments,
+			Title:            watchTitle,
+			AvailableModes:   availableModes(modeSources),
+			ModeSources:      modeSources,
+			Segments:         segments,
+			FallbackEpisodes: fallbackEpisodes,
 		}
 
 		s.setPlaybackBaseDataCache(cacheKey, baseData)
@@ -189,6 +198,7 @@ func (s *Service) BuildWatchPageData(ctx context.Context, malID int, titleCandid
 		AvailableModes:   cloneSlice(baseData.AvailableModes),
 		ModeSources:      clientModeSources,
 		Segments:         cloneSlice(segments),
+		FallbackEpisodes: baseData.FallbackEpisodes,
 	}, nil
 }
 
@@ -342,10 +352,11 @@ func (s *Service) fetchPlaybackSourcesAndSegments(ctx context.Context, showID st
 
 func clonePlaybackBaseData(data playbackBaseData) playbackBaseData {
 	return playbackBaseData{
-		Title:          data.Title,
-		AvailableModes: cloneSlice(data.AvailableModes),
-		ModeSources:    cloneModeSources(data.ModeSources),
-		Segments:       cloneSlice(data.Segments),
+		Title:            data.Title,
+		AvailableModes:   cloneSlice(data.AvailableModes),
+		ModeSources:      cloneModeSources(data.ModeSources),
+		Segments:         cloneSlice(data.Segments),
+		FallbackEpisodes: data.FallbackEpisodes,
 	}
 }
 

@@ -35,13 +35,14 @@ type SkipSegment struct {
 }
 
 type WatchPageData struct {
-	MalID            int
-	Title            string
-	CurrentEpisode   string
-	StartTimeSeconds float64
-	CurrentStatus    string
-	InitialMode      string
-	AvailableModes   []string
-	ModeSources      map[string]ModeSource
-	Segments         []SkipSegment
+	MalID             int
+	Title             string
+	CurrentEpisode    string
+	StartTimeSeconds  float64
+	CurrentStatus     string
+	InitialMode       string
+	AvailableModes    []string
+	ModeSources       map[string]ModeSource
+	Segments          []SkipSegment
+	FallbackEpisodes  map[string]int
 }
