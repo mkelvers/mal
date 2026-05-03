@@ -847,10 +847,72 @@ const initPlayer = (): void => {
     const nextEpisode = currentEpNum + 1
     markEpisodeTransition(nextEpisode)
 
-    sessionStorage.setItem('mal:autoplay-next', 'true')
-    const newUrl = new URL(window.location.href)
-    newUrl.searchParams.set('ep', String(nextEpisode))
-    window.location.href = newUrl.toString()
+    try {
+      const response = await fetch(`/api/watch/episode/${malID}/${nextEpisode}`)
+      if (!response.ok) {
+        sessionStorage.setItem('mal:autoplay-next', 'true')
+        const newUrl = new URL(window.location.href)
+        newUrl.searchParams.set('ep', String(nextEpisode))
+        window.location.href = newUrl.toString()
+        return
+      }
+
+      const data = await response.json()
+
+      modeSources = data.mode_sources || {}
+      availableModes = data.available_modes || []
+
+      if (availableModes.includes(currentMode) && modeSources[currentMode]?.token) {
+      } else {
+        const fallbackMode = availableModes.find(m => modeSources[m]?.token)
+        if (fallbackMode) {
+          currentMode = fallbackMode
+        } else {
+          sessionStorage.setItem('mal:autoplay-next', 'true')
+          const newUrl = new URL(window.location.href)
+          newUrl.searchParams.set('ep', String(nextEpisode))
+          window.location.href = newUrl.toString()
+          return
+        }
+      }
+
+      const streamUrl = streamUrlForMode(currentMode)
+      const wasPlaying = !video.paused
+      video.src = streamUrl
+      video.load()
+      if (wasPlaying) video.play().catch(() => {})
+
+      currentEpisode = String(nextEpisode)
+      pendingSeekTime = null
+      completionSent = false
+      completionAttempts = 0
+      activeSubtitles = []
+      hideSubtitleText()
+
+      updateSubtitleOptions()
+      updateModeButtons(currentMode)
+      updateVideoOverlay(currentEpisode, data.episode_title || '')
+
+      const episodeList = document.querySelector('[data-episode-list]')
+      if (episodeList) {
+        episodeList.querySelectorAll('[data-episode-id]').forEach((el) => {
+          el.classList.remove('bg-accent/20')
+        })
+        const newEpEl = episodeList.querySelector(`[data-episode-id="${nextEpisode}"]`)
+        if (newEpEl) {
+          newEpEl.classList.add('bg-accent/20')
+        }
+      }
+
+      const newUrl = new URL(window.location.href)
+      newUrl.searchParams.set('ep', String(nextEpisode))
+      history.pushState(null, '', newUrl.toString())
+    } catch {
+      sessionStorage.setItem('mal:autoplay-next', 'true')
+      const newUrl = new URL(window.location.href)
+      newUrl.searchParams.set('ep', String(nextEpisode))
+      window.location.href = newUrl.toString()
+    }
   }
 
   
