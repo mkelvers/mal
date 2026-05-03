@@ -74,6 +74,19 @@ func (h *Handler) HandleWatchPage(w http.ResponseWriter, r *http.Request) {
 
 	user := middleware.GetUser(r.Context())
 
+	var watchlistIDs []int64
+	var watchlistStatus string
+	if user != nil {
+		watchlist, _ := h.svc.db.GetUserWatchList(r.Context(), user.ID)
+		watchlistIDs = make([]int64, len(watchlist))
+		for i, entry := range watchlist {
+			watchlistIDs[i] = entry.AnimeID
+			if entry.AnimeID == int64(id) {
+				watchlistStatus = entry.Status
+			}
+		}
+	}
+
 	currentEpID := r.URL.Query().Get("ep")
 	if currentEpID == "" {
 		if user != nil {
@@ -146,12 +159,14 @@ func (h *Handler) HandleWatchPage(w http.ResponseWriter, r *http.Request) {
 	})
 
 	if err := templates.GetRenderer().ExecuteTemplate(r.Context(), w, "watch.gohtml", map[string]any{
-		"Anime":       anime,
-		"Episodes":    allEpisodes,
-		"WatchData":   watchData,
-		"User":        user,
-		"CurrentPath": r.URL.Path,
-		"CurrentEpID": currentEpID,
+		"Anime":           anime,
+		"Episodes":        allEpisodes,
+		"WatchData":       watchData,
+		"User":            user,
+		"CurrentPath":     r.URL.Path,
+		"CurrentEpID":     currentEpID,
+		"WatchlistIDs":    watchlistIDs,
+		"WatchlistStatus": watchlistStatus,
 	}); err != nil {
 		log.Printf("render error: %v", err)
 	}

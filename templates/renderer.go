@@ -9,6 +9,7 @@ import (
 	"log"
 	"path/filepath"
 	"slices"
+	"strconv"
 	"strings"
 	"sync"
 )
@@ -91,12 +92,27 @@ func GetRenderer() *Renderer {
 				}
 				return res
 			},
-			"min": func(a, b int) int {
-				if a < b {
-					return a
-				}
-				return b
-			},
+"min": func(a, b int) int {
+			if a < b {
+				return a
+			}
+			return b
+		},
+		"int": func(v any) int {
+			switch n := v.(type) {
+			case int:
+				return n
+			case int64:
+				return int(n)
+			case float64:
+				return int(n)
+			case string:
+				i, _ := strconv.Atoi(n)
+				return i
+			default:
+				return 0
+			}
+		},
 			"percent": func(current, total float64) float64 {
 				if total == 0 {
 					return 0

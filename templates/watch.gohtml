@@ -1,14 +1,61 @@
 {{define "title"}}Watch {{.Anime.Title}} - MyAnimeList{{end}}
 {{define "content"}}
+{{if .WatchlistIDs}}<script>initWatchlist({{.WatchlistIDs}})</script>{{end}}
 {{$anime := .Anime}}
 {{$episodes := .Episodes}}
 {{$currentEpID := .CurrentEpID}}
 {{$totalEpisodes := len $episodes}}
 
-<div class="flex flex-col gap-8 pb-12 lg:flex-row lg:gap-6">
+<div class="flex flex-col gap-6 pb-12 lg:flex-row lg:gap-6">
   <div class="flex-1 min-w-0">
     <div id="video-player-container">
       {{template "video_player" dict "WatchData" .WatchData "TotalEpisodes" $anime.Episodes}}
+    </div>
+
+    <div class="flex items-center justify-between mt-4">
+      <div class="flex gap-2">
+        {{$prevEp := sub (int $currentEpID) 1}}
+        {{if ge $prevEp 1}}
+          <a href="/anime/{{$anime.MalID}}/watch?ep={{$prevEp}}" class="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 text-sm text-neutral-300 transition-colors">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
+            Prev
+          </a>
+        {{end}}
+        {{$nextEp := add (int $currentEpID) 1}}
+        {{if le $nextEp $anime.Episodes}}
+          <a href="/anime/{{$anime.MalID}}/watch?ep={{$nextEp}}" class="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 text-sm text-neutral-300 transition-colors">
+            Next
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+          </a>
+        {{end}}
+      </div>
+
+      <ui-dropdown class="relative block" data-align="right" data-width="min-w-[160px]">
+        <div data-trigger class="cursor-pointer">
+          <button type="button" class="bg-white/5 hover:bg-white/10 flex items-center justify-between gap-2 px-4 py-2 text-sm text-neutral-300 transition-colors">
+            <span id="watchlist-status-display-{{$anime.MalID}}">
+              {{if .WatchlistStatus}}{{if eq .WatchlistStatus "watching"}}Watching{{else if eq .WatchlistStatus "completed"}}Completed{{else if eq .WatchlistStatus "plan_to_watch"}}Plan to Watch{{else if eq .WatchlistStatus "dropped"}}Dropped{{end}}{{else}}Add to Watchlist{{end}}
+            </span>
+            <svg class="w-4 h-4 text-neutral-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m6 9 6 6 6-6" /></svg>
+          </button>
+        </div>
+        <div data-content class="hidden absolute z-50 min-w-[160px] bg-background-button shadow-2xl right-0 top-full mt-2">
+          <div class="flex flex-col py-1">
+            <button class="flex w-full items-center px-5 py-2.5 transition-colors focus:outline-none hover:bg-white/10" onclick="updateWatchlist({{$anime.MalID}}, 'watching', 'Watching', this)">
+              <span class="text-sm text-white">Watching</span>
+            </button>
+            <button class="flex w-full items-center px-5 py-2.5 transition-colors focus:outline-none hover:bg-white/10" onclick="updateWatchlist({{$anime.MalID}}, 'completed', 'Completed', this)">
+              <span class="text-sm text-white">Completed</span>
+            </button>
+            <button class="flex w-full items-center px-5 py-2.5 transition-colors focus:outline-none hover:bg-white/10" onclick="updateWatchlist({{$anime.MalID}}, 'plan_to_watch', 'Plan to Watch', this)">
+              <span class="text-sm text-white">Plan to Watch</span>
+            </button>
+            <button class="flex w-full items-center px-5 py-2.5 transition-colors focus:outline-none hover:bg-white/10" onclick="updateWatchlist({{$anime.MalID}}, 'dropped', 'Dropped', this)">
+              <span class="text-sm text-white">Dropped</span>
+            </button>
+          </div>
+        </div>
+      </ui-dropdown>
     </div>
   </div>
 
@@ -74,8 +121,67 @@
             </a>
           {{end}}
         </div>
-      {{end}}
-    {{end}}
+{{end}}
+{{end}}
+
+<script>
+  function updateWatchlist(id, status, display, btn) {
+    fetch('/api/watchlist', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ animeId: id, status: status })
+    }).then(res => {
+      if (res.ok) {
+        watchlistIds.add(id);
+        document.getElementById('watchlist-status-display-' + id).textContent = display;
+        
+        // Update all watchlist icons on the page
+        document.querySelectorAll('.watchlist-icon').forEach(function(icon) {
+          const button = icon.closest('button')
+          if (button) {
+            const malId = button.dataset.malId
+            if (malId && parseInt(malId) === id) {
+              button.classList.add('in-watchlist')
+            }
+          }
+        });
+        
+        // Close dropdown after a small delay to let click event finish
+        requestAnimationFrame(() => {
+          const dropdown = btn.closest('ui-dropdown');
+          if (dropdown) dropdown.close();
+        });
+      }
+    });
+  }
+
+  function removeWatchlist(id) {
+    fetch('/api/watchlist/' + id, { method: 'DELETE' }).then(res => {
+      if (res.ok) {
+        watchlistIds.delete(id);
+        document.getElementById('watchlist-status-display-' + id).textContent = 'Add to Watchlist';
+        
+        // Update all watchlist icons on the page
+        document.querySelectorAll('.watchlist-icon').forEach(function(icon) {
+          const button = icon.closest('button')
+          if (button) {
+            const malId = button.dataset.malId
+            if (malId && parseInt(malId) === id) {
+              button.classList.remove('in-watchlist')
+            }
+          }
+        });
+        
+        // Close dropdown
+        const btn = document.getElementById('watchlist-status-display-' + id);
+        if (btn) {
+          const dropdown = btn.closest('ui-dropdown');
+          if (dropdown) dropdown.close();
+        }
+      }
+    });
+  }
+</script>
   </div>
 </div>
 {{end}}
