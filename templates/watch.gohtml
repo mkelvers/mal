@@ -3,6 +3,7 @@
 {{$anime := .Anime}}
 {{$episodes := .Episodes}}
 {{$currentEpID := .CurrentEpID}}
+{{$totalEpisodes := len $episodes}}
 
 <div class="flex flex-col gap-8 pb-12 lg:flex-row lg:gap-6">
   <div class="flex-1 min-w-0">
@@ -12,21 +13,68 @@
   </div>
 
   <div class="w-full lg:w-80 xl:w-96 flex-shrink-0">
-    {{if eq (len $episodes) 0}}
+    {{if eq $totalEpisodes 0}}
       <div class="flex flex-col items-center justify-center gap-2 py-12 text-neutral-400">
         <svg class="h-10 w-10 opacity-30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
         <p class="text-sm">No episodes found</p>
       </div>
     {{else}}
-      <div class="flex flex-col gap-1 overflow-y-auto max-h-[70vh] lg:max-h-[calc(100vh-8rem)] pr-2 scrollbar-hide" data-episode-list>
-        {{range $episodes}}
-          {{$isCurrent := eq (printf "%v" .MalID) $currentEpID}}
-          <a href="/anime/{{$anime.MalID}}/watch?ep={{.MalID}}" class="flex items-center gap-3 px-3 py-2 transition-colors hover:bg-white/5 text-left {{if $isCurrent}}bg-accent/20{{end}}" data-episode-id="{{.MalID}}">
-            <span class="w-10 flex-shrink-0 text-xs font-medium text-neutral-500 tabular-nums">EP{{.MalID}}</span>
-            <span class="truncate text-sm text-neutral-300" data-episode-title>{{.Title}}</span>
-          </a>
+      <div class="flex flex-col gap-2">
+        <div class="flex items-center justify-between">
+          <span class="text-sm font-medium text-neutral-400">Episodes</span>
+          {{if gt $totalEpisodes 100}}
+            <input type="text" placeholder="Find" data-episode-search class="w-24 bg-white/5 text-sm px-3 py-1.5 rounded border border-white/10 text-neutral-200 placeholder-neutral-500 focus:outline-none focus:border-accent" />
+          {{end}}
+        </div>
+
+        {{if gt $totalEpisodes 100}}
+          <ui-dropdown class="relative block" data-align="left" data-width="min-w-[200px]" data-episode-dropdown>
+            <div data-trigger>
+              <button class="w-full flex items-center justify-between px-3 py-2 bg-white/5 border border-white/10 rounded text-sm text-neutral-300 hover:bg-white/10">
+                <span data-dropdown-label>01-100</span>
+                <svg class="w-4 h-4 text-neutral-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+              </button>
+            </div>
+            <div data-content class="hidden absolute z-50 top-full mt-1 left-0 min-w-[200px] bg-background-button rounded shadow-2xl">
+              <div class="flex flex-col py-1">
+                {{$ranges := ceilDiv $totalEpisodes 100}}
+                {{range $i := seq 0 $ranges}}
+                  {{$start := imul $i 100}}
+                  {{$end := min (add $start 100) $totalEpisodes}}
+                  <button class="episode-range-btn px-4 py-2 text-left text-sm text-neutral-300 hover:bg-white/10" data-range-index="{{$i}}" data-range-start="{{add $start 1}}" data-range-end="{{$end}}">
+                    {{printf "%02d" (add $start 1)}}-{{printf "%02d" $end}}
+                  </button>
+                {{end}}
+              </div>
+            </div>
+          </ui-dropdown>
         {{end}}
       </div>
+
+      {{if gt $totalEpisodes 100}}
+        <div class="grid grid-cols-5 gap-1 mt-2" data-episode-grid>
+          {{range $episodes}}
+            {{$isCurrent := eq (printf "%v" .MalID) $currentEpID}}
+            {{$isFiller := .Filler}}
+            {{$isRecap := .Recap}}
+            <a href="/anime/{{$anime.MalID}}/watch?ep={{.MalID}}" class="flex items-center justify-center py-2 text-xs transition-colors {{if $isFiller}}bg-yellow-500/20 text-yellow-400{{else if $isRecap}}bg-blue-500/20 text-blue-400{{else}}text-neutral-400 hover:bg-white/5{{end}} {{if $isCurrent}}bg-accent/20 text-accent ring-1 ring-accent{{end}}" data-episode-id="{{.MalID}}" data-episode-index="{{.MalID}}" data-episode-title="{{.Title}}">
+              {{.MalID}}
+            </a>
+          {{end}}
+        </div>
+      {{else}}
+        <div class="flex flex-col gap-1 overflow-y-auto max-h-[70vh] lg:max-h-[calc(100vh-8rem)] pr-2 scrollbar-hide mt-2" data-episode-list>
+          {{range $episodes}}
+            {{$isCurrent := eq (printf "%v" .MalID) $currentEpID}}
+            {{$isFiller := .Filler}}
+            {{$isRecap := .Recap}}
+            <a href="/anime/{{$anime.MalID}}/watch?ep={{.MalID}}" class="flex items-center gap-3 px-3 py-2 transition-colors hover:bg-white/5 text-left {{if $isFiller}}border-l-2 border-l-yellow-500{{else if $isRecap}}border-l-2 border-l-blue-500{{end}} {{if $isCurrent}}bg-accent/20{{end}}" data-episode-id="{{.MalID}}" data-episode-title="{{.Title}}">
+              <span class="w-10 flex-shrink-0 text-xs font-medium text-neutral-500 tabular-nums">EP{{.MalID}}</span>
+              <span class="truncate text-sm {{if $isFiller}}text-yellow-400{{else if $isRecap}}text-blue-400{{else}}text-neutral-300{{end}}" data-episode-title>{{.Title}}</span>
+            </a>
+          {{end}}
+        </div>
+      {{end}}
     {{end}}
   </div>
 </div>

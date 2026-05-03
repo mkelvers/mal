@@ -1174,6 +1174,117 @@ const initPlayer = (): void => {
   updateAutoplayButton()
   showControls()
 
+  // Episode search and range dropdown logic
+  const episodeSearchInput = document.querySelector('[data-episode-search]') as HTMLInputElement | null
+  const episodeDropdown = document.querySelector('[data-episode-dropdown]') as HTMLElement | null
+  const episodeGrid = document.querySelector('[data-episode-grid]') as HTMLElement | null
+  const episodeList = document.querySelector('[data-episode-list]') as HTMLElement | null
+  let searchDebounceTimer: number | undefined
+
+  const updateEpisodeHighlight = (episodeNum: number): void => {
+    if (episodeGrid) {
+      episodeGrid.querySelectorAll('[data-episode-id]').forEach((el) => {
+        el.classList.remove('ring-2', 'ring-accent', 'text-accent')
+        const epNum = parseInt(el.getAttribute('data-episode-id') || '0', 10)
+        const isCurrent = el.classList.contains('bg-accent/20')
+        if (!isCurrent) {
+          el.classList.remove('bg-accent/20')
+        }
+      })
+      const targetEp = episodeGrid.querySelector(`[data-episode-id="${episodeNum}"]`) as HTMLElement | null
+      if (targetEp) {
+        targetEp.classList.add('ring-2', 'ring-accent')
+        targetEp.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      }
+    }
+    if (episodeList) {
+      episodeList.querySelectorAll('[data-episode-id]').forEach((el) => {
+        el.classList.remove('ring-2', 'ring-accent')
+      })
+      const targetEp = episodeList.querySelector(`[data-episode-id="${episodeNum}"]`) as HTMLElement | null
+      if (targetEp) {
+        targetEp.classList.add('ring-2', 'ring-accent')
+        targetEp.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      }
+    }
+  }
+
+  const switchEpisodeRange = (rangeIndex: number): void => {
+    if (!episodeGrid || !episodeDropdown) return
+    const rangeBtns = episodeDropdown.querySelectorAll('.episode-range-btn') as NodeListOf<HTMLButtonElement>
+    const allRanges = Array.from(rangeBtns)
+    const targetRange = allRanges[rangeIndex]
+    if (!targetRange) return
+    const rangeStart = parseInt(targetRange.getAttribute('data-range-start') || '1', 10)
+    const rangeEnd = parseInt(targetRange.getAttribute('data-range-end') || '100', 10)
+    const dropdownLabel = episodeDropdown.querySelector('[data-dropdown-label]') as HTMLElement | null
+    if (dropdownLabel) {
+      const startStr = rangeStart.toString().padStart(2, '0')
+      const endStr = rangeEnd.toString().padStart(2, '0')
+      dropdownLabel.textContent = `${startStr}-${endStr}`
+    }
+    episodeGrid.querySelectorAll('[data-episode-id]').forEach((el) => {
+      const epNum = parseInt(el.getAttribute('data-episode-id') || '0', 10)
+      if (epNum >= rangeStart && epNum <= rangeEnd) {
+        el.classList.remove('hidden')
+      } else {
+        el.classList.add('hidden')
+      }
+    })
+    const dropdown = episodeDropdown as unknown as { close: () => void }
+    if (dropdown.close) dropdown.close()
+  }
+
+  if (episodeSearchInput) {
+    episodeSearchInput.addEventListener('input', () => {
+      clearTimeout(searchDebounceTimer)
+      searchDebounceTimer = window.setTimeout(() => {
+        const inputVal = episodeSearchInput.value.replace(/\D/g, '')
+        if (inputVal === '') {
+          const currentEpNum = parseInt(currentEpisode, 10)
+          if (episodeGrid) {
+            switchEpisodeRange(Math.floor((currentEpNum - 1) / 100))
+            episodeGrid.querySelectorAll('[data-episode-id]').forEach((el) => {
+              el.classList.remove('ring-2', 'ring-accent')
+            })
+          }
+          if (episodeList) {
+            episodeList.querySelectorAll('[data-episode-id]').forEach((el) => {
+              el.classList.remove('ring-2', 'ring-accent')
+            })
+          }
+          updateEpisodeHighlight(currentEpNum)
+          return
+        }
+        const episodeNum = parseInt(inputVal, 10)
+        if (Number.isNaN(episodeNum) || episodeNum <= 0) return
+        const maxEp = totalEpisodes > 0 ? totalEpisodes : 500
+        const clampedEp = Math.min(episodeNum, maxEp)
+        if (episodeGrid) {
+          const rangeIndex = Math.floor((clampedEp - 1) / 100)
+          switchEpisodeRange(rangeIndex)
+          episodeSearchInput.value = clampedEp.toString()
+        }
+        updateEpisodeHighlight(clampedEp)
+      }, 300)
+    })
+  }
+
+  if (episodeDropdown) {
+    const rangeBtns = episodeDropdown.querySelectorAll('.episode-range-btn')
+    rangeBtns.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const rangeIndex = parseInt(btn.getAttribute('data-range-index') || '0', 10)
+        switchEpisodeRange(rangeIndex)
+      })
+    })
+  }
+
+  // Initialize grid to show first range
+  if (episodeGrid && totalEpisodes > 100) {
+    switchEpisodeRange(0)
+  }
+
   playerInitialized = true
 
   // Fetch thumbnails and metadata in the background
