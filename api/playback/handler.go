@@ -11,8 +11,6 @@ import (
 	"sort"
 	"strconv"
 	"strings"
-	"sync"
-	"time"
 
 	"mal/integrations/jikan"
 	database "mal/internal/db"
@@ -58,34 +56,19 @@ func (h *Handler) HandleWatchPage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Get essential episodes (first and last pages)
-	allEpisodes, err := h.jikanClient.GetAllEpisodes(r.Context(), id)
-	if err != nil {
-		log.Printf("watch error fetching episodes: %v", err)
-	}
-
-	// Fetch any metadata overlays (thumbnails)
-	videoEpisodes, _ := h.jikanClient.GetVideoEpisodes(r.Context(), id, 1)
-	videoMeta := make(map[int]jikan.Episode)
-	for _, ve := range videoEpisodes.Data {
-		videoMeta[ve.MalID] = ve
-	}
-
-	for i, ep := range allEpisodes {
-		if ve, ok := videoMeta[ep.MalID]; ok {
-			if ve.Images != nil && ve.Images.Jpg.ImageURL != "" {
-				allEpisodes[i].Images = ve.Images
-			}
+	// Fetch episodes sequentially (pages are in correct order: 1-100, 101-200, etc.)
+	pageSize := 100
+	var allEpisodes []jikan.Episode
+	for page := 1; ; page++ {
+		resp, err := h.jikanClient.GetEpisodes(r.Context(), id, page)
+		if err != nil || len(resp.Data) == 0 {
+			break
 		}
-	}
+		allEpisodes = append(allEpisodes, resp.Data...)
 
-	// Deduplicate and prep the list
-	seen := make(map[int]bool)
-	unique := make([]jikan.Episode, 0)
-	for _, ep := range allEpisodes {
-		if !seen[ep.MalID] {
-			seen[ep.MalID] = true
-			unique = append(unique, ep)
+		// If we got fewer than pageSize, we've reached the end
+		if len(resp.Data) < pageSize {
+			break
 		}
 	}
 
@@ -127,7 +110,7 @@ func (h *Handler) HandleWatchPage(w http.ResponseWriter, r *http.Request) {
 		log.Printf("watch data error: %v", err)
 	}
 
-	// Update episodes list if fallback has more
+	// Fill gaps with placeholder episodes if fallback has more
 	if watchData.FallbackEpisodes != nil {
 		maxCount := 0
 		for _, count := range watchData.FallbackEpisodes {
@@ -137,74 +120,34 @@ func (h *Handler) HandleWatchPage(w http.ResponseWriter, r *http.Request) {
 		}
 
 		epMap := make(map[int]jikan.Episode)
-		for _, ep := range unique {
+		for _, ep := range allEpisodes {
 			epMap[ep.MalID] = ep
 		}
 
 		if maxCount > 0 {
-			var fullList []jikan.Episode
+			var filled []jikan.Episode
 			for i := 1; i <= maxCount; i++ {
 				if ep, ok := epMap[i]; ok {
-					fullList = append(fullList, ep)
+					filled = append(filled, ep)
 				} else {
-					fullList = append(fullList, jikan.Episode{
+					filled = append(filled, jikan.Episode{
 						MalID:   i,
 						Episode: fmt.Sprintf("Episode %d", i),
 						Title:   fmt.Sprintf("Episode %d", i),
 					})
 				}
 			}
-			unique = fullList
+			allEpisodes = filled
 		}
 	}
 
-	// Update episodes list if fallback has more
-	if watchData.FallbackEpisodes != nil {
-		maxCount := 0
-		for _, count := range watchData.FallbackEpisodes {
-			if count > maxCount {
-				maxCount = count
-			}
-		}
-
-		// Ensure we don't have duplicates or missing episodes in the sequence
-		epMap := make(map[int]jikan.Episode)
-		for _, ep := range unique {
-			epMap[ep.MalID] = ep
-		}
-
-		if maxCount > 0 {
-			var newEpisodes []jikan.Episode
-			// We build the list from 1 to maxCount to ensure order and completeness
-			// If we have data from Jikan, we use it. Otherwise we generate a placeholder.
-			for i := 1; i <= maxCount; i++ {
-				if ep, ok := epMap[i]; ok {
-					newEpisodes = append(newEpisodes, ep)
-				} else {
-					title := fmt.Sprintf("Episode %d", i)
-					newEpisodes = append(newEpisodes, jikan.Episode{
-						MalID:   i,
-						Episode: fmt.Sprintf("Episode %d", i),
-						Title:   title,
-						Images: &jikan.EpisodeImages{
-							Jpg: struct {
-								ImageURL string `json:"image_url"`
-							}{ImageURL: ""},
-						},
-					})
-				}
-			}
-			unique = newEpisodes
-		}
-	}
-
-	sort.Slice(unique, func(i, j int) bool {
-		return unique[i].MalID < unique[j].MalID
+	sort.Slice(allEpisodes, func(i, j int) bool {
+		return allEpisodes[i].MalID < allEpisodes[j].MalID
 	})
 
 	if err := templates.GetRenderer().ExecuteTemplate(r.Context(), w, "watch.gohtml", map[string]any{
 		"Anime":       anime,
-		"Episodes":    unique,
+		"Episodes":    allEpisodes,
 		"WatchData":   watchData,
 		"User":        user,
 		"CurrentPath": r.URL.Path,
@@ -418,103 +361,54 @@ func (h *Handler) HandleEpisodeThumbnails(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	// Get essential episodes (first and last pages)
-	allEpisodes, err := h.jikanClient.GetAllEpisodes(r.Context(), id)
-	if err != nil {
-		http.Error(w, "failed to get episodes", http.StatusInternalServerError)
-		return
-	}
-
-	// Also get video episodes for richer metadata (thumbnails) on recent episodes
-	videoEpisodes, _ := h.jikanClient.GetVideoEpisodes(r.Context(), id, 1)
-
-	// Merge metadata
-	videoMeta := make(map[int]jikan.Episode)
-	for _, ve := range videoEpisodes.Data {
-		videoMeta[ve.MalID] = ve
-	}
-
-	for i, ep := range allEpisodes {
-		if ve, ok := videoMeta[ep.MalID]; ok {
-			if ve.Images != nil && ve.Images.Jpg.ImageURL != "" {
-				allEpisodes[i].Images = ve.Images
-			}
+	// Fetch episodes sequentially
+	pageSize := 100
+	var allEpisodes []jikan.Episode
+	for page := 1; ; page++ {
+		resp, err := h.jikanClient.GetEpisodes(r.Context(), id, page)
+		if err != nil || len(resp.Data) == 0 {
+			break
+		}
+		allEpisodes = append(allEpisodes, resp.Data...)
+		if len(resp.Data) < pageSize {
+			break
 		}
 	}
 
-	// Dedup and sort
-	seen := make(map[int]bool)
-	unique := make([]jikan.Episode, 0, len(allEpisodes))
-	for _, ep := range allEpisodes {
-		if !seen[ep.MalID] {
-			seen[ep.MalID] = true
-			unique = append(unique, ep)
-		}
-	}
-
-	// Calculate total count from anime info for complete list
+	// Fill gaps if anime has known total
 	anime, _ := h.jikanClient.GetAnimeByID(r.Context(), id)
-	maxCount := anime.Episodes
-
-	epMap := make(map[int]jikan.Episode)
-	for _, ep := range unique {
-		epMap[ep.MalID] = ep
-	}
-
-	if maxCount > 0 {
-		var fullList []jikan.Episode
-		for i := 1; i <= maxCount; i++ {
+	if anime.Episodes > 0 && anime.Episodes > len(allEpisodes) {
+		epMap := make(map[int]jikan.Episode)
+		for _, ep := range allEpisodes {
+			epMap[ep.MalID] = ep
+		}
+		var filled []jikan.Episode
+		for i := 1; i <= anime.Episodes; i++ {
 			if ep, ok := epMap[i]; ok {
-				fullList = append(fullList, ep)
+				filled = append(filled, ep)
 			} else {
-				fullList = append(fullList, jikan.Episode{
+				filled = append(filled, jikan.Episode{
 					MalID:   i,
 					Episode: fmt.Sprintf("Episode %d", i),
 					Title:   fmt.Sprintf("Episode %d", i),
 				})
 			}
 		}
-		unique = fullList
+		allEpisodes = filled
 	}
 
-	sort.Slice(unique, func(i, j int) bool {
-		return unique[i].MalID < unique[j].MalID
-	})
-
-	type ThumbResult struct {
+	type Result struct {
 		MalID int    `json:"mal_id"`
-		URL   string `json:"url"`
-		Title string `json:"title,omitempty"`
+		Title string `json:"title"`
 	}
 
-	results := make([]ThumbResult, len(unique))
-
-	// Use a semaphore to limit concurrent scraping requests to avoid MAL bans
-	sem := make(chan struct{}, 2)
-	var wg sync.WaitGroup
-
-	for i := range unique {
-		wg.Add(1)
-		go func(idx int) {
-			defer wg.Done()
-
-			sem <- struct{}{} // Acquire
-
-			// Add a small jittered delay between requests to avoid 405/429
-			time.Sleep(time.Duration(200+idx%300) * time.Millisecond)
-
-			defer func() { <-sem }() // Release
-
-			ep := unique[idx]
-			imgURL := ep.GetFallbackImage(id)
-			results[idx] = ThumbResult{
-				MalID: ep.MalID,
-				URL:   imgURL,
-				Title: ep.Title,
-			}
-		}(i)
+	results := make([]Result, len(allEpisodes))
+	for i, ep := range allEpisodes {
+		results[i] = Result{
+			MalID: ep.MalID,
+			Title: ep.Title,
+		}
 	}
-	wg.Wait()
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(results)
