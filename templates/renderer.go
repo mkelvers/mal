@@ -63,40 +63,40 @@ func GetRenderer() *Renderer {
 			"sub": func(a, b int) int {
 				return a - b
 			},
-"mul": func(a, b float64) float64 {
-			return a * b
-		},
-		"imul": func(a, b int) int {
-			return a * b
-		},
-"div": func(a, b float64) float64 {
-			if b == 0 {
-				return 0
-			}
-			return a / b
-		},
-		"ceilDiv": func(a, b int) int {
-			if b == 0 {
-				return 0
-			}
-			return (a + b - 1) / b
-		},
-		"toFloat": func(a int) float64 {
-			return float64(a)
-		},
-		"seq": func(start, end int) []int {
-			res := make([]int, 0, end-start)
-			for i := start; i < end; i++ {
-				res = append(res, i)
-			}
-			return res
-		},
-		"min": func(a, b int) int {
-			if a < b {
-				return a
-			}
-			return b
-		},
+			"mul": func(a, b float64) float64 {
+				return a * b
+			},
+			"imul": func(a, b int) int {
+				return a * b
+			},
+			"div": func(a, b float64) float64 {
+				if b == 0 {
+					return 0
+				}
+				return a / b
+			},
+			"ceilDiv": func(a, b int) int {
+				if b == 0 {
+					return 0
+				}
+				return (a + b - 1) / b
+			},
+			"toFloat": func(a int) float64 {
+				return float64(a)
+			},
+			"seq": func(start, end int) []int {
+				res := make([]int, 0, end-start)
+				for i := start; i < end; i++ {
+					res = append(res, i)
+				}
+				return res
+			},
+			"min": func(a, b int) int {
+				if a < b {
+					return a
+				}
+				return b
+			},
 			"percent": func(current, total float64) float64 {
 				if total == 0 {
 					return 0
