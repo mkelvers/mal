@@ -658,7 +658,7 @@ const initPlayer = (): void => {
     if (!availableModes.includes(mode) || mode === currentMode) return
     const nextURL = streamUrlForMode(mode)
     if (!nextURL) return
-    const wasPlaying = !video.paused
+    const wasPlaying = video.ended || !video.paused
     const previousTime = displayTimeFromAbsolute(video.currentTime)
     currentMode = mode
     hidePreviewPopover()
@@ -877,7 +877,7 @@ const initPlayer = (): void => {
       }
 
       const streamUrl = streamUrlForMode(currentMode)
-      const wasPlaying = !video.paused
+      const wasPlaying = video.ended || !video.paused
       video.src = streamUrl
       video.load()
       if (wasPlaying) video.play().catch(() => {})
@@ -893,6 +893,18 @@ const initPlayer = (): void => {
       updateModeButtons(currentMode)
       updateVideoOverlay(currentEpisode, data.episode_title || '')
 
+      // Update skip segments for new episode
+      if (data.segments && Array.isArray(data.segments)) {
+        parsedSegments = data.segments.map((segment: SkipSegment) => {
+          const start = Number(segment.start || 0)
+          const end = Number(segment.end || 0)
+          if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) {
+            return { ...segment, start: 0, end: 0 }
+          }
+          return { ...segment, start, end }
+        }).filter((s: SkipSegment) => s.start > 0 || s.end > 0)
+      }
+
       const episodeList = document.querySelector('[data-episode-list]')
       if (episodeList) {
         episodeList.querySelectorAll('[data-episode-id]').forEach((el) => {
@@ -904,9 +916,26 @@ const initPlayer = (): void => {
         }
       }
 
+      // Update episode grid highlight for >100 episodes
+      const episodeGrid = document.querySelector('[data-episode-grid]')
+      if (episodeGrid) {
+        episodeGrid.querySelectorAll('[data-episode-id]').forEach((el) => {
+          el.classList.remove('bg-accent/20', 'ring-2', 'ring-accent', 'text-accent')
+        })
+        const rangeIndex = Math.floor((nextEpisode - 1) / 100)
+        switchEpisodeRange(rangeIndex)
+        const gridEpEl = episodeGrid.querySelector(`[data-episode-id="${nextEpisode}"]`) as HTMLElement | null
+        if (gridEpEl) {
+          gridEpEl.classList.add('bg-accent/20', 'ring-2', 'ring-accent', 'text-accent')
+        }
+      }
+
       const newUrl = new URL(window.location.href)
       newUrl.searchParams.set('ep', String(nextEpisode))
       history.pushState(null, '', newUrl.toString())
+
+      // Reset transitionEpisode so beforeunload handler saves progress
+      transitionEpisode = null
     } catch {
       sessionStorage.setItem('mal:autoplay-next', 'true')
       const newUrl = new URL(window.location.href)
@@ -1280,9 +1309,13 @@ const initPlayer = (): void => {
     })
   }
 
-  // Initialize grid to show first range
+  // Initialize grid to show the range containing the current episode
   if (episodeGrid && totalEpisodes > 100) {
-    switchEpisodeRange(0)
+    const currentEpNum = parseInt(currentEpisode, 10)
+    const initialRangeIndex = !Number.isNaN(currentEpNum) && currentEpNum > 0
+      ? Math.floor((currentEpNum - 1) / 100)
+      : 0
+    switchEpisodeRange(initialRangeIndex)
   }
 
   playerInitialized = true
