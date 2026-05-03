@@ -20,7 +20,7 @@
 {{end}}
 
 <div class="flex w-full flex-col gap-2" data-id="{{$dataId}}">
-  <a href="/anime/{{$anime.MalID}}" class="group relative flex aspect-[2/3] w-full flex-col overflow-hidden bg-white/5 after:absolute after:inset-0 {{if $withActions}}after:bg-black/80 after:opacity-0 hover:after:opacity-100{{else}}after:bg-linear-to-t after:from-black/80 after:via-black/20 after:to-transparent after:opacity-80 hover:after:opacity-100{{end}} after:transition-opacity">
+  <a href="/anime/{{$anime.MalID}}" class="group relative flex aspect-2/3 w-full flex-col overflow-hidden bg-white/5 after:absolute after:inset-0 {{if $withActions}}after:bg-black/80 after:opacity-0 hover:after:opacity-100{{else}}after:bg-linear-to-t after:from-black/80 after:via-black/20 after:to-transparent after:opacity-80 hover:after:opacity-100{{end}} after:transition-opacity">
     <img src="{{$imageUrl}}" alt="{{$displayTitle}}" class="h-full w-full object-cover" loading="lazy" />
 
     {{if $withActions}}

@@ -9,10 +9,10 @@
     "build:assets": "bun run build:css && bun run build:ts"
   },
   "devDependencies": {
-    "@tailwindcss/cli": "^4.2.3",
+    "@tailwindcss/cli": "^4.2.4",
     "@toolwind/anchors": "^1.0.10",
     "lefthook": "^2.1.6",
-    "tailwindcss": "^4.2.3",
+    "tailwindcss": "^4.2.4",
     "typescript": "^6.0.3"
   },
   "dependencies": {
